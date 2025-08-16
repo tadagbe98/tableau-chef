@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const products = [
   { id: 1, name: "Pizza Margherita", category: "Pizzas", price: 12.99, stock: 50, image: "https://placehold.co/40x40.png" },
@@ -27,6 +28,8 @@ const products = [
   { id: 5, name: "Frites", category: "Accompagnements", price: 3.99, stock: 150, image: "https://placehold.co/40x40.png" },
   { id: 6, name: "Coca-Cola", category: "Boissons", price: 1.99, stock: 200, image: "https://placehold.co/40x40.png" },
 ];
+
+const categories = ["Pizzas", "Burgers", "Salades", "Pâtes", "Accompagnements", "Boissons"];
 
 
 export default function ProductsPage() {
@@ -54,7 +57,16 @@ export default function ProductsPage() {
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="category" className="text-right">Catégorie</Label>
-                            <Input id="category" placeholder="Pizzas" className="col-span-3" />
+                            <Select>
+                                <SelectTrigger className="col-span-3">
+                                    <SelectValue placeholder="Sélectionnez une catégorie" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {categories.map(category => (
+                                        <SelectItem key={category} value={category}>{category}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                          <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="price" className="text-right">Prix</Label>
