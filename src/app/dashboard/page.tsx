@@ -201,7 +201,9 @@ export default function DashboardPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p>Votre rôle est : <Badge>{user?.role}</Badge></p>
+                    <div className="flex items-center gap-2">
+                        Votre rôle est : <Badge>{user?.role}</Badge>
+                    </div>
                     <p className="mt-4 text-muted-foreground">Si vous pensez que vos accès sont incorrects, veuillez contacter un administrateur.</p>
                 </CardContent>
             </Card>
