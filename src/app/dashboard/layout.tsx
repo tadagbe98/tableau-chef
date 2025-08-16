@@ -25,6 +25,7 @@ import {
   LogOut,
   Bell,
   Users,
+  CheckCircle,
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
 
 
 const allNavItems = [
@@ -58,7 +60,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, isRegisterOpen, openedBy } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -139,6 +141,12 @@ export default function DashboardLayout({
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
           <SidebarTrigger className="md:hidden" />
           <div className="flex w-full items-center justify-end gap-4">
+            {isRegisterOpen && (
+              <Badge variant="outline" className="flex items-center gap-2 text-sm p-2 border-green-500 text-green-500">
+                  <CheckCircle className="h-4 w-4" />
+                  Caisse Ouverte ({openedBy})
+              </Badge>
+            )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">

@@ -9,7 +9,7 @@ import { DollarSign, CreditCard, Smartphone, AlertCircle, TrendingUp, TrendingDo
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, AppUser } from "@/context/AuthContext";
 
 
 const dailySummary = {
@@ -23,13 +23,10 @@ const dailySummary = {
 };
 
 export default function DailyPointPage() {
-    const { user } = useAuth();
+    const { user, isRegisterOpen, openedBy, openTime, openingCash, openRegister, closeRegister } = useAuth();
     const [cashInDrawer, setCashInDrawer] = useState('');
-    const [openingCash, setOpeningCash] = useState('');
+    const [currentOpeningCash, setCurrentOpeningCash] = useState('');
     const [variance, setVariance] = useState<number | null>(null);
-    const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-    const [openedBy, setOpenedBy] = useState<string | null>(null);
-    const [openTime, setOpenTime] = useState<Date | null>(null);
 
     const { toast } = useToast();
 
@@ -44,7 +41,7 @@ export default function DailyPointPage() {
             });
             return;
         }
-        if (!openingCash) {
+        if (!currentOpeningCash) {
             toast({
                 variant: 'destructive',
                 title: 'Saisie Manquante',
@@ -52,12 +49,10 @@ export default function DailyPointPage() {
             });
             return;
         }
-        setIsRegisterOpen(true);
-        setOpenedBy(user?.displayName || 'Utilisateur inconnu');
-        setOpenTime(new Date());
+        openRegister(currentOpeningCash, user as AppUser);
         toast({
             title: "Caisse Ouverte",
-            description: `La caisse a été ouverte par ${user?.displayName} avec un fonds de ${parseFloat(openingCash).toFixed(2)} €.`
+            description: `La caisse a été ouverte par ${user?.displayName} avec un fonds de ${parseFloat(currentOpeningCash).toFixed(2)} €.`
         });
     };
 
@@ -87,12 +82,10 @@ export default function DailyPointPage() {
         }
         calculateVariance();
         if(cashInDrawer) {
-            setIsRegisterOpen(false);
-            setOpeningCash('');
+            closeRegister();
             setCashInDrawer('');
+            setCurrentOpeningCash('');
             setVariance(null);
-            setOpenedBy(null);
-            setOpenTime(null);
             toast({
                 title: "Point de Vente Fermé",
                 description: `Le journal d'aujourd'hui a été créé et la caisse fermée par ${user?.displayName}.`
@@ -124,8 +117,8 @@ export default function DailyPointPage() {
                         id="opening-cash"
                         type="number"
                         placeholder="Entrer le montant"
-                        value={openingCash}
-                        onChange={(e) => setOpeningCash(e.target.value)}
+                        value={currentOpeningCash}
+                        onChange={(e) => setCurrentOpeningCash(e.target.value)}
                         disabled={!isAuthorized}
                     />
                 </div>

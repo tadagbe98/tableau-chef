@@ -23,7 +23,13 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<any>;
   signup: (email: string, pass: string, fullName: string, restaurantName: string) => Promise<any>;
   logout: () => Promise<void>;
-  createUser: (email: string, pass: string, fullName: string, role: string) => Promise<any>;
+  createUser: (email: string, pass: string, fullName: string, role: string) => Promise<void>;
+  isRegisterOpen: boolean;
+  openedBy: string | null;
+  openTime: Date | null;
+  openingCash: string;
+  openRegister: (cash: string, user: AppUser) => void;
+  closeRegister: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({ 
@@ -33,6 +39,12 @@ const AuthContext = createContext<AuthContextType>({
     signup: async () => {},
     logout: async () => {},
     createUser: async () => {},
+    isRegisterOpen: false,
+    openedBy: null,
+    openTime: null,
+    openingCash: '',
+    openRegister: () => {},
+    closeRegister: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -41,6 +53,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
+
+  // Register state
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [openedBy, setOpenedBy] = useState<string | null>(null);
+  const [openTime, setOpenTime] = useState<Date | null>(null);
+  const [openingCash, setOpeningCash] = useState('');
+
+  const openRegister = (cash: string, user: AppUser) => {
+    setOpeningCash(cash);
+    setIsRegisterOpen(true);
+    setOpenedBy(user.displayName || 'Utilisateur Inconnu');
+    setOpenTime(new Date());
+  };
+
+  const closeRegister = () => {
+    setIsRegisterOpen(false);
+    setOpeningCash('');
+    setOpenedBy(null);
+    setOpenTime(null);
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -107,39 +139,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
   
   const createUser = async (email: string, pass: string, fullName: string, role: string) => {
-      const adminUser = auth.currentUser;
-      if (!adminUser) {
-          throw new Error("L'administrateur doit être connecté pour créer un utilisateur.");
-      }
+    const adminUser = auth.currentUser;
+    if (!adminUser) {
+        throw new Error("L'administrateur doit être connecté pour créer un utilisateur.");
+    }
+    
+    const appName = `secondary-app-${new Date().getTime()}`;
+    const secondaryApp = initializeApp({
+        apiKey: auth.app.options.apiKey,
+        authDomain: auth.app.options.authDomain,
+    }, appName);
+    const secondaryAuth = getAuth(secondaryApp);
+
+    try {
+      const newUserCredential = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
+      const newUser = newUserCredential.user;
       
-      const appName = `secondary-app-${new Date().getTime()}`;
-      const secondaryApp = initializeApp({
-          apiKey: auth.app.options.apiKey,
-          authDomain: auth.app.options.authDomain,
-      }, appName);
-      const secondaryAuth = getAuth(secondaryApp);
+      // We are not updating the profile on the auth object anymore to avoid issues
+      // await updateProfile(newUser, { displayName: fullName });
+    
+      const userDocRef = doc(db, "users", newUser.uid);
+      await setDoc(userDocRef, {
+          uid: newUser.uid,
+          email: newUser.email,
+          name: fullName,
+          role: role,
+      });
 
-      try {
-        const newUserCredential = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
-        const newUser = newUserCredential.user;
-
-        await updateProfile(newUser, { displayName: fullName });
-      
-        const userDocRef = doc(db, "users", newUser.uid);
-        await setDoc(userDocRef, {
-            uid: newUser.uid,
-            email: newUser.email,
-            name: fullName,
-            role: role,
-        });
-
-      } catch (error: any) {
-         console.error("Error creating user:", error);
-         throw error;
-      } finally {
-        await signOut(secondaryAuth);
-        await deleteApp(secondaryApp);
-      }
+    } catch (error: any) {
+       console.error("Error creating user:", error);
+       throw error;
+    } finally {
+      // It's important to sign out of the secondary auth instance and delete the app
+      // to avoid issues with the main admin session.
+      await signOut(secondaryAuth);
+      await deleteApp(secondaryApp);
+    }
   }
 
 
@@ -149,16 +184,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   
   const isAuthProtected = !['/', '/login', '/signup'].includes(pathname);
 
+  if (loading && isAuthProtected) {
+    return (
+      <div className="fixed inset-0 flex h-screen items-center justify-center bg-background z-50">
+          <div className="flex flex-col items-center gap-4">
+              <Logo className="h-12 w-12 animate-spin text-primary" />
+              <p className="text-muted-foreground">Chargement...</p>
+          </div>
+      </div>
+    );
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, createUser }}>
-      {loading && isAuthProtected ? (
-         <div className="fixed inset-0 flex h-screen items-center justify-center bg-background z-50">
-            <div className="flex flex-col items-center gap-4">
-                <Logo className="h-12 w-12 animate-spin text-primary" />
-                <p className="text-muted-foreground">Chargement...</p>
-            </div>
-        </div>
-      ) : children }
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, createUser, isRegisterOpen, openedBy, openTime, openingCash, openRegister, closeRegister }}>
+      {children}
     </AuthContext.Provider>
   );
 };
