@@ -8,36 +8,36 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, ResponsiveContainer } from 'recharts';
 
 const salesData = [
-  { date: 'Mon', sales: 4000 },
-  { date: 'Tue', sales: 3000 },
-  { date: 'Wed', sales: 2000 },
-  { date: 'Thu', sales: 2780 },
-  { date: 'Fri', sales: 1890 },
-  { date: 'Sat', sales: 2390 },
-  { date: 'Sun', sales: 3490 },
+  { date: 'Lun', sales: 4000 },
+  { date: 'Mar', sales: 3000 },
+  { date: 'Mer', sales: 2000 },
+  { date: 'Jeu', sales: 2780 },
+  { date: 'Ven', sales: 1890 },
+  { date: 'Sam', sales: 2390 },
+  { date: 'Dim', sales: 3490 },
 ];
 
 const chartConfig = {
   sales: {
-    label: "Sales",
+    label: "Ventes",
     color: "hsl(var(--primary))",
   },
 };
 
 const topProductsData = [
-  { name: 'Margherita Pizza', sales: 120 },
+  { name: 'Pizza Margherita', sales: 120 },
   { name: 'Cheeseburger', sales: 98 },
-  { name: 'Caesar Salad', sales: 75 },
+  { name: 'Salade César', sales: 75 },
   { name: 'Spaghetti Carbonara', sales: 62 },
   { name: 'Tiramisu', sales: 45 },
 ];
 
 const recentOrders = [
-    { id: '#125', customer: 'John Doe', status: 'Delivered', total: '$45.50' },
-    { id: '#124', customer: 'Jane Smith', status: 'Preparing', total: '$22.00' },
-    { id: '#123', customer: ' takeout', status: 'Delivered', total: '$15.75' },
-    { id: '#122', customer: 'Mike Johnson', status: 'Cancelled', total: '$30.10' },
-    { id: '#121', customer: 'Emily White', status: 'New', total: '$55.00' },
+    { id: '#125', customer: 'John Doe', status: 'Livrée', total: '$45.50' },
+    { id: '#124', customer: 'Jane Smith', status: 'En préparation', total: '$22.00' },
+    { id: '#123', customer: 'À emporter', status: 'Livrée', total: '$15.75' },
+    { id: '#122', customer: 'Mike Johnson', status: 'Annulée', total: '$30.10' },
+    { id: '#121', customer: 'Emily White', status: 'Nouvelle', total: '$55.00' },
 ]
 
 export default function DashboardPage() {
@@ -46,42 +46,42 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium">Revenu Total</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">$45,231.89</div>
-            <p className="text-xs text-muted-foreground">+20.1% from last month</p>
+            <p className="text-xs text-muted-foreground">+20.1% par rapport au mois dernier</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Customers</CardTitle>
+            <CardTitle className="text-sm font-medium">Clients</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">+2350</div>
-            <p className="text-xs text-muted-foreground">+180.1% from last month</p>
+            <p className="text-xs text-muted-foreground">+180.1% par rapport au mois dernier</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Orders</CardTitle>
+            <CardTitle className="text-sm font-medium">Commandes</CardTitle>
             <ShoppingBag className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">+12,234</div>
-            <p className="text-xs text-muted-foreground">+19% from last month</p>
+            <p className="text-xs text-muted-foreground">+19% par rapport au mois dernier</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Order Value</CardTitle>
+            <CardTitle className="text-sm font-medium">Panier Moyen</CardTitle>
             <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">$28.50</div>
-            <p className="text-xs text-muted-foreground">+5.2% from last month</p>
+            <p className="text-xs text-muted-foreground">+5.2% par rapport au mois dernier</p>
           </CardContent>
         </Card>
       </div>
@@ -89,8 +89,8 @@ export default function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-5">
         <Card className="md:col-span-3">
           <CardHeader>
-            <CardTitle>Sales Overview</CardTitle>
-            <CardDescription>This week's sales performance.</CardDescription>
+            <CardTitle>Aperçu des Ventes</CardTitle>
+            <CardDescription>Performance des ventes de cette semaine.</CardDescription>
           </CardHeader>
           <CardContent>
              <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
@@ -126,8 +126,8 @@ export default function DashboardPage() {
         </Card>
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Top Selling Products</CardTitle>
-            <CardDescription>Your best performers this week.</CardDescription>
+            <CardTitle>Produits les Plus Vendus</CardTitle>
+            <CardDescription>Vos meilleures ventes cette semaine.</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
@@ -145,15 +145,15 @@ export default function DashboardPage() {
       
        <Card>
         <CardHeader>
-          <CardTitle>Recent Orders</CardTitle>
+          <CardTitle>Commandes Récentes</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>ID Commande</TableHead>
+                <TableHead>Client</TableHead>
+                <TableHead>Statut</TableHead>
                 <TableHead className="text-right">Total</TableHead>
               </TableRow>
             </TableHeader>
@@ -164,9 +164,9 @@ export default function DashboardPage() {
                   <TableCell>{order.customer}</TableCell>
                   <TableCell>
                     <Badge variant={
-                        order.status === 'Delivered' ? 'default' : 
-                        order.status === 'Preparing' ? 'secondary' : 
-                        order.status === 'New' ? 'outline' : 'destructive'
+                        order.status === 'Livrée' ? 'default' : 
+                        order.status === 'En préparation' ? 'secondary' : 
+                        order.status === 'Nouvelle' ? 'outline' : 'destructive'
                     } className="capitalize">{order.status}</Badge>
                   </TableCell>
                   <TableCell className="text-right">{order.total}</TableCell>

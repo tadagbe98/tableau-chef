@@ -12,13 +12,13 @@ import { Label } from "@/components/ui/label";
 import { useState } from "react";
 
 const inventoryItems = [
-  { id: 1, name: "Pizza Dough", category: "Ingredients", stock: 80, maxStock: 100, unit: "kg" },
-  { id: 2, name: "Tomato Sauce", category: "Ingredients", stock: 50, maxStock: 100, unit: "liters" },
-  { id: 3, name: "Mozzarella Cheese", category: "Ingredients", stock: 25, maxStock: 50, unit: "kg" },
-  { id: 4, name: "Beef Patties", category: "Ingredients", stock: 120, maxStock: 200, unit: "units" },
-  { id: 5, name: "Burger Buns", category: "Ingredients", stock: 90, maxStock: 200, unit: "units" },
-  { id: 6, name: "Lettuce", category: "Produce", stock: 15, maxStock: 30, unit: "heads" },
-  { id: 7, name: "Coke Cans", category: "Beverages", stock: 180, maxStock: 240, unit: "cans" },
+  { id: 1, name: "Pâte à Pizza", category: "Ingrédients", stock: 80, maxStock: 100, unit: "kg" },
+  { id: 2, name: "Sauce Tomate", category: "Ingrédients", stock: 50, maxStock: 100, unit: "litres" },
+  { id: 3, name: "Fromage Mozzarella", category: "Ingrédients", stock: 25, maxStock: 50, unit: "kg" },
+  { id: 4, name: "Steaks de Boeuf", category: "Ingrédients", stock: 120, maxStock: 200, unit: "unités" },
+  { id: 5, name: "Pains à Burger", category: "Ingrédients", stock: 90, maxStock: 200, unit: "unités" },
+  { id: 6, name: "Laitue", category: "Légumes", stock: 15, maxStock: 30, unit: "têtes" },
+  { id: 7, name: "Canettes de Coca", category: "Boissons", stock: 180, maxStock: 240, unit: "canettes" },
 ];
 
 export default function InventoryPage() {
@@ -42,10 +42,10 @@ export default function InventoryPage() {
             case 'add':
                 return (
                     <>
-                        <DialogTitle>Add Stock</DialogTitle>
-                        <DialogDescription>Add new stock for {selectedItem.name}. Current stock: {selectedItem.stock} {selectedItem.unit}.</DialogDescription>
+                        <DialogTitle>Ajouter du Stock</DialogTitle>
+                        <DialogDescription>Ajouter du nouveau stock pour {selectedItem.name}. Stock actuel : {selectedItem.stock} {selectedItem.unit}.</DialogDescription>
                          <div className="grid gap-4 py-4">
-                            <Label htmlFor="add-quantity">Quantity to Add</Label>
+                            <Label htmlFor="add-quantity">Quantité à Ajouter</Label>
                             <Input id="add-quantity" type="number" placeholder="0" />
                         </div>
                     </>
@@ -53,10 +53,10 @@ export default function InventoryPage() {
             case 'use':
                  return (
                     <>
-                        <DialogTitle>Use Stock</DialogTitle>
-                        <DialogDescription>Record used stock for {selectedItem.name}. Current stock: {selectedItem.stock} {selectedItem.unit}.</DialogDescription>
+                        <DialogTitle>Utiliser du Stock</DialogTitle>
+                        <DialogDescription>Enregistrer le stock utilisé pour {selectedItem.name}. Stock actuel : {selectedItem.stock} {selectedItem.unit}.</DialogDescription>
                          <div className="grid gap-4 py-4">
-                            <Label htmlFor="use-quantity">Quantity to Use</Label>
+                            <Label htmlFor="use-quantity">Quantité à Utiliser</Label>
                             <Input id="use-quantity" type="number" placeholder="0" />
                         </div>
                     </>
@@ -64,10 +64,10 @@ export default function InventoryPage() {
             case 'count':
                  return (
                     <>
-                        <DialogTitle>Physical Count</DialogTitle>
-                        <DialogDescription>Update stock for {selectedItem.name} after a physical count. Current stock: {selectedItem.stock} {selectedItem.unit}.</DialogDescription>
+                        <DialogTitle>Comptage Physique</DialogTitle>
+                        <DialogDescription>Mettre à jour le stock pour {selectedItem.name} après un comptage physique. Stock actuel : {selectedItem.stock} {selectedItem.unit}.</DialogDescription>
                          <div className="grid gap-4 py-4">
-                            <Label htmlFor="count-quantity">New Total Quantity</Label>
+                            <Label htmlFor="count-quantity">Nouvelle Quantité Totale</Label>
                             <Input id="count-quantity" type="number" placeholder={selectedItem.stock} />
                         </div>
                     </>
@@ -80,26 +80,26 @@ export default function InventoryPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Inventory</h1>
+        <h1 className="text-2xl font-bold">Inventaire</h1>
         <div className="flex gap-2">
-            <Button variant="outline"><MinusCircle className="mr-2 h-4 w-4" /> Use Stock</Button>
-            <Button><PlusCircle className="mr-2 h-4 w-4" /> Add Stock</Button>
-            <Button variant="secondary"><CheckCircle className="mr-2 h-4 w-4" /> Physical Count</Button>
+            <Button variant="outline"><MinusCircle className="mr-2 h-4 w-4" /> Utiliser Stock</Button>
+            <Button><PlusCircle className="mr-2 h-4 w-4" /> Ajouter Stock</Button>
+            <Button variant="secondary"><CheckCircle className="mr-2 h-4 w-4" /> Comptage Physique</Button>
         </div>
       </div>
       <Card>
         <CardHeader>
-          <CardTitle>Inventory Items</CardTitle>
-          <CardDescription>Track and manage your stock levels.</CardDescription>
+          <CardTitle>Articles en Inventaire</CardTitle>
+          <CardDescription>Suivez et gérez vos niveaux de stock.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Item Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Stock Level</TableHead>
-                <TableHead className="text-right">Current Stock</TableHead>
+                <TableHead>Nom de l'Article</TableHead>
+                <TableHead>Catégorie</TableHead>
+                <TableHead>Niveau de Stock</TableHead>
+                <TableHead className="text-right">Stock Actuel</TableHead>
                 <TableHead>
                   <span className="sr-only">Actions</span>
                 </TableHead>
@@ -122,14 +122,14 @@ export default function InventoryPage() {
                                 <DropdownMenuTrigger asChild>
                                 <Button aria-haspopup="true" size="icon" variant="ghost">
                                     <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Toggle menu</span>
+                                    <span className="sr-only">Ouvrir le menu</span>
                                 </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DialogTrigger asChild onClick={() => openDialog('add', item)}><DropdownMenuItem>Add Stock</DropdownMenuItem></DialogTrigger>
-                                <DialogTrigger asChild onClick={() => openDialog('use', item)}><DropdownMenuItem>Use Stock</DropdownMenuItem></DialogTrigger>
-                                <DialogTrigger asChild onClick={() => openDialog('count', item)}><DropdownMenuItem>Physical Count</DropdownMenuItem></DialogTrigger>
+                                <DialogTrigger asChild onClick={() => openDialog('add', item)}><DropdownMenuItem>Ajouter Stock</DropdownMenuItem></DialogTrigger>
+                                <DialogTrigger asChild onClick={() => openDialog('use', item)}><DropdownMenuItem>Utiliser Stock</DropdownMenuItem></DialogTrigger>
+                                <DialogTrigger asChild onClick={() => openDialog('count', item)}><DropdownMenuItem>Comptage Physique</DropdownMenuItem></DialogTrigger>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                             <DialogContent className="sm:max-w-[425px]">
@@ -137,7 +137,7 @@ export default function InventoryPage() {
                                     {getDialogContent()}
                                 </DialogHeader>
                                 <DialogFooter>
-                                    <Button type="submit">Save changes</Button>
+                                    <Button type="submit">Enregistrer</Button>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>

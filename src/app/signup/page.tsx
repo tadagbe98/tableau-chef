@@ -21,19 +21,19 @@ export default function SignupPage() {
             <Logo className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold tracking-tight">TableauChef</span>
           </Link>
-          <CardTitle className="text-2xl">Create your restaurant</CardTitle>
+          <CardTitle className="text-2xl">Créez votre restaurant</CardTitle>
           <CardDescription>
-            Enter your information to create an account
+            Entrez vos informations pour créer un compte
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="full-name">Full Name</Label>
+              <Label htmlFor="full-name">Nom Complet</Label>
               <Input id="full-name" placeholder="John Doe" required />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="restaurant-name">Restaurant Name</Label>
+              <Label htmlFor="restaurant-name">Nom du Restaurant</Label>
               <Input id="restaurant-name" placeholder="The Good Place" required />
             </div>
             <div className="grid gap-2">
@@ -46,20 +46,20 @@ export default function SignupPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Mot de passe</Label>
               <Input id="password" type="password" />
             </div>
             <Button type="submit" className="w-full" asChild>
-               <Link href="/dashboard">Create an account</Link>
+               <Link href="/dashboard">Créer un compte</Link>
             </Button>
             <Button variant="outline" className="w-full">
-              Sign up with Google
+              S'inscrire avec Google
             </Button>
           </div>
           <div className="mt-4 text-center text-sm">
-            Already have an account?{" "}
+            Vous avez déjà un compte ?{" "}
             <Link href="/login" className="underline">
-              Login
+              Se connecter
             </Link>
           </div>
         </CardContent>

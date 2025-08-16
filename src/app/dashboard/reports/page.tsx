@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client';
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -21,33 +20,33 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 
 const monthlySalesData = [
   { month: 'Jan', sales: 4000 },
-  { month: 'Feb', sales: 3000 },
+  { month: 'Fév', sales: 3000 },
   { month: 'Mar', sales: 5000 },
-  { month: 'Apr', sales: 4500 },
-  { month: 'May', sales: 6000 },
-  { month: 'Jun', sales: 5500 },
+  { month: 'Avr', sales: 4500 },
+  { month: 'Mai', sales: 6000 },
+  { month: 'Juin', sales: 5500 },
 ];
 
 const topProductsData = [
   { name: 'Margherita', sales: 250 },
   { name: 'Cheeseburger', sales: 180 },
-  { name: 'Caesar Salad', sales: 150 },
+  { name: 'Salade César', sales: 150 },
   { name: 'Carbonara', sales: 120 },
-  { name: 'Fries', sales: 300 },
+  { name: 'Frites', sales: 300 },
 ];
 
 const categorySalesData = [
   { name: 'Pizzas', value: 400, fill: 'var(--color-pizzas)' },
   { name: 'Burgers', value: 300, fill: 'var(--color-burgers)' },
-  { name: 'Salads', value: 300, fill: 'var(--color-salads)' },
-  { name: 'Pastas', value: 200, fill: 'var(--color-pastas)' },
-  { name: 'Sides', value: 250, fill: 'var(--color-sides)' },
-  { name: 'Drinks', value: 150, fill: 'var(--color-drinks)' },
+  { name: 'Salades', value: 300, fill: 'var(--color-salads)' },
+  { name: 'Pâtes', value: 200, fill: 'var(--color-pastas)' },
+  { name: 'Accompagnements', value: 250, fill: 'var(--color-sides)' },
+  { name: 'Boissons', value: 150, fill: 'var(--color-drinks)' },
 ];
 
 const chartConfig = {
   sales: {
-    label: "Sales",
+    label: "Ventes",
     color: "hsl(var(--primary))",
   },
   pizzas: {
@@ -59,19 +58,19 @@ const chartConfig = {
     color: "hsl(var(--chart-2))",
   },
   salads: {
-    label: "Salads",
+    label: "Salades",
     color: "hsl(var(--chart-3))",
   },
   pastas: {
-    label: "Pastas",
+    label: "Pâtes",
     color: "hsl(var(--chart-4))",
   },
   sides: {
-    label: "Sides",
+    label: "Accompagnements",
     color: "hsl(var(--chart-5))",
   },
   drinks: {
-    label: "Drinks",
+    label: "Boissons",
     color: "hsl(var(--muted))",
   },
 };
@@ -79,11 +78,11 @@ const chartConfig = {
 export default function ReportsPage() {
   return (
     <div className="flex flex-col gap-6">
-       <h1 className="text-2xl font-bold">Reports & Analytics</h1>
+       <h1 className="text-2xl font-bold">Rapports et Analyses</h1>
       <Card>
         <CardHeader>
-          <CardTitle>Monthly Sales Trend</CardTitle>
-          <CardDescription>A look at your revenue over the past few months.</CardDescription>
+          <CardTitle>Tendance des Ventes Mensuelles</CardTitle>
+          <CardDescription>Un aperçu de vos revenus au cours des derniers mois.</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
@@ -122,8 +121,8 @@ export default function ReportsPage() {
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Top 5 Selling Products</CardTitle>
-            <CardDescription>Your most popular items this month.</CardDescription>
+            <CardTitle>Top 5 des Produits les Plus Vendus</CardTitle>
+            <CardDescription>Vos articles les plus populaires ce mois-ci.</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
@@ -140,8 +139,8 @@ export default function ReportsPage() {
         
         <Card>
           <CardHeader>
-            <CardTitle>Sales by Category</CardTitle>
-             <CardDescription>Breakdown of sales across different categories.</CardDescription>
+            <CardTitle>Ventes par Catégorie</CardTitle>
+             <CardDescription>Répartition des ventes par catégorie.</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
@@ -166,11 +165,11 @@ export default function ReportsPage() {
       
        <Card>
           <CardHeader>
-            <CardTitle>Gross Margin Analysis (Placeholder)</CardTitle>
-            <CardDescription>Understanding your profitability.</CardDescription>
+            <CardTitle>Analyse de la Marge Brute (Espace réservé)</CardTitle>
+            <CardDescription>Comprendre votre rentabilité.</CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-center h-48 bg-secondary rounded-lg">
-            <p className="text-muted-foreground">Chart for Gross Margin will be here.</p>
+            <p className="text-muted-foreground">Le graphique de la marge brute sera ici.</p>
           </CardContent>
         </Card>
     </div>

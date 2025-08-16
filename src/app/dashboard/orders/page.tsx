@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 import { useState } from 'react';
@@ -19,22 +18,22 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 const products = [
-  { id: 1, name: "Margherita Pizza", price: 12.99, image: "https://placehold.co/300x200.png", category: "Pizzas", "data-ai-hint": "pizza food" },
+  { id: 1, name: "Pizza Margherita", price: 12.99, image: "https://placehold.co/300x200.png", category: "Pizzas", "data-ai-hint": "pizza food" },
   { id: 2, name: "Cheeseburger", price: 8.99, image: "https://placehold.co/300x200.png", category: "Burgers", "data-ai-hint": "burger food" },
-  { id: 3, name: "Caesar Salad", price: 7.50, image: "https://placehold.co/300x200.png", category: "Salads", "data-ai-hint": "salad food" },
-  { id: 4, name: "Spaghetti Carbonara", price: 14.00, image: "https://placehold.co/300x200.png", category: "Pastas", "data-ai-hint": "pasta food" },
-  { id: 5, name: "French Fries", price: 3.99, image: "https://placehold.co/300x200.png", category: "Sides", "data-ai-hint": "fries food" },
-  { id: 6, name: "Coca-Cola", price: 1.99, image: "https://placehold.co/300x200.png", category: "Drinks", "data-ai-hint": "soda drink" },
-  { id: 7, name: "Pepperoni Pizza", price: 14.99, image: "https://placehold.co/300x200.png", category: "Pizzas", "data-ai-hint": "pizza food" },
-  { id: 8, name: "Veggie Burger", price: 9.50, image: "https://placehold.co/300x200.png", category: "Burgers", "data-ai-hint": "burger food" },
+  { id: 3, name: "Salade César", price: 7.50, image: "https://placehold.co/300x200.png", category: "Salades", "data-ai-hint": "salad food" },
+  { id: 4, name: "Spaghetti Carbonara", price: 14.00, image: "https://placehold.co/300x200.png", category: "Pâtes", "data-ai-hint": "pasta food" },
+  { id: 5, name: "Frites", price: 3.99, image: "https://placehold.co/300x200.png", category: "Accompagnements", "data-ai-hint": "fries food" },
+  { id: 6, name: "Coca-Cola", price: 1.99, image: "https://placehold.co/300x200.png", category: "Boissons", "data-ai-hint": "soda drink" },
+  { id: 7, name: "Pizza Pepperoni", price: 14.99, image: "https://placehold.co/300x200.png", category: "Pizzas", "data-ai-hint": "pizza food" },
+  { id: 8, name: "Burger Végétarien", price: 9.50, image: "https://placehold.co/300x200.png", category: "Burgers", "data-ai-hint": "burger food" },
 ];
 
-const categories = ["All", "Pizzas", "Burgers", "Salads", "Pastas", "Sides", "Drinks"];
+const categories = ["Tout", "Pizzas", "Burgers", "Salades", "Pâtes", "Accompagnements", "Boissons"];
 
 export default function OrdersPage() {
   const [orderItems, setOrderItems] = useState([]);
-  const [orderType, setOrderType] = useState("Dine-in");
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [orderType, setOrderType] = useState("Sur place");
+  const [activeCategory, setActiveCategory] = useState("Tout");
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
 
@@ -72,8 +71,8 @@ export default function OrdersPage() {
     if (orderItems.length === 0) {
       toast({
         variant: "destructive",
-        title: "Empty Order",
-        description: "Please add items to the order before placing it.",
+        title: "Commande Vide",
+        description: "Veuillez ajouter des articles à la commande avant de la valider.",
       });
       return;
     }
@@ -81,7 +80,7 @@ export default function OrdersPage() {
   };
   
   const handlePayment = (method) => {
-    console.log(`Paid with ${method}`);
+    console.log(`Payé avec ${method}`);
     setIsPaymentDialogOpen(false);
     setIsReceiptDialogOpen(true);
   }
@@ -90,12 +89,12 @@ export default function OrdersPage() {
     setOrderItems([]);
     setIsReceiptDialogOpen(false);
     toast({
-      title: "New Order Started",
-      description: "You can now start adding items to the new order.",
+      title: "Nouvelle Commande Créée",
+      description: "Vous pouvez maintenant ajouter des articles à la nouvelle commande.",
     })
   }
 
-  const filteredProducts = activeCategory === "All"
+  const filteredProducts = activeCategory === "Tout"
     ? products
     : products.filter(p => p.category === activeCategory);
 
@@ -103,7 +102,7 @@ export default function OrdersPage() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-8rem)]">
       <div className="lg:col-span-2 flex flex-col h-full">
         <div className="flex-shrink-0">
-            <h1 className="text-2xl font-bold mb-4">Point of Sale</h1>
+            <h1 className="text-2xl font-bold mb-4">Point de Vente</h1>
             <div className="flex items-center space-x-2 overflow-x-auto pb-2">
                 {categories.map(category => (
                     <Button
@@ -136,9 +135,9 @@ export default function OrdersPage() {
       <div className="lg:col-span-1 h-full">
         <Card className="flex flex-col h-full">
           <CardHeader>
-            <CardTitle>Current Order</CardTitle>
+            <CardTitle>Commande Actuelle</CardTitle>
             <div className="flex items-center gap-2 pt-2">
-              {['Dine-in', 'Takeout', 'Delivery'].map(type => (
+              {['Sur place', 'À emporter', 'Livraison'].map(type => (
                 <Button key={type} size="sm" variant={orderType === type ? "default" : "outline"} onClick={() => setOrderType(type)}>
                   {type}
                 </Button>
@@ -149,7 +148,7 @@ export default function OrdersPage() {
             {orderItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
                 <ShoppingBasket className="w-16 h-16 mb-4" />
-                <p>No items in order</p>
+                <p>Aucun article dans la commande</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -178,11 +177,11 @@ export default function OrdersPage() {
             <CardFooter className="flex-col !p-4 !mt-auto border-t">
               <div className="w-full space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Subtotal</span>
+                  <span>Sous-total</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Tax (8%)</span>
+                  <span>Taxe (8%)</span>
                   <span>${tax.toFixed(2)}</span>
                 </div>
                 <Separator />
@@ -192,7 +191,7 @@ export default function OrdersPage() {
                 </div>
               </div>
               <Button className="w-full mt-4" size="lg" onClick={handlePlaceOrder}>
-                Place Order
+                Valider la commande
               </Button>
             </CardFooter>
           )}
@@ -202,15 +201,15 @@ export default function OrdersPage() {
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Payment for Order</DialogTitle>
-            <DialogDescription>Total amount: <span className="font-bold text-foreground">${total.toFixed(2)}</span></DialogDescription>
+            <DialogTitle>Paiement de la Commande</DialogTitle>
+            <DialogDescription>Montant total : <span className="font-bold text-foreground">${total.toFixed(2)}</span></DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-3 gap-4 py-4">
-            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handlePayment('Cash')}>
-                <DollarSign /> Cash
+            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handlePayment('Espèces')}>
+                <DollarSign /> Espèces
             </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handlePayment('Card')}>
-                <CreditCard /> Card
+            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handlePayment('Carte')}>
+                <CreditCard /> Carte
             </Button>
              <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handlePayment('Mobile')}>
                 <Smartphone /> Mobile
@@ -222,8 +221,8 @@ export default function OrdersPage() {
       <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-center">Receipt</DialogTitle>
-             <DialogDescription className="text-center">Order #125</DialogDescription>
+            <DialogTitle className="text-center">Reçu</DialogTitle>
+             <DialogDescription className="text-center">Commande #125</DialogDescription>
           </DialogHeader>
           <div className="p-4 my-4 border rounded-lg bg-secondary/30">
              <div className="space-y-2">
@@ -237,11 +236,11 @@ export default function OrdersPage() {
               <Separator className="my-3" />
                <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span>Subtotal</span>
+                  <span>Sous-total</span>
                   <span>${subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Tax</span>
+                  <span>Taxe</span>
                   <span>${tax.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between font-bold">
@@ -251,7 +250,7 @@ export default function OrdersPage() {
               </div>
           </div>
            <DialogFooter>
-            <Button className="w-full" onClick={handleNewOrder}>Start New Order</Button>
+            <Button className="w-full" onClick={handleNewOrder}>Commencer une Nouvelle Commande</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

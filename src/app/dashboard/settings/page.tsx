@@ -4,15 +4,15 @@ import { Separator } from "@/components/ui/separator";
 export default function SettingsPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Settings</h1>
+      <h1 className="text-2xl font-bold">Paramètres</h1>
       
       <Card>
         <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>Manage your personal and restaurant information.</CardDescription>
+          <CardTitle>Profil</CardTitle>
+          <CardDescription>Gérez vos informations personnelles et celles de votre restaurant.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Profile settings form will be here.</p>
+          <p className="text-muted-foreground">Le formulaire de paramètres de profil sera ici.</p>
         </CardContent>
       </Card>
       
@@ -20,11 +20,11 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Billing</CardTitle>
-          <CardDescription>Manage your subscription and payment methods.</CardDescription>
+          <CardTitle>Facturation</CardTitle>
+          <CardDescription>Gérez votre abonnement et vos méthodes de paiement.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Billing management interface will be here.</p>
+          <p className="text-muted-foreground">L'interface de gestion de la facturation sera ici.</p>
         </CardContent>
       </Card>
       
@@ -33,10 +33,10 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Notifications</CardTitle>
-          <CardDescription>Configure your notification preferences.</CardDescription>
+          <CardDescription>Configurez vos préférences de notification.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Notification settings toggles will be here.</p>
+          <p className="text-muted-foreground">Les options de paramètres de notification seront ici.</p>
         </CardContent>
       </Card>
     </div>
