@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from "react";
@@ -49,7 +50,9 @@ export default function UsersPage() {
     try {
       const snapshot = await getDocs(usersCollectionRef);
       const fetchedUsers = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as UserData));
-      setUsers(fetchedUsers);
+      // Ensure we have the uid from the doc id if it's missing in the data
+      const finalUsers = fetchedUsers.map(u => ({...u, uid: u.uid || u.id }));
+      setUsers(finalUsers);
     } catch (error) {
       console.error("Failed to fetch users:", error);
       toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les utilisateurs.' });
@@ -79,12 +82,13 @@ export default function UsersPage() {
           return;
       }
       try {
-          // Note: Deleting from Firestore doesn't delete from Firebase Auth.
-          // This has to be done manually in the Firebase console for now.
+          // This only deletes the Firestore record. Deleting from Firebase Auth
+          // requires admin SDK on a backend (Firebase Functions).
+          // This is a known limitation of this client-side approach.
           const userDocRef = doc(db, 'users', userToDelete.uid);
           await deleteDoc(userDocRef);
-          toast({ title: 'Succès', description: "Utilisateur supprimé de la base de données. Pensez à le supprimer de la console d'authentification." });
-          fetchUsers();
+          toast({ title: 'Succès', description: "Utilisateur supprimé de la base de données. L'authentification reste active." });
+          fetchUsers(); // Refresh the list
       } catch (error) {
           toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de supprimer l'utilisateur."});
           console.error(error);
@@ -131,18 +135,14 @@ export default function UsersPage() {
         }
         await createUser(formData.email, formData.password, formData.name, formData.role);
         // The createUser function in AuthContext will now handle redirection and messaging.
-        fetchUsers();
-        setIsDialogOpen(false);
+        // It will sign out the admin, so no need to fetchUsers() or close dialog here.
+        // setIsDialogOpen(false); 
     } catch (error: any) {
-        let description = "Une erreur est survenue.";
+        let description = "Une erreur est survenue lors de la création.";
         if (error.code === 'auth/email-already-in-use') {
             description = "Cet email est déjà utilisé."
-        } else if (error.message.includes("Veuillez vous reconnecter")) {
-            // This is our custom error from AuthContext
-            description = error.message;
         }
-        
-        toast({ variant: 'destructive', title: 'Erreur', description });
+        toast({ variant: 'destructive', title: 'Erreur de création', description });
         console.error("Form submission error:", error);
     }
   };
