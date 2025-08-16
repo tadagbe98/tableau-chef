@@ -25,6 +25,7 @@ import {
   LogOut,
   Bell,
   User,
+  Globe,
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useState } from 'react';
 
 const navItems = [
   { href: '/dashboard', icon: Home, label: 'Dashboard' },
@@ -53,6 +55,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [selectedLanguage, setSelectedLanguage] = useState('Français');
 
   return (
     <SidebarProvider>
@@ -106,6 +109,24 @@ export default function DashboardLayout({
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
           <SidebarTrigger className="md:hidden" />
           <div className="flex w-full items-center justify-end gap-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Globe className="h-5 w-5" />
+                  <span className="sr-only">Changer de langue</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Sélectionner la langue</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setSelectedLanguage('English')}>English</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSelectedLanguage('Français')}>Français</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSelectedLanguage('Español')}>Español</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSelectedLanguage('Fongbé')}>Fongbé</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSelectedLanguage('Yoruba')}>Yoruba</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSelectedLanguage('Wolof')}>Wolof</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
