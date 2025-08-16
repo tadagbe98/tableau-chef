@@ -2,13 +2,13 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
+import { onAuthStateChanged, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, getAuth } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter, usePathname } from 'next/navigation';
 import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
-import { initializeApp } from 'firebase/app';
+import { initializeApp, deleteApp } from 'firebase/app';
 
 
 // Définir un type pour notre utilisateur qui inclut le rôle
@@ -45,24 +45,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in, let's fetch their custom data from Firestore
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
             const userData = userDoc.data();
-            // Combine firebase user with firestore data
             setUser({
               ...firebaseUser,
-              displayName: userData.name, // Always get name from Firestore
+              displayName: userData.name,
               role: userData.role,
               restaurantName: userData.restaurantName,
             });
         } else {
-             // This might happen during signup before the doc is created
              setUser(firebaseUser);
         }
       } else {
-        // User is signed out
         setUser(null);
       }
       setLoading(false);
@@ -90,7 +86,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const newUser = userCredential.user;
 
-      // We still update the profile for good measure, but Firestore is the source of truth
       await updateProfile(newUser, { displayName: fullName });
       
       const userDocRef = doc(db, "users", newUser.uid);
@@ -99,11 +94,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email: newUser.email,
         name: fullName,
         restaurantName: restaurantName,
-        role: 'Admin', // First user is always Admin
+        role: 'Admin',
       };
       await setDoc(userDocRef, userData);
 
-      // Set user in state immediately after signup
       setUser({
         ...newUser,
         displayName: fullName,
@@ -118,11 +112,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           throw new Error("L'administrateur doit être connecté pour créer un utilisateur.");
       }
       
-      // Workaround: Use a secondary app to create user without signing out the admin
+      const appName = `secondary-app-${new Date().getTime()}`;
       const secondaryApp = initializeApp({
           apiKey: auth.app.options.apiKey,
           authDomain: auth.app.options.authDomain,
-      }, `secondary-app-${new Date().getTime()}`);
+      }, appName);
       const secondaryAuth = getAuth(secondaryApp);
 
       try {
@@ -139,13 +133,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             role: role,
         });
 
-        // The secondary auth instance can now be signed out, admin stays logged in.
-        await signOut(secondaryAuth);
-        
       } catch (error: any) {
-         await signOut(secondaryAuth); // Ensure secondary auth is logged out on failure
          console.error("Error creating user:", error);
-         throw error; // Re-throw the error to be caught by the calling page
+         throw error;
+      } finally {
+        await signOut(secondaryAuth);
+        await deleteApp(secondaryApp);
       }
   }
 
@@ -153,22 +146,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     return signOut(auth);
   }
+  
+  const isAuthProtected = !['/', '/login', '/signup'].includes(pathname);
 
-  // Display a global loading spinner for auth-protected pages
-  if (loading && !['/', '/login', '/signup'].includes(pathname)) {
-    return (
-        <div className="flex h-screen items-center justify-center bg-background">
+  return (
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, createUser }}>
+      {loading && isAuthProtected ? (
+         <div className="fixed inset-0 flex h-screen items-center justify-center bg-background z-50">
             <div className="flex flex-col items-center gap-4">
                 <Logo className="h-12 w-12 animate-spin text-primary" />
                 <p className="text-muted-foreground">Chargement...</p>
             </div>
         </div>
-    );
-  }
-
-  return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, createUser }}>
-      {!loading && children}
+      ) : children }
     </AuthContext.Provider>
   );
 };
