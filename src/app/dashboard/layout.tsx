@@ -38,9 +38,72 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-const navItems = [
+const translations = {
+  en: {
+    Dashboard: 'Dashboard',
+    Orders: 'Orders',
+    Products: 'Products',
+    Inventory: 'Inventory',
+    Reports: 'Reports',
+    'Daily Point': 'Daily Point',
+    Settings: 'Settings',
+    'Log Out': 'Log Out',
+    'Select language': 'Select language',
+    Notifications: 'Notifications',
+    'My Account': 'My Account',
+    Profile: 'Profile',
+    Billing: 'Billing',
+  },
+  fr: {
+    Dashboard: 'Tableau de bord',
+    Orders: 'Commandes',
+    Products: 'Produits',
+    Inventory: 'Inventaire',
+    Reports: 'Rapports',
+    'Daily Point': 'Point Journalier',
+    Settings: 'Paramètres',
+    'Log Out': 'Déconnexion',
+    'Select language': 'Sélectionner la langue',
+    Notifications: 'Notifications',
+    'My Account': 'Mon Compte',
+    Profile: 'Profil',
+    Billing: 'Facturation',
+  },
+    es: {
+    Dashboard: 'Tablero',
+    Orders: 'Pedidos',
+    Products: 'Productos',
+    Inventory: 'Inventario',
+    Reports: 'Informes',
+    'Daily Point': 'Punto Diario',
+    Settings: 'Configuración',
+    'Log Out': 'Cerrar Sesión',
+    'Select language': 'Seleccionar idioma',
+    Notifications: 'Notificaciones',
+    'My Account': 'Mi Cuenta',
+    Profile: 'Perfil',
+    Billing: 'Facturación',
+  },
+  fon: {
+    Dashboard: 'Agbasa',
+    Orders: 'Gbajẹ',
+    Products: 'Nùkplọnmẹ',
+    Inventory: 'Nùkọ̀n',
+    Reports: 'Wema',
+    'Daily Point': 'Azǎn gblamẹ',
+    Settings: 'Tito',
+    'Log Out': 'Gbajẹ',
+    'Select language': 'Gbe yí',
+    Notifications: 'Nùkọ̀n',
+    'My Account': 'Ayi ce',
+    Profile: 'Ayi ce',
+    Billing: 'Akwẹ',
+  },
+};
+
+const initialNavItems = [
   { href: '/dashboard', icon: Home, label: 'Dashboard' },
   { href: '/dashboard/orders', icon: UtensilsCrossed, label: 'Orders' },
   { href: '/dashboard/products', icon: ShoppingBasket, label: 'Products' },
@@ -55,7 +118,33 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [selectedLanguage, setSelectedLanguage] = useState('Français');
+  const [selectedLanguage, setSelectedLanguage] = useState('en');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    // You could retrieve the saved language from localStorage here
+    const savedLanguage = localStorage.getItem('selectedLanguage') || 'en';
+    setSelectedLanguage(savedLanguage);
+  }, []);
+  
+  const handleLanguageChange = (lang) => {
+      setSelectedLanguage(lang);
+      if (typeof window !== 'undefined') {
+          localStorage.setItem('selectedLanguage', lang);
+      }
+  }
+
+  const t = (key) => {
+    if (!isClient) {
+        // Render English on the server to avoid hydration mismatch
+        return translations.en[key] || key;
+    }
+    const lang = selectedLanguage in translations ? selectedLanguage : 'en';
+    return translations[lang][key] || key;
+  };
+
+  const navItems = initialNavItems.map(item => ({...item, label: t(item.label)}));
 
   return (
     <SidebarProvider>
@@ -87,18 +176,18 @@ export default function DashboardLayout({
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive={pathname === '/dashboard/settings'} tooltip="Settings">
+              <SidebarMenuButton asChild isActive={pathname === '/dashboard/settings'} tooltip={t('Settings')}>
                 <Link href="/dashboard/settings">
                   <Settings />
-                  <span>Settings</span>
+                  <span>{t('Settings')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip="Log Out">
+              <SidebarMenuButton asChild tooltip={t('Log Out')}>
                 <Link href="/login">
                   <LogOut />
-                  <span>Log Out</span>
+                  <span>{t('Log Out')}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -113,18 +202,18 @@ export default function DashboardLayout({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <Globe className="h-5 w-5" />
-                  <span className="sr-only">Changer de langue</span>
+                  <span className="sr-only">{t('Select language')}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Sélectionner la langue</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('Select language')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => setSelectedLanguage('English')}>English</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setSelectedLanguage('Français')}>Français</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setSelectedLanguage('Español')}>Español</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setSelectedLanguage('Fongbé')}>Fongbé</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setSelectedLanguage('Yoruba')}>Yoruba</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setSelectedLanguage('Wolof')}>Wolof</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => handleLanguageChange('en')}>English</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => handleLanguageChange('fr')}>Français</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => handleLanguageChange('es')}>Español</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => handleLanguageChange('fon')}>Fongbé</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSelectedLanguage('yo')}>Yoruba</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSelectedLanguage('wo')}>Wolof</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <DropdownMenu>
@@ -138,7 +227,7 @@ export default function DashboardLayout({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('Notifications')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <span className="font-semibold">Low Stock: </span>&nbsp;Tomatoes are running low.
@@ -159,16 +248,16 @@ export default function DashboardLayout({
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('My Account')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Billing</DropdownMenuItem>
+                <DropdownMenuItem>{t('Profile')}</DropdownMenuItem>
+                <DropdownMenuItem>{t('Billing')}</DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/settings">Settings</Link>
+                  <Link href="/dashboard/settings">{t('Settings')}</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/login">Log out</Link>
+                  <Link href="/login">{t('Log Out')}</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
