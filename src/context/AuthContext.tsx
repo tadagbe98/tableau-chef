@@ -2,12 +2,14 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, signInWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { onAuthStateChanged, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter, usePathname } from 'next/navigation';
 import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
+import { initializeApp } from 'firebase/app';
+
 
 // Définir un type pour notre utilisateur qui inclut le rôle
 export interface AppUser extends User {
@@ -116,12 +118,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           throw new Error("L'administrateur doit être connecté pour créer un utilisateur.");
       }
       
-      // THIS IS A WORKAROUND for client-side admin actions.
-      // The proper way is to use Firebase Functions (backend).
-      // This will sign out the admin.
-      
+      // Workaround: Use a secondary app to create user without signing out the admin
+      const secondaryApp = initializeApp({
+          apiKey: auth.app.options.apiKey,
+          authDomain: auth.app.options.authDomain,
+      }, `secondary-app-${new Date().getTime()}`);
+      const secondaryAuth = getAuth(secondaryApp);
+
       try {
-        const newUserCredential = await createUserWithEmailAndPassword(auth, email, pass);
+        const newUserCredential = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
         const newUser = newUserCredential.user;
 
         await updateProfile(newUser, { displayName: fullName });
@@ -134,23 +139,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             role: role,
         });
 
-        // Sign out the newly created user immediately and prompt admin to log back in
-        await signOut(auth);
-
-        toast({
-            title: "Utilisateur créé avec succès !",
-            description: `Le compte pour ${fullName} a été créé. Veuillez vous reconnecter en tant qu'administrateur.`,
-            duration: 5000,
-        });
-
-        router.push('/login');
-
+        // The secondary auth instance can now be signed out, admin stays logged in.
+        await signOut(secondaryAuth);
+        
       } catch (error: any) {
-         // If creation fails, we should try to sign the admin back in, but it's complex.
-         // For now, we'll just log the error and ask them to re-login.
+         await signOut(secondaryAuth); // Ensure secondary auth is logged out on failure
          console.error("Error creating user:", error);
-         await signOut(auth); // Ensure we are logged out
-         router.push('/login');
          throw error; // Re-throw the error to be caught by the calling page
       }
   }

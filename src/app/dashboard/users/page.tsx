@@ -55,13 +55,15 @@ export default function UsersPage() {
       setUsers(finalUsers);
     } catch (error) {
       console.error("Failed to fetch users:", error);
-      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les utilisateurs.' });
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les utilisateurs. Vérifiez les règles de sécurité de Firestore.' });
     }
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (adminUser) { // Only fetch if admin is logged in
+        fetchUsers();
+    }
+  }, [adminUser]);
 
   const handleDialogOpen = (user: UserData | null = null) => {
     if (user) {
@@ -82,9 +84,6 @@ export default function UsersPage() {
           return;
       }
       try {
-          // This only deletes the Firestore record. Deleting from Firebase Auth
-          // requires admin SDK on a backend (Firebase Functions).
-          // This is a known limitation of this client-side approach.
           const userDocRef = doc(db, 'users', userToDelete.uid);
           await deleteDoc(userDocRef);
           toast({ title: 'Succès', description: "Utilisateur supprimé de la base de données. L'authentification reste active." });
@@ -133,10 +132,13 @@ export default function UsersPage() {
             toast({ variant: 'destructive', title: "Erreur", description: "Le mot de passe doit faire au moins 6 caractères." });
             return;
         }
-        await createUser(formData.email, formData.password, formData.name, formData.role);
-        // The createUser function in AuthContext will now handle redirection and messaging.
-        // It will sign out the admin, so no need to fetchUsers() or close dialog here.
-        // setIsDialogOpen(false); 
+        await createUser(formData.email, formData.password, formData.name, formData.role as string);
+        toast({
+            title: "Utilisateur créé avec succès !",
+            description: `Le compte pour ${formData.name} a été créé. Rafraîchissez la page pour voir la mise à jour.`,
+            duration: 5000,
+        });
+        setIsDialogOpen(false);
     } catch (error: any) {
         let description = "Une erreur est survenue lors de la création.";
         if (error.code === 'auth/email-already-in-use') {
