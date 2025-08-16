@@ -13,7 +13,10 @@ export default function Home() {
         </Link>
         <nav className="flex items-center gap-4">
           <Button variant="ghost" asChild>
-            <Link href="/login">Se Connecter</Link>
+            <Link href="/login">Connexion Caissier</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/admin">Connexion Admin</Link>
           </Button>
           <Button asChild>
             <Link href="/signup">S'inscrire</Link>

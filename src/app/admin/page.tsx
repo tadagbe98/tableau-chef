@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/icons/logo"
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-secondary">
       <Card className="mx-auto max-w-sm w-full">
@@ -21,9 +21,9 @@ export default function LoginPage() {
             <Logo className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold tracking-tight">TableauChef</span>
           </Link>
-          <CardTitle className="text-2xl">Connexion Caissier</CardTitle>
+          <CardTitle className="text-2xl">Connexion Administrateur</CardTitle>
           <CardDescription>
-            Entrez votre email et mot de passe pour commencer la journée.
+            Accès réservé aux administrateurs du système.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -33,19 +33,13 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
+                placeholder="admin@example.com"
                 required
               />
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Mot de passe</Label>
-                <Link
-                  href="#"
-                  className="ml-auto inline-block text-sm underline"
-                >
-                  Mot de passe oublié ?
-                </Link>
               </div>
               <Input id="password" type="password" required />
             </div>
