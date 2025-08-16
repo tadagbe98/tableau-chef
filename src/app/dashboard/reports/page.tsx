@@ -17,6 +17,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
 const monthlySalesData = [
   { month: 'Jan', sales: 4000 },
@@ -36,15 +37,44 @@ const topProductsData = [
 ];
 
 const categorySalesData = [
-  { name: 'Pizzas', value: 400 },
-  { name: 'Burgers', value: 300 },
-  { name: 'Salads', value: 300 },
-  { name: 'Pastas', value: 200 },
-  { name: 'Sides', value: 250 },
-  { name: 'Drinks', value: 150 },
+  { name: 'Pizzas', value: 400, fill: 'var(--color-pizzas)' },
+  { name: 'Burgers', value: 300, fill: 'var(--color-burgers)' },
+  { name: 'Salads', value: 300, fill: 'var(--color-salads)' },
+  { name: 'Pastas', value: 200, fill: 'var(--color-pastas)' },
+  { name: 'Sides', value: 250, fill: 'var(--color-sides)' },
+  { name: 'Drinks', value: 150, fill: 'var(--color-drinks)' },
 ];
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#AF19FF', '#FF4242'];
+const chartConfig = {
+  sales: {
+    label: "Sales",
+    color: "hsl(var(--primary))",
+  },
+  pizzas: {
+    label: "Pizzas",
+    color: "hsl(var(--chart-1))",
+  },
+  burgers: {
+    label: "Burgers",
+    color: "hsl(var(--chart-2))",
+  },
+  salads: {
+    label: "Salads",
+    color: "hsl(var(--chart-3))",
+  },
+  pastas: {
+    label: "Pastas",
+    color: "hsl(var(--chart-4))",
+  },
+  sides: {
+    label: "Sides",
+    color: "hsl(var(--chart-5))",
+  },
+  drinks: {
+    label: "Drinks",
+    color: "hsl(var(--muted))",
+  },
+};
 
 export default function ReportsPage() {
   return (
@@ -56,21 +86,36 @@ export default function ReportsPage() {
           <CardDescription>A look at your revenue over the past few months.</CardDescription>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={monthlySalesData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--background))',
-                  borderColor: 'hsl(var(--border))',
-                }}
+          <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+            <LineChart
+              accessibilityLayer
+              data={monthlySalesData}
+              margin={{
+                left: 12,
+                right: 12,
+              }}
+            >
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                tickFormatter={(value) => value.slice(0, 3)}
               />
-              <Legend />
-              <Line type="monotone" dataKey="sales" stroke="hsl(var(--primary))" activeDot={{ r: 8 }} />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent hideLabel />}
+              />
+              <Line
+                dataKey="sales"
+                type="natural"
+                stroke="var(--color-sales)"
+                strokeWidth={2}
+                dot={false}
+              />
             </LineChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         </CardContent>
       </Card>
       
@@ -81,20 +126,15 @@ export default function ReportsPage() {
             <CardDescription>Your most popular items this month.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={topProductsData} layout="vertical" margin={{ left: 20, right: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false}/>
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" />
-                <Tooltip
-                    contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    borderColor: 'hsl(var(--border))',
-                    }}
-                />
-                <Bar dataKey="sales" fill="hsl(var(--primary))" background={{ fill: 'hsl(var(--secondary))' }} />
-              </BarChart>
-            </ResponsiveContainer>
+            <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+                <BarChart accessibilityLayer data={topProductsData} layout="vertical" margin={{ left: 20, right: 20 }}>
+                    <CartesianGrid horizontal={false}/>
+                    <XAxis type="number" dataKey="sales" hide/>
+                    <YAxis dataKey="name" type="category" tickLine={false} axisLine={false}/>
+                    <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                    <Bar dataKey="sales" fill="var(--color-sales)" radius={4} />
+                </BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
         
@@ -104,30 +144,22 @@ export default function ReportsPage() {
              <CardDescription>Breakdown of sales across different categories.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
+            <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+              <PieChart accessibilityLayer>
+                 <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
                 <Pie
                   data={categorySalesData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={100}
-                  fill="#8884d8"
                   dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  nameKey="name"
+                  innerRadius={60}
+                  strokeWidth={5}
                 >
-                  {categorySalesData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
                 </Pie>
-                 <Tooltip
-                    contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    borderColor: 'hsl(var(--border))',
-                    }}
-                />
               </PieChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>

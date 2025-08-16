@@ -17,6 +17,13 @@ const salesData = [
   { date: 'Sun', sales: 3490 },
 ];
 
+const chartConfig = {
+  sales: {
+    label: "Sales",
+    color: "hsl(var(--primary))",
+  },
+};
+
 const topProductsData = [
   { name: 'Margherita Pizza', sales: 120 },
   { name: 'Cheeseburger', sales: 98 },
@@ -86,24 +93,35 @@ export default function DashboardPage() {
             <CardDescription>This week's sales performance.</CardDescription>
           </CardHeader>
           <CardContent>
-             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={salesData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="date" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `$${value/1000}k`} />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent indicator="dot" />}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="sales"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  dot={{ r: 4, fill: "hsl(var(--primary))" }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+             <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+                <LineChart
+                    accessibilityLayer
+                    data={salesData}
+                    margin={{
+                    left: 12,
+                    right: 12,
+                    }}
+                >
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    />
+                    <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dot" />}
+                    />
+                    <Line
+                    dataKey="sales"
+                    type="monotone"
+                    stroke="var(--color-sales)"
+                    strokeWidth={2}
+                    dot={false}
+                    />
+                </LineChart>
+            </ChartContainer>
           </CardContent>
         </Card>
         <Card className="md:col-span-2">
@@ -112,15 +130,15 @@ export default function DashboardPage() {
             <CardDescription>Your best performers this week.</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={topProductsData} layout="vertical" margin={{ left: 20, right: 20 }}>
-                    <CartesianGrid horizontal={false} strokeDasharray="3 3" />
-                    <XAxis type="number" hide />
+            <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+                <BarChart accessibilityLayer data={topProductsData} layout="vertical" margin={{ left: 20, right: 20 }}>
+                    <CartesianGrid horizontal={false} />
+                    <XAxis type="number" dataKey="sales" hide />
                     <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={120} />
                     <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                    <Bar dataKey="sales" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="sales" fill="var(--color-sales)" radius={[0, 4, 4, 0]} />
                 </BarChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>
