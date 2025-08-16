@@ -20,11 +20,10 @@ import {
   ShoppingBasket,
   Warehouse,
   BarChart,
-  History,
+  BookOpenCheck,
   Settings,
   LogOut,
   Bell,
-  User,
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import { Button } from '@/components/ui/button';
@@ -45,7 +44,7 @@ const navItems = [
   { href: '/dashboard/products', icon: ShoppingBasket, label: 'Produits' },
   { href: '/dashboard/inventory', icon: Warehouse, label: 'Inventaire' },
   { href: '/dashboard/reports', icon: BarChart, label: 'Rapports' },
-  { href: '/dashboard/daily-point', icon: History, label: 'Point Journalier' },
+  { href: '/dashboard/daily-point', icon: BookOpenCheck, label: 'Point Journalier' },
 ];
 
 export default function DashboardLayout({

@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { DollarSign, ShoppingBag, Users, UtensilsCrossed } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, ResponsiveContainer } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, Line, LineChart } from 'recharts';
 
 const salesData = [
   { date: 'Lun', sales: 4000 },
@@ -33,11 +33,11 @@ const topProductsData = [
 ];
 
 const recentOrders = [
-    { id: '#125', customer: 'John Doe', status: 'Livrée', total: '$45.50' },
-    { id: '#124', customer: 'Jane Smith', status: 'En préparation', total: '$22.00' },
-    { id: '#123', customer: 'À emporter', status: 'Livrée', total: '$15.75' },
-    { id: '#122', customer: 'Mike Johnson', status: 'Annulée', total: '$30.10' },
-    { id: '#121', customer: 'Emily White', status: 'Nouvelle', total: '$55.00' },
+    { id: '#125', customer: 'Table 3', status: 'Servie', total: '$45.50' },
+    { id: '#124', customer: 'John Doe', status: 'Prête', total: '$22.00' },
+    { id: '#123', customer: 'À emporter', status: 'En préparation', total: '$15.75' },
+    { id: '#122', customer: 'Jane Smith', status: 'Nouvelle', total: '$30.10' },
+    { id: '#121', customer: 'Table 5', status: 'Servie', total: '$55.00' },
 ]
 
 export default function DashboardPage() {
@@ -145,14 +145,14 @@ export default function DashboardPage() {
       
        <Card>
         <CardHeader>
-          <CardTitle>Commandes Récentes</CardTitle>
+          <CardTitle>Suivi des Commandes en Temps Réel</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>ID Commande</TableHead>
-                <TableHead>Client</TableHead>
+                <TableHead>Client / Table</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead className="text-right">Total</TableHead>
               </TableRow>
@@ -164,10 +164,12 @@ export default function DashboardPage() {
                   <TableCell>{order.customer}</TableCell>
                   <TableCell>
                     <Badge variant={
-                        order.status === 'Livrée' ? 'default' : 
-                        order.status === 'En préparation' ? 'secondary' : 
-                        order.status === 'Nouvelle' ? 'outline' : 'destructive'
-                    } className="capitalize">{order.status}</Badge>
+                        order.status === 'Servie' ? 'default' : 
+                        order.status === 'Prête' ? 'secondary' : 
+                        order.status === 'En préparation' ? 'outline' :
+                        order.status === 'Nouvelle' ? 'default' : 
+                        'destructive'
+                    } className={`capitalize ${order.status === 'Nouvelle' && 'bg-blue-500 text-white'} ${order.status === 'Prête' && 'bg-green-500 text-white'}`}>{order.status}</Badge>
                   </TableCell>
                   <TableCell className="text-right">{order.total}</TableCell>
                 </TableRow>

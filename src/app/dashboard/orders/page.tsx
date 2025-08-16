@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { PlusCircle, MinusCircle, Trash2, CreditCard, Smartphone, DollarSign, X, ShoppingBasket } from "lucide-react";
+import { PlusCircle, MinusCircle, CreditCard, Smartphone, DollarSign, ShoppingBasket, Printer, ChefHat } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import {
@@ -16,6 +16,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useReactToPrint } from 'react-to-print';
+import { Logo } from '@/components/icons/logo';
 
 const products = [
   { id: 1, name: "Pizza Margherita", price: 12.99, image: "https://placehold.co/300x200.png", category: "Pizzas", "data-ai-hint": "pizza food" },
@@ -30,14 +32,30 @@ const products = [
 
 const categories = ["Tout", "Pizzas", "Burgers", "Salades", "Pâtes", "Accompagnements", "Boissons"];
 
+const tables = Array.from({ length: 12 }, (_, i) => ({ id: i + 1, name: `T${i + 1}`, status: 'disponible' }));
+
 export default function OrdersPage() {
   const [orderItems, setOrderItems] = useState([]);
   const [orderType, setOrderType] = useState("Sur place");
   const [activeCategory, setActiveCategory] = useState("Tout");
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
+  const [selectedTable, setSelectedTable] = useState(null);
+  const [orderNumber] = useState(Math.floor(Math.random() * 1000) + 125);
+
 
   const { toast } = useToast();
+  
+  const receiptRef = useRef();
+  const kitchenTicketRef = useRef();
+
+  const handlePrintReceipt = useReactToPrint({
+    content: () => receiptRef.current,
+  });
+
+  const handlePrintKitchenTicket = useReactToPrint({
+    content: () => kitchenTicketRef.current,
+  });
 
   const addToOrder = (product) => {
     setOrderItems(currentItems => {
@@ -64,7 +82,7 @@ export default function OrdersPage() {
   };
 
   const subtotal = orderItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  const tax = subtotal * 0.08;
+  const tax = subtotal * 0.20; // Assuming 20% tax for France
   const total = subtotal + tax;
 
   const handlePlaceOrder = () => {
@@ -75,6 +93,14 @@ export default function OrdersPage() {
         description: "Veuillez ajouter des articles à la commande avant de la valider.",
       });
       return;
+    }
+    if (orderType === 'Sur place' && !selectedTable) {
+        toast({
+            variant: "destructive",
+            title: "Aucune Table Sélectionnée",
+            description: "Veuillez sélectionner une table pour une commande 'Sur place'.",
+        });
+        return;
     }
     setIsPaymentDialogOpen(true);
   };
@@ -87,6 +113,7 @@ export default function OrdersPage() {
 
   const handleNewOrder = () => {
     setOrderItems([]);
+    setSelectedTable(null);
     setIsReceiptDialogOpen(false);
     toast({
       title: "Nouvelle Commande Créée",
@@ -97,12 +124,36 @@ export default function OrdersPage() {
   const filteredProducts = activeCategory === "Tout"
     ? products
     : products.filter(p => p.category === activeCategory);
+    
+  const getOrderTitle = () => {
+    if (orderType === 'Sur place') {
+      return selectedTable ? `Commande: Table ${selectedTable}` : 'Commande: Sélectionnez une table';
+    }
+    return `Commande: ${orderType}`;
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-8rem)]">
+      {/* Product Selection */}
       <div className="lg:col-span-2 flex flex-col h-full">
         <div className="flex-shrink-0">
             <h1 className="text-2xl font-bold mb-4">Point de Vente</h1>
+            {orderType === 'Sur place' && (
+                <div className="mb-4">
+                    <h2 className="text-lg font-semibold mb-2">Plan de Salle</h2>
+                    <div className="grid grid-cols-6 gap-2">
+                        {tables.map(table => (
+                            <Button 
+                                key={table.id}
+                                variant={selectedTable === table.id ? 'default' : 'outline'}
+                                onClick={() => setSelectedTable(table.id)}
+                            >
+                                {table.name}
+                            </Button>
+                        ))}
+                    </div>
+                </div>
+            )}
             <div className="flex items-center space-x-2 overflow-x-auto pb-2">
                 {categories.map(category => (
                     <Button
@@ -124,7 +175,7 @@ export default function OrdersPage() {
                     <Image src={product.image} alt={product.name} width={300} height={200} className="rounded-t-lg object-cover aspect-video" data-ai-hint={product['data-ai-hint']} />
                     <div className="p-3">
                         <h3 className="font-semibold text-sm truncate">{product.name}</h3>
-                        <p className="text-muted-foreground text-sm">${product.price.toFixed(2)}</p>
+                        <p className="text-muted-foreground text-sm">{product.price.toFixed(2)} €</p>
                     </div>
                 </CardContent>
                 </Card>
@@ -132,10 +183,11 @@ export default function OrdersPage() {
             </div>
         </div>
       </div>
+      {/* Current Order */}
       <div className="lg:col-span-1 h-full">
         <Card className="flex flex-col h-full">
           <CardHeader>
-            <CardTitle>Commande Actuelle</CardTitle>
+            <CardTitle>{getOrderTitle()}</CardTitle>
             <div className="flex items-center gap-2 pt-2">
               {['Sur place', 'À emporter', 'Livraison'].map(type => (
                 <Button key={type} size="sm" variant={orderType === type ? "default" : "outline"} onClick={() => setOrderType(type)}>
@@ -156,7 +208,7 @@ export default function OrdersPage() {
                   <div key={item.id} className="flex items-center">
                     <div className="flex-grow">
                       <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">${item.price.toFixed(2)}</p>
+                      <p className="text-sm text-muted-foreground">{item.price.toFixed(2)} €</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
@@ -167,7 +219,7 @@ export default function OrdersPage() {
                         <PlusCircle className="h-4 w-4" />
                       </Button>
                     </div>
-                    <p className="w-16 text-right font-medium">${(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="w-16 text-right font-medium">{(item.price * item.quantity).toFixed(2)} €</p>
                   </div>
                 ))}
               </div>
@@ -178,16 +230,16 @@ export default function OrdersPage() {
               <div className="w-full space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Sous-total</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{subtotal.toFixed(2)} €</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Taxe (8%)</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>TVA (20%)</span>
+                  <span>{tax.toFixed(2)} €</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{total.toFixed(2)} €</span>
                 </div>
               </div>
               <Button className="w-full mt-4" size="lg" onClick={handlePlaceOrder}>
@@ -198,11 +250,12 @@ export default function OrdersPage() {
         </Card>
       </div>
 
+      {/* Payment Dialog */}
       <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Paiement de la Commande</DialogTitle>
-            <DialogDescription>Montant total : <span className="font-bold text-foreground">${total.toFixed(2)}</span></DialogDescription>
+            <DialogDescription>Montant total : <span className="font-bold text-foreground">{total.toFixed(2)} €</span></DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-3 gap-4 py-4">
             <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handlePayment('Espèces')}>
@@ -218,42 +271,83 @@ export default function OrdersPage() {
         </DialogContent>
       </Dialog>
       
+      {/* Receipt Dialog */}
       <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-center">Reçu</DialogTitle>
-             <DialogDescription className="text-center">Commande #125</DialogDescription>
+            <DialogTitle className="text-center">Paiement Réussi</DialogTitle>
           </DialogHeader>
-          <div className="p-4 my-4 border rounded-lg bg-secondary/30">
-             <div className="space-y-2">
-                {orderItems.map(item => (
-                  <div key={item.id} className="flex justify-between text-sm">
-                    <span>{item.quantity} x {item.name}</span>
-                    <span>${(item.price * item.quantity).toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-              <Separator className="my-3" />
-               <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span>Sous-total</span>
-                  <span>${subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Taxe</span>
-                  <span>${tax.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between font-bold">
-                  <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
-                </div>
-              </div>
+          <div className="my-4 text-center">
+            <p className="text-muted-foreground">Que souhaitez-vous faire maintenant ?</p>
           </div>
-           <DialogFooter>
-            <Button className="w-full" onClick={handleNewOrder}>Commencer une Nouvelle Commande</Button>
+           <DialogFooter className="flex-col gap-2">
+            <Button className="w-full" onClick={handlePrintReceipt}><Printer className="mr-2 h-4 w-4"/> Imprimer le Reçu Client</Button>
+            <Button className="w-full" variant="secondary" onClick={handlePrintKitchenTicket}><ChefHat className="mr-2 h-4 w-4"/> Imprimer le Ticket de Cuisine</Button>
+            <Button className="w-full" variant="outline" onClick={handleNewOrder}>Commencer une Nouvelle Commande</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Printable Components */}
+      <div className="hidden">
+        <div ref={receiptRef} className="p-8 font-mono">
+            <div className="text-center mb-6">
+                <Logo className="h-12 w-12 mx-auto mb-2"/>
+                <h2 className="text-2xl font-bold">TableauChef</h2>
+                <p>123 Rue du Restaurant, 75001 Paris</p>
+                <p>01 23 45 67 89</p>
+                <p>{new Date().toLocaleString('fr-FR')}</p>
+            </div>
+            <div className="text-center mb-4">
+              <p className="font-bold">Commande #{orderNumber}</p>
+              {orderType === 'Sur place' && selectedTable && <p>Table: {selectedTable}</p>}
+            </div>
+            <div className="space-y-2 text-sm">
+                {orderItems.map(item => (
+                  <div key={item.id} className="flex justify-between">
+                    <span>{item.quantity} x {item.name}</span>
+                    <span>{(item.price * item.quantity).toFixed(2)} €</span>
+                  </div>
+                ))}
+            </div>
+            <hr className="my-4 border-dashed" />
+            <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span>Sous-total</span>
+                  <span>{subtotal.toFixed(2)} €</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>TVA (20%)</span>
+                  <span>{tax.toFixed(2)} €</span>
+                </div>
+                <div className="flex justify-between font-bold text-base">
+                  <span>Total</span>
+                  <span>{total.toFixed(2)} €</span>
+                </div>
+            </div>
+            <div className="text-center mt-6">
+                <p>Merci de votre visite !</p>
+            </div>
+        </div>
+        <div ref={kitchenTicketRef} className="p-4 font-mono">
+             <div className="text-center mb-4">
+                <h2 className="text-xl font-bold">NOUVELLE COMMANDE</h2>
+                <p className="text-lg">{new Date().toLocaleTimeString('fr-FR')}</p>
+            </div>
+             <div className="text-left">
+                <p className="text-lg font-semibold">Commande #{orderNumber}</p>
+                <p className="text-lg font-semibold">Type: {orderType} {orderType === 'Sur place' && selectedTable ? `- T${selectedTable}`: ''}</p>
+            </div>
+            <hr className="my-3 border-dashed border-black" />
+            <div className="space-y-2">
+                {orderItems.map(item => (
+                  <div key={item.id} className="text-lg">
+                    <span className="font-bold text-xl">{item.quantity}x</span> {item.name}
+                  </div>
+                ))}
+            </div>
+        </div>
+      </div>
 
     </div>
   );
