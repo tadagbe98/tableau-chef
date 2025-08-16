@@ -5,9 +5,11 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { DollarSign, CreditCard, Smartphone, AlertCircle, TrendingUp, TrendingDown, CheckCircle, UserCircle } from 'lucide-react';
+import { DollarSign, CreditCard, Smartphone, AlertCircle, TrendingUp, TrendingDown, CheckCircle, UserCircle, Lock } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 const dailySummary = {
     totalSales: 2450.75,
@@ -20,8 +22,11 @@ const dailySummary = {
 };
 
 const currentUser = {
-    name: "Jean Dupont"
+    name: "Jean Dupont",
+    role: "Admin"
 };
+
+const isAuthorized = currentUser.role === 'Admin' || currentUser.role === 'Caissier';
 
 export default function DailyPointPage() {
     const [cashInDrawer, setCashInDrawer] = useState('');
@@ -34,6 +39,14 @@ export default function DailyPointPage() {
     const { toast } = useToast();
 
     const handleOpenRegister = () => {
+        if (!isAuthorized) {
+            toast({
+                variant: 'destructive',
+                title: 'Accès Refusé',
+                description: "Vous n'avez pas la permission d'ouvrir la caisse.",
+            });
+            return;
+        }
         if (!openingCash) {
             toast({
                 variant: 'destructive',
@@ -67,6 +80,14 @@ export default function DailyPointPage() {
     };
 
     const handleClosePoint = () => {
+         if (!isAuthorized) {
+            toast({
+                variant: 'destructive',
+                title: 'Accès Refusé',
+                description: "Vous n'avez pas la permission de fermer la caisse.",
+            });
+            return;
+        }
         calculateVariance();
         if(cashInDrawer) {
             setIsRegisterOpen(false);
@@ -83,6 +104,7 @@ export default function DailyPointPage() {
     }
 
   return (
+    <TooltipProvider>
     <div className="max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Gestion de Caisse et Point Journalier</h1>
       {!isRegisterOpen ? (
@@ -96,7 +118,7 @@ export default function DailyPointPage() {
                     <Label>Caissier</Label>
                     <div className="flex items-center gap-2 mt-1">
                         <UserCircle className="text-muted-foreground"/>
-                        <p className="font-medium">{currentUser.name}</p>
+                        <p className="font-medium">{currentUser.name} <Badge variant="secondary">{currentUser.role}</Badge></p>
                     </div>
                 </div>
                 <div>
@@ -107,11 +129,26 @@ export default function DailyPointPage() {
                         placeholder="Entrer le montant"
                         value={openingCash}
                         onChange={(e) => setOpeningCash(e.target.value)}
+                        disabled={!isAuthorized}
                     />
                 </div>
             </CardContent>
             <CardFooter>
-                <Button onClick={handleOpenRegister} className="w-full">Ouvrir la Caisse</Button>
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div className="w-full">
+                            <Button onClick={handleOpenRegister} className="w-full" disabled={!isAuthorized}>
+                                {!isAuthorized && <Lock className="mr-2 h-4 w-4" />}
+                                Ouvrir la Caisse
+                            </Button>
+                        </div>
+                    </TooltipTrigger>
+                    {!isAuthorized && (
+                        <TooltipContent>
+                            <p>Seuls les Admins et Caissiers peuvent ouvrir la caisse.</p>
+                        </TooltipContent>
+                    )}
+                </Tooltip>
             </CardFooter>
         </Card>
       ) : (
@@ -200,11 +237,26 @@ export default function DailyPointPage() {
                     placeholder="Entrer le montant" 
                     value={cashInDrawer}
                     onChange={(e) => setCashInDrawer(e.target.value)}
+                    disabled={!isAuthorized}
                 />
                 </div>
             </CardContent>
             <CardFooter>
-                <Button onClick={calculateVariance} className="w-full">Calculer l'Écart</Button>
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                       <div className="w-full">
+                           <Button onClick={calculateVariance} className="w-full" disabled={!isAuthorized}>
+                            {!isAuthorized && <Lock className="mr-2 h-4 w-4" />}
+                            Calculer l'Écart
+                           </Button>
+                        </div>
+                    </TooltipTrigger>
+                    {!isAuthorized && (
+                        <TooltipContent>
+                            <p>Seuls les Admins et Caissiers peuvent effectuer cette action.</p>
+                        </TooltipContent>
+                    )}
+                </Tooltip>
             </CardFooter>
             </Card>
 
@@ -240,10 +292,25 @@ export default function DailyPointPage() {
             </Card>
 
             <div className="md:col-span-2">
-                <Button size="lg" className="w-full" onClick={handleClosePoint}>Fermer le Point de Vente & Créer le Journal</Button>
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div className="w-full">
+                            <Button size="lg" className="w-full" onClick={handleClosePoint} disabled={!isAuthorized}>
+                                {!isAuthorized && <Lock className="mr-2 h-4 w-4" />}
+                                Fermer le Point de Vente & Créer le Journal
+                            </Button>
+                         </div>
+                    </TooltipTrigger>
+                    {!isAuthorized && (
+                        <TooltipContent>
+                            <p>Seuls les Admins et Caissiers peuvent fermer la caisse.</p>
+                        </TooltipContent>
+                    )}
+                </Tooltip>
             </div>
         </div>
       )}
     </div>
+    </TooltipProvider>
   );
 }
