@@ -1,5 +1,5 @@
+'use client';
 import Link from "next/link"
-
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -11,8 +11,37 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/icons/logo"
+import { useState } from "react";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 export default function AdminLoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur de Connexion",
+        description: "Email ou mot de passe incorrect. Assurez-vous d'avoir les droits administrateur.",
+      });
+      console.error("Admin Login Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-secondary">
       <Card className="mx-auto max-w-sm w-full">
@@ -27,7 +56,7 @@ export default function AdminLoginPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4">
+          <form onSubmit={handleLogin} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -35,18 +64,26 @@ export default function AdminLoginPage() {
                 type="email"
                 placeholder="admin@example.com"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
                 <Label htmlFor="password">Mot de passe</Label>
               </div>
-              <Input id="password" type="password" required />
+              <Input 
+                id="password" 
+                type="password" 
+                required 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
-            <Button type="submit" className="w-full" asChild>
-              <Link href="/dashboard">Se connecter</Link>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Connexion en cours...' : 'Se connecter'}
             </Button>
-          </div>
+          </form>
         </CardContent>
       </Card>
     </div>

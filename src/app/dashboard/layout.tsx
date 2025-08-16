@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -37,14 +37,10 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useState, useEffect } from 'react';
-
-// Simulation de l'utilisateur connecté
-// Pour tester, changez le rôle en 'Caissier', 'Admin' ou 'Gestionnaire de Stock'
-const currentUser = {
-  name: "Jean Dupont",
-  role: "Admin" // Changez ici pour 'Caissier' ou 'Gestionnaire de Stock' pour tester
-};
+import { useAuth } from '@/context/AuthContext';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
 
 
 const allNavItems = [
@@ -63,16 +59,30 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const [isMounted, setIsMounted] = useState(false);
+  const { user } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  const navItems = allNavItems.filter(item => item.roles.includes(currentUser.role));
-
-  if (!isMounted) {
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast({ title: 'Déconnexion réussie.'});
+      router.push('/login');
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Erreur lors de la déconnexion.'});
+    }
+  };
+  
+  // Si les données de l'utilisateur ne sont pas encore chargées, n'affichez rien ou un loader
+  if (!user) {
     return null;
+  }
+  
+  const navItems = allNavItems.filter(item => user.role && item.roles.includes(user.role));
+
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
   }
 
   return (
@@ -113,11 +123,9 @@ export default function DashboardLayout({
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild tooltip={'Déconnexion'}>
-                <Link href="/login">
+              <SidebarMenuButton onClick={handleLogout} tooltip={'Déconnexion'}>
                   <LogOut />
                   <span>{'Déconnexion'}</span>
-                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -154,12 +162,12 @@ export default function DashboardLayout({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="h-9 w-9 cursor-pointer">
-                  <AvatarImage src="https://placehold.co/100x100.png" alt="@utilisateur" data-ai-hint="user avatar" />
-                  <AvatarFallback>JD</AvatarFallback>
+                  <AvatarImage src={user.photoURL || "https://placehold.co/100x100.png"} alt="@utilisateur" data-ai-hint="user avatar" />
+                  <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>{currentUser.name}</DropdownMenuLabel>
+                <DropdownMenuLabel>{user.displayName || user.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Profil</DropdownMenuItem>
                 <DropdownMenuItem>Facturation</DropdownMenuItem>
@@ -167,9 +175,7 @@ export default function DashboardLayout({
                   <Link href="/dashboard/settings">Paramètres</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/login">Déconnexion</Link>
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>Déconnexion</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
