@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { DollarSign, ShoppingBag, Users, UtensilsCrossed } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, BarChart, CartesianGrid, XAxis, Line, LineChart } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart } from 'recharts';
 
 const salesData = [
   { date: 'Lun', sales: 4000 },
@@ -33,11 +33,11 @@ const topProductsData = [
 ];
 
 const recentOrders = [
-    { id: '#125', customer: 'Table 3', status: 'Servie', total: '$45.50' },
-    { id: '#124', customer: 'John Doe', status: 'Prête', total: '$22.00' },
-    { id: '#123', customer: 'À emporter', status: 'En préparation', total: '$15.75' },
-    { id: '#122', customer: 'Jane Smith', status: 'Nouvelle', total: '$30.10' },
-    { id: '#121', customer: 'Table 5', status: 'Servie', total: '$55.00' },
+    { id: '#125', customer: 'Table 3', status: 'Servie', total: '45.50 €' },
+    { id: '#124', customer: 'John Doe', status: 'Prête', total: '22.00 €' },
+    { id: '#123', customer: 'À emporter', status: 'En préparation', total: '15.75 €' },
+    { id: '#122', customer: 'Jane Smith', status: 'Nouvelle', total: '30.10 €' },
+    { id: '#121', customer: 'Table 5', status: 'Servie', total: '55.00 €' },
 ]
 
 export default function DashboardPage() {
@@ -50,7 +50,7 @@ export default function DashboardPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$45,231.89</div>
+            <div className="text-2xl font-bold">45,231.89 €</div>
             <p className="text-xs text-muted-foreground">+20.1% par rapport au mois dernier</p>
           </CardContent>
         </Card>
@@ -80,7 +80,7 @@ export default function DashboardPage() {
             <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$28.50</div>
+            <div className="text-2xl font-bold">28.50 €</div>
             <p className="text-xs text-muted-foreground">+5.2% par rapport au mois dernier</p>
           </CardContent>
         </Card>
@@ -169,7 +169,7 @@ export default function DashboardPage() {
                         order.status === 'En préparation' ? 'outline' :
                         order.status === 'Nouvelle' ? 'default' : 
                         'destructive'
-                    } className={`capitalize ${order.status === 'Nouvelle' && 'bg-blue-500 text-white'} ${order.status === 'Prête' && 'bg-green-500 text-white'}`}>{order.status}</Badge>
+                    } className={`capitalize ${order.status === 'Nouvelle' && 'bg-blue-500 text-white'} ${order.status === 'Prête' && 'bg-green-500 text-white'} ${order.status === 'Servie' && 'bg-primary'} ${order.status === 'En préparation' && 'bg-yellow-500 text-black'}`}>{order.status}</Badge>
                   </TableCell>
                   <TableCell className="text-right">{order.total}</TableCell>
                 </TableRow>
