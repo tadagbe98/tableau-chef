@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { collection, addDoc, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 
@@ -45,6 +45,7 @@ export default function ProductsPage() {
         price: '',
         stock: '',
         recipeNotes: '',
+        image: '',
     });
     const { toast } = useToast();
     const productsCollectionRef = collection(db, 'products');
@@ -55,7 +56,6 @@ export default function ProductsPage() {
             setProducts(fetchedProducts);
         });
 
-        // Cleanup subscription on unmount
         return () => unsubscribe();
     }, []);
     
@@ -66,6 +66,21 @@ export default function ProductsPage() {
 
     const handleSelectChange = (value: string) => {
         setNewProduct(prev => ({ ...prev, category: value }));
+    }
+    
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setNewProduct(prev => ({ ...prev, image: reader.result as string }));
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+
+    const resetForm = () => {
+        setNewProduct({ name: '', category: '', price: '', stock: '', recipeNotes: '', image: '' });
     }
     
     const handleSubmit = async (e: React.FormEvent) => {
@@ -82,11 +97,11 @@ export default function ProductsPage() {
                 price: parseFloat(newProduct.price),
                 stock: parseInt(newProduct.stock, 10),
                 recipeNotes: newProduct.recipeNotes || '',
-                image: `https://placehold.co/40x40.png?text=${newProduct.name.charAt(0)}`
+                image: newProduct.image || `https://placehold.co/40x40.png?text=${newProduct.name.charAt(0)}`
             });
             toast({ title: "Succès", description: "Le produit a été ajouté." });
             setIsDialogOpen(false);
-            setNewProduct({ name: '', category: '', price: '', stock: '', recipeNotes: '' }); // Reset form
+            resetForm();
         } catch (error) {
             console.error("Error adding document: ", error);
             toast({ variant: "destructive", title: "Erreur", description: "Impossible d'ajouter le produit." });
@@ -140,8 +155,15 @@ export default function ProductsPage() {
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="image" className="text-right">Image</Label>
-                                 <Input id="image" type="file" className="col-span-3" disabled />
+                                 <Input id="image" type="file" onChange={handleImageChange} className="col-span-3" accept="image/*" />
                             </div>
+                            {newProduct.image && (
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <div className="col-start-2 col-span-3">
+                                        <Image src={newProduct.image} alt="Aperçu" width={80} height={80} className="rounded-md object-cover" />
+                                    </div>
+                                </div>
+                            )}
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="recipeNotes" className="text-right">Notes de Recette</Label>
                                 <Textarea id="recipeNotes" value={newProduct.recipeNotes} onChange={handleInputChange} placeholder="Détails de la recette, ingrédients, etc." className="col-span-3" />
@@ -187,7 +209,7 @@ export default function ProductsPage() {
                     <TableRow key={product.id}>
                     <TableCell className="hidden sm:table-cell">
                         <Image
-                        alt="Image du produit"
+                        alt={product.name || "Image du produit"}
                         className="aspect-square rounded-md object-cover"
                         height="40"
                         src={product.image || "https://placehold.co/40x40.png"}
