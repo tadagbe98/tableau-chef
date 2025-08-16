@@ -7,6 +7,7 @@ import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter, usePathname } from 'next/navigation';
 import { Logo } from '@/components/icons/logo';
+import { useToast } from '@/hooks/use-toast';
 
 // Définir un type pour notre utilisateur qui inclut le rôle
 interface AppUser extends User {
@@ -38,6 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const { toast } = useToast();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -54,6 +56,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               restaurantName: userData.restaurantName,
             });
         } else {
+             // This might happen briefly during signup before the doc is created.
              setUser(firebaseUser);
         }
       } else {
@@ -127,9 +130,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // Sign out the newly created user immediately
       await signOut(auth);
 
-      // Redirect admin to login. They have been logged out by the process.
+      // Inform the admin and redirect to login. They have been logged out.
       router.push('/login');
-      throw new Error("Utilisateur créé avec succès. Veuillez vous reconnecter.");
+      // We throw an error to stop the execution flow in the component
+      // and display a toast message there.
+      toast({
+        title: "Utilisateur créé avec succès",
+        description: "Veuillez vous reconnecter pour continuer."
+      });
+      throw new Error("Veuillez vous reconnecter.");
   }
 
 

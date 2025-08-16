@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import { collection, doc, getDocs, updateDoc, deleteDoc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
   AlertDialog,
@@ -79,9 +79,11 @@ export default function UsersPage() {
           return;
       }
       try {
+          // Note: Deleting from Firestore doesn't delete from Firebase Auth.
+          // This has to be done manually in the Firebase console for now.
           const userDocRef = doc(db, 'users', userToDelete.uid);
           await deleteDoc(userDocRef);
-          toast({ title: 'Succès', description: "Utilisateur supprimé de Firestore. N'oubliez pas de le supprimer de la console d'authentification Firebase." });
+          toast({ title: 'Succès', description: "Utilisateur supprimé de la base de données. Pensez à le supprimer de la console d'authentification." });
           fetchUsers();
       } catch (error) {
           toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de supprimer l'utilisateur."});
@@ -128,7 +130,7 @@ export default function UsersPage() {
             return;
         }
         await createUser(formData.email, formData.password, formData.name, formData.role);
-        toast({ title: 'Utilisateur créé', description: "L'administrateur a été déconnecté et doit se reconnecter." });
+        // The createUser function in AuthContext will now handle redirection and messaging.
         fetchUsers();
         setIsDialogOpen(false);
     } catch (error: any) {
@@ -136,6 +138,7 @@ export default function UsersPage() {
         if (error.code === 'auth/email-already-in-use') {
             description = "Cet email est déjà utilisé."
         } else if (error.message.includes("Veuillez vous reconnecter")) {
+            // This is our custom error from AuthContext
             description = error.message;
         }
         
