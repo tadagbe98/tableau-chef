@@ -25,7 +25,6 @@ import {
   LogOut,
   Bell,
   Users,
-  Globe,
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import { Button } from '@/components/ui/button';
@@ -40,15 +39,22 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState, useEffect } from 'react';
 
+// Simulation de l'utilisateur connecté
+// Pour tester, changez le rôle en 'Caissier' ou 'Admin'
+const currentUser = {
+  name: "Marie Curie",
+  role: "Caissier" // ou "Admin"
+};
 
-const navItems = [
-  { href: '/dashboard', icon: Home, label: 'Tableau de bord' },
-  { href: '/dashboard/orders', icon: UtensilsCrossed, label: 'Commandes' },
-  { href: '/dashboard/products', icon: ShoppingBasket, label: 'Produits' },
-  { href: '/dashboard/inventory', icon: Warehouse, label: 'Inventaire' },
-  { href: '/dashboard/reports', icon: BarChart, label: 'Rapports' },
-  { href: '/dashboard/daily-point', icon: BookOpenCheck, label: 'Point Journalier' },
-  { href: '/dashboard/users', icon: Users, label: 'Utilisateurs' },
+
+const allNavItems = [
+  { href: '/dashboard', icon: Home, label: 'Tableau de bord', roles: ['Admin', 'Caissier'] },
+  { href: '/dashboard/orders', icon: UtensilsCrossed, label: 'Commandes', roles: ['Admin', 'Caissier'] },
+  { href: '/dashboard/products', icon: ShoppingBasket, label: 'Produits', roles: ['Admin', 'Caissier'] },
+  { href: '/dashboard/inventory', icon: Warehouse, label: 'Inventaire', roles: ['Admin', 'Caissier'] },
+  { href: '/dashboard/reports', icon: BarChart, label: 'Rapports', roles: ['Admin', 'Caissier'] },
+  { href: '/dashboard/daily-point', icon: BookOpenCheck, label: 'Point Journalier', roles: ['Admin', 'Caissier'] },
+  { href: '/dashboard/users', icon: Users, label: 'Utilisateurs', roles: ['Admin'] }, // Uniquement pour les Admins
 ];
 
 export default function DashboardLayout({
@@ -62,6 +68,8 @@ export default function DashboardLayout({
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const navItems = allNavItems.filter(item => item.roles.includes(currentUser.role));
 
   if (!isMounted) {
     return null;
@@ -151,7 +159,7 @@ export default function DashboardLayout({
                 </Avatar>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
+                <DropdownMenuLabel>{currentUser.name}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Profil</DropdownMenuItem>
                 <DropdownMenuItem>Facturation</DropdownMenuItem>
