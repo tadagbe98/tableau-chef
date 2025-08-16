@@ -40,21 +40,21 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState, useEffect } from 'react';
 
 // Simulation de l'utilisateur connecté
-// Pour tester, changez le rôle en 'Caissier' ou 'Admin'
+// Pour tester, changez le rôle en 'Caissier', 'Admin' ou 'Gestionnaire de Stock'
 const currentUser = {
   name: "Jean Dupont",
-  role: "Admin" // Changez ici pour 'Caissier' pour tester
+  role: "Admin" // Changez ici pour 'Caissier' ou 'Gestionnaire de Stock' pour tester
 };
 
 
 const allNavItems = [
-  { href: '/dashboard', icon: Home, label: 'Tableau de bord', roles: ['Admin', 'Caissier'] },
+  { href: '/dashboard', icon: Home, label: 'Tableau de bord', roles: ['Admin', 'Caissier', 'Gestionnaire de Stock'] },
   { href: '/dashboard/orders', icon: UtensilsCrossed, label: 'Commandes', roles: ['Admin', 'Caissier'] },
-  { href: '/dashboard/products', icon: ShoppingBasket, label: 'Produits', roles: ['Admin', 'Caissier'] },
-  { href: '/dashboard/inventory', icon: Warehouse, label: 'Inventaire', roles: ['Admin', 'Caissier'] },
+  { href: '/dashboard/products', icon: ShoppingBasket, label: 'Produits', roles: ['Admin', 'Caissier', 'Gestionnaire de Stock'] },
+  { href: '/dashboard/inventory', icon: Warehouse, label: 'Inventaire', roles: ['Admin', 'Caissier', 'Gestionnaire de Stock'] },
   { href: '/dashboard/reports', icon: BarChart, label: 'Rapports', roles: ['Admin', 'Caissier'] },
   { href: '/dashboard/daily-point', icon: BookOpenCheck, label: 'Point Journalier', roles: ['Admin', 'Caissier'] },
-  { href: '/dashboard/users', icon: Users, label: 'Utilisateurs', roles: ['Admin'] }, // Uniquement pour les Admins
+  { href: '/dashboard/users', icon: Users, label: 'Utilisateurs', roles: ['Admin'] },
 ];
 
 export default function DashboardLayout({

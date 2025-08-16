@@ -16,6 +16,7 @@ const users = [
   { id: 1, name: "Jean Dupont", email: "jean.dupont@example.com", role: "Admin" },
   { id: 2, name: "Marie Curie", email: "marie.curie@example.com", role: "Caissier" },
   { id: 3, name: "Pierre Martin", email: "pierre.martin@example.com", role: "Caissier" },
+  { id: 4, name: "Samira Kafi", email: "samira.kafi@example.com", role: "Gestionnaire de Stock" },
 ];
 
 export default function UsersPage() {
@@ -58,6 +59,7 @@ export default function UsersPage() {
                   <SelectContent>
                     <SelectItem value="Admin">Admin</SelectItem>
                     <SelectItem value="Caissier">Caissier</SelectItem>
+                    <SelectItem value="Gestionnaire de Stock">Gestionnaire de Stock</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -91,7 +93,7 @@ export default function UsersPage() {
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    <Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>
+                    <Badge variant={user.role === 'Admin' ? 'default' : user.role === 'Gestionnaire de Stock' ? 'outline' : 'secondary'}>
                       {user.role}
                     </Badge>
                   </TableCell>
