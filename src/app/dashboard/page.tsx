@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { DollarSign, ShoppingBag, Users, UtensilsCrossed } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart } from 'recharts';
+import { useAuth } from '@/context/AuthContext';
+import Link from 'next/link';
 
 const salesData = [
   { date: 'Lun', sales: 4000 },
@@ -40,7 +42,7 @@ const recentOrders = [
     { id: '#121', customer: 'Table 5', status: 'Servie', total: '55.00 €' },
 ]
 
-export default function DashboardPage() {
+function AdminDashboard() {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -180,4 +182,29 @@ export default function DashboardPage() {
       </Card>
     </div>
   );
+}
+
+export default function DashboardPage() {
+    const { user } = useAuth();
+    
+    if (user?.role === 'Admin') {
+        return <AdminDashboard />;
+    }
+    
+    return (
+        <div className="flex flex-col gap-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Bienvenue, {user?.displayName || 'Utilisateur'}!</CardTitle>
+                    <CardDescription>
+                        Ceci est votre tableau de bord. Utilisez le menu de gauche pour naviguer vers les sections qui vous concernent.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p>Votre rôle est : <Badge>{user?.role}</Badge></p>
+                    <p className="mt-4 text-muted-foreground">Si vous pensez que vos accès sont incorrects, veuillez contacter un administrateur.</p>
+                </CardContent>
+            </Card>
+        </div>
+    )
 }
