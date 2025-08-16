@@ -9,6 +9,7 @@ import { DollarSign, CreditCard, Smartphone, AlertCircle, TrendingUp, TrendingDo
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/context/AuthContext";
 
 
 const dailySummary = {
@@ -21,22 +22,18 @@ const dailySummary = {
     taxes: 181.54,
 };
 
-const currentUser = {
-    name: "Jean Dupont",
-    role: "Admin"
-};
-
-const isAuthorized = currentUser.role === 'Admin' || currentUser.role === 'Caissier';
-
 export default function DailyPointPage() {
+    const { user } = useAuth();
     const [cashInDrawer, setCashInDrawer] = useState('');
     const [openingCash, setOpeningCash] = useState('');
-    const [variance, setVariance] = useState(null);
+    const [variance, setVariance] = useState<number | null>(null);
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-    const [openedBy, setOpenedBy] = useState(null);
-    const [openTime, setOpenTime] = useState(null);
+    const [openedBy, setOpenedBy] = useState<string | null>(null);
+    const [openTime, setOpenTime] = useState<Date | null>(null);
 
     const { toast } = useToast();
+
+    const isAuthorized = user?.role === 'Admin' || user?.role === 'Caissier';
 
     const handleOpenRegister = () => {
         if (!isAuthorized) {
@@ -56,15 +53,15 @@ export default function DailyPointPage() {
             return;
         }
         setIsRegisterOpen(true);
-        setOpenedBy(currentUser.name);
+        setOpenedBy(user?.displayName || 'Utilisateur inconnu');
         setOpenTime(new Date());
         toast({
             title: "Caisse Ouverte",
-            description: `La caisse a été ouverte par ${currentUser.name} avec un fonds de ${parseFloat(openingCash).toFixed(2)} €.`
+            description: `La caisse a été ouverte par ${user?.displayName} avec un fonds de ${parseFloat(openingCash).toFixed(2)} €.`
         });
     };
 
-    const expectedCash = dailySummary.cashSales + parseFloat(openingCash || 0);
+    const expectedCash = dailySummary.cashSales + parseFloat(openingCash || '0');
 
     const calculateVariance = () => {
         if (!cashInDrawer) {
@@ -98,7 +95,7 @@ export default function DailyPointPage() {
             setOpenTime(null);
             toast({
                 title: "Point de Vente Fermé",
-                description: `Le journal d'aujourd'hui a été créé et la caisse fermée par ${currentUser.name}.`
+                description: `Le journal d'aujourd'hui a été créé et la caisse fermée par ${user?.displayName}.`
             });
         }
     }
@@ -118,7 +115,7 @@ export default function DailyPointPage() {
                     <Label>Caissier</Label>
                     <div className="flex items-center gap-2 mt-1">
                         <UserCircle className="text-muted-foreground"/>
-                        <p className="font-medium">{currentUser.name} <Badge variant="secondary">{currentUser.role}</Badge></p>
+                        <p className="font-medium">{user?.displayName || 'Utilisateur'} <Badge variant="secondary">{user?.role || 'Rôle inconnu'}</Badge></p>
                     </div>
                 </div>
                 <div>
@@ -245,7 +242,7 @@ export default function DailyPointPage() {
                  <Tooltip>
                     <TooltipTrigger asChild>
                        <div className="w-full">
-                           <Button onClick={calculateVariance} className="w-full" disabled={!isAuthorized}>
+                           <Button onClick={calculateVariance} className="w-full" disabled={!isAuthorized || !cashInDrawer}>
                             {!isAuthorized && <Lock className="mr-2 h-4 w-4" />}
                             Calculer l'Écart
                            </Button>
@@ -295,7 +292,7 @@ export default function DailyPointPage() {
                  <Tooltip>
                     <TooltipTrigger asChild>
                         <div className="w-full">
-                            <Button size="lg" className="w-full" onClick={handleClosePoint} disabled={!isAuthorized}>
+                            <Button size="lg" className="w-full" onClick={handleClosePoint} disabled={!isAuthorized || variance === null}>
                                 {!isAuthorized && <Lock className="mr-2 h-4 w-4" />}
                                 Fermer le Point de Vente & Créer le Journal
                             </Button>
