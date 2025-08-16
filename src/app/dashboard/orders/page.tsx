@@ -16,7 +16,6 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { useReactToPrint } from 'react-to-print';
 import { Logo } from '@/components/icons/logo';
 
 const products = [
@@ -46,16 +45,30 @@ export default function OrdersPage() {
 
   const { toast } = useToast();
   
-  const receiptRef = useRef();
-  const kitchenTicketRef = useRef();
+  const receiptRef = useRef<HTMLDivElement>(null);
+  const kitchenTicketRef = useRef<HTMLDivElement>(null);
 
-  const handlePrintReceipt = useReactToPrint({
-    content: () => receiptRef.current,
-  });
+  const handlePrint = (contentRef: React.RefObject<HTMLDivElement>) => {
+    const content = contentRef.current;
+    if (content) {
+      const printWindow = window.open('', '', 'height=600,width=800');
+      if (printWindow) {
+        printWindow.document.write('<html><head><title>Imprimer</title>');
+        printWindow.document.write('<style>body { font-family: monospace; margin: 20px; } .text-center { text-align: center; } .mb-6 { margin-bottom: 1.5rem; } .mb-4 { margin-bottom: 1rem; } .mb-2 { margin-bottom: 0.5rem; } .h-12 { height: 3rem; } .w-12 { width: 3rem; } .mx-auto { margin-left: auto; margin-right: auto; } .text-2xl { font-size: 1.5rem; line-height: 2rem; } .font-bold { font-weight: 700; } .space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; } .text-sm { font-size: 0.875rem; line-height: 1.25rem; } .flex { display: flex; } .justify-between { justify-content: space-between; } .my-4 { margin-top: 1rem; margin-bottom: 1rem; } .border-dashed { border-style: dashed; } .space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; } .text-base { font-size: 1rem; line-height: 1.5rem; } .mt-6 { margin-top: 1.5rem; } .text-xl { font-size: 1.25rem; line-height: 1.75rem; } .text-lg { font-size: 1.125rem; line-height: 1.75rem; } .font-semibold { font-weight: 600; } .my-3 { margin-top: 0.75rem; margin-bottom: 0.75rem; } .border-black { border-color: #000; } hr { border-width: 0; border-top-width: 1px; } </style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(content.innerHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+      }
+    }
+  };
+  
+  const handlePrintReceipt = () => handlePrint(receiptRef);
+  const handlePrintKitchenTicket = () => handlePrint(kitchenTicketRef);
 
-  const handlePrintKitchenTicket = useReactToPrint({
-    content: () => kitchenTicketRef.current,
-  });
 
   const addToOrder = (product) => {
     setOrderItems(currentItems => {
@@ -290,7 +303,7 @@ export default function OrdersPage() {
       
       {/* Printable Components */}
       <div className="hidden">
-        <div ref={receiptRef} className="p-8 font-mono">
+        <div ref={receiptRef}>
             <div className="text-center mb-6">
                 <Logo className="h-12 w-12 mx-auto mb-2"/>
                 <h2 className="text-2xl font-bold">TableauChef</h2>
@@ -329,7 +342,7 @@ export default function OrdersPage() {
                 <p>Merci de votre visite !</p>
             </div>
         </div>
-        <div ref={kitchenTicketRef} className="p-4 font-mono">
+        <div ref={kitchenTicketRef}>
              <div className="text-center mb-4">
                 <h2 className="text-xl font-bold">NOUVELLE COMMANDE</h2>
                 <p className="text-lg">{new Date().toLocaleTimeString('fr-FR')}</p>

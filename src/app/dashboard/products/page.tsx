@@ -130,7 +130,7 @@ export default function ProductsPage() {
                     <Badge variant="outline">{product.category}</Badge>
                   </TableCell>
                   <TableCell>{product.stock} en stock</TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
+                  <TableCell>{product.price.toFixed(2)} €</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
