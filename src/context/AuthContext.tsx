@@ -11,6 +11,7 @@ import { Logo } from '@/components/icons/logo';
 // Définir un type pour notre utilisateur qui inclut le rôle
 interface AppUser extends User {
   role?: string;
+  restaurantName?: string;
 }
 
 interface AuthContextType {
@@ -48,8 +49,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               ...firebaseUser,
               displayName: firebaseUser.displayName || userData.displayName,
               role: userData.role,
+              restaurantName: userData.restaurantName,
             });
         } else {
+             // This might happen briefly during signup before the doc is created
              setUser(firebaseUser);
         }
       } else {
@@ -90,23 +93,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       await updateProfile(user, { displayName: fullName });
       
       const userDocRef = doc(db, "users", user.uid);
-      await setDoc(userDocRef, {
+      const userData = {
         uid: user.uid,
         email: user.email,
         displayName: fullName,
         restaurantName: restaurantName,
-        role: 'Admin',
-      });
+        role: 'Admin', // First user is always Admin
+      };
+      await setDoc(userDocRef, userData);
 
-      const userDoc = await getDoc(userDocRef);
-      if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUser({
-            ...user,
-            displayName: fullName,
-            role: userData.role,
-          });
-      }
+      // Set user state immediately after signup
+      setUser({
+        ...user,
+        displayName: fullName,
+        role: userData.role,
+        restaurantName: userData.restaurantName,
+      });
   }
 
   const logout = () => {
