@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { PlusCircle, MinusCircle, Trash2, CreditCard, Smartphone, DollarSign, X } from "lucide-react";
+import { PlusCircle, MinusCircle, Trash2, CreditCard, Smartphone, DollarSign, X, ShoppingBasket } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import {
