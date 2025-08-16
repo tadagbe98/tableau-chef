@@ -12,11 +12,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/icons/logo"
 import { useState } from "react";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
-import { doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('');
@@ -26,6 +24,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { signup } = useAuth();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,20 +39,8 @@ export default function SignupPage() {
         setLoading(false);
         return;
       }
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Mettre à jour le profil utilisateur Firebase avec le nom complet
-      await updateProfile(user, { displayName: fullName });
-
-      // Créer un document utilisateur dans Firestore avec le rôle 'Admin'
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
-        email: user.email,
-        displayName: fullName,
-        restaurantName: restaurantName,
-        role: 'Admin', // Le premier utilisateur est toujours Admin
-      });
+      
+      await signup(email, password, fullName, restaurantName);
       
       toast({
           title: "Compte créé !",
@@ -66,6 +53,9 @@ export default function SignupPage() {
        let description = "Impossible de créer le compte. Veuillez réessayer.";
        if (error.code === 'auth/email-already-in-use') {
            description = "Cet email est déjà utilisé par un autre compte.";
+       }
+       if (error.code === 'auth/weak-password') {
+           description = "Le mot de passe doit contenir au moins 6 caractères.";
        }
        toast({
         variant: "destructive",

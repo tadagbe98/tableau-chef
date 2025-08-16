@@ -2,9 +2,9 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { onAuthStateChanged, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter, usePathname } from 'next/navigation';
 import { Logo } from '@/components/icons/logo';
 
@@ -16,9 +16,18 @@ interface AppUser extends User {
 interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
+  login: (email: string, pass: string) => Promise<any>;
+  signup: (email: string, pass: string, fullName: string, restaurantName: string) => Promise<any>;
+  logout: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
+const AuthContext = createContext<AuthContextType>({ 
+    user: null, 
+    loading: true,
+    login: async () => {},
+    signup: async () => {},
+    logout: async () => {},
+});
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
@@ -29,22 +38,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Utilisateur connecté, récupérer son rôle depuis Firestore
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
             const userData = userDoc.data();
             setUser({
               ...firebaseUser,
-              displayName: firebaseUser.displayName || userData.displayName, // Assurer que le displayName est présent
+              displayName: firebaseUser.displayName || userData.displayName,
               role: userData.role,
             });
         } else {
-            // Document non trouvé, l'utilisateur n'a pas de rôle défini
              setUser(firebaseUser);
         }
       } else {
-        // Utilisateur déconnecté
         setUser(null);
       }
       setLoading(false);
@@ -60,10 +66,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     if (!user && !isAuthPage) {
       router.push('/login');
+    } else if (user && isAuthPage) {
+      router.push('/dashboard');
     }
   }, [user, loading, router, pathname]);
 
-  if (loading) {
+  const login = (email: string, pass: string) => {
+      return signInWithEmailAndPassword(auth, email, pass);
+  }
+
+  const signup = async (email: string, pass: string, fullName: string, restaurantName: string) => {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+      const user = userCredential.user;
+
+      await updateProfile(user, { displayName: fullName });
+
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email,
+        displayName: fullName,
+        restaurantName: restaurantName,
+        role: 'Admin', // Le premier utilisateur est toujours Admin
+      });
+
+      setUser({ ...user, displayName: fullName, role: 'Admin' });
+  }
+
+  const logout = () => {
+    return signOut(auth);
+  }
+
+  if (loading && !['/', '/login', '/signup'].includes(pathname)) {
     return (
         <div className="flex h-screen items-center justify-center bg-background">
             <div className="flex flex-col items-center gap-4">
@@ -75,7 +108,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

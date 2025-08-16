@@ -38,8 +38,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/AuthContext';
-import { auth } from '@/lib/firebase';
-import { signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -59,13 +57,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await logout();
       toast({ title: 'Déconnexion réussie.'});
       router.push('/login');
     } catch (error) {
@@ -73,7 +71,6 @@ export default function DashboardLayout({
     }
   };
   
-  // Si les données de l'utilisateur ne sont pas encore chargées, n'affichez rien ou un loader
   if (!user) {
     return null;
   }
