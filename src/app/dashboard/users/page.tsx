@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,63 +11,166 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { addUser, getUsers, updateUser, deleteUser, UserData } from "@/services/userService";
+import { useAuth } from "@/context/AuthContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
-
-const users = [
-  { id: 1, name: "Jean Dupont", email: "jean.dupont@example.com", role: "Admin" },
-  { id: 2, name: "Marie Curie", email: "marie.curie@example.com", role: "Caissier" },
-  { id: 3, name: "Pierre Martin", email: "pierre.martin@example.com", role: "Caissier" },
-  { id: 4, name: "Samira Kafi", email: "samira.kafi@example.com", role: "Gestionnaire de Stock" },
-];
 
 export default function UsersPage() {
+  const [users, setUsers] = useState<UserData[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [currentUser, setCurrentUser] = useState<UserData | null>(null);
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: '' });
+  const { toast } = useToast();
+  const { user: adminUser, createUser } = useAuth();
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const fetchedUsers = await getUsers();
+      setUsers(fetchedUsers);
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les utilisateurs.' });
+    }
+  };
+
+  const handleDialogOpen = (user: UserData | null = null) => {
+    if (user) {
+      setIsEditMode(true);
+      setCurrentUser(user);
+      setFormData({ name: user.name, email: user.email, password: '', role: user.role });
+    } else {
+      setIsEditMode(false);
+      setCurrentUser(null);
+      setFormData({ name: '', email: '', password: '', role: '' });
+    }
+    setIsDialogOpen(true);
+  };
+  
+  const handleDeleteUser = async (userId: string) => {
+      if (userId === adminUser?.uid) {
+          toast({ variant: 'destructive', title: 'Action impossible', description: 'Vous ne pouvez pas supprimer votre propre compte.' });
+          return;
+      }
+      try {
+          await deleteUser(userId);
+          toast({ title: 'Succès', description: 'Utilisateur supprimé avec succès.' });
+          fetchUsers();
+      } catch (error) {
+          toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de supprimer l'utilisateur."});
+          console.error(error);
+      }
+  }
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement> | string, field: string) => {
+    if (typeof e === 'string') {
+        setFormData(prev => ({ ...prev, [field]: e }));
+    } else {
+        setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+        if (isEditMode && currentUser) {
+            await updateUser(currentUser.id, {
+                name: formData.name,
+                role: formData.role
+            });
+            toast({ title: 'Succès', description: "Utilisateur mis à jour avec succès." });
+        } else {
+             if (formData.password.length < 6) {
+                toast({ variant: 'destructive', title: "Erreur", description: "Le mot de passe doit faire au moins 6 caractères." });
+                return;
+            }
+            await addUser({
+                email: formData.email,
+                password: formData.password,
+                name: formData.name,
+                role: formData.role
+            });
+            toast({ title: 'Succès', description: "Utilisateur ajouté avec succès." });
+        }
+        fetchUsers();
+        setIsDialogOpen(false);
+    } catch (error: any) {
+        let description = "Une erreur est survenue.";
+        if (error.code === 'auth/email-already-in-use') {
+            description = "Cet email est déjà utilisé."
+        }
+        toast({ variant: 'destructive', title: 'Erreur', description });
+        console.error(error);
+    }
+  };
+
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Gestion des Utilisateurs</h1>
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button onClick={() => handleDialogOpen()}>
               <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un Utilisateur
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Ajouter un Nouvel Utilisateur</DialogTitle>
-              <DialogDescription>
-                Remplissez les détails du nouvel utilisateur.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Nom Complet</Label>
-                <Input id="name" placeholder="John Doe" className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">Email</Label>
-                <Input id="email" type="email" placeholder="john@example.com" className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="password" className="text-right">Mot de passe</Label>
-                <Input id="password" type="password" placeholder="********" className="col-span-3" />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="role" className="text-right">Rôle</Label>
-                <Select>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Sélectionnez un rôle" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Admin">Admin</SelectItem>
-                    <SelectItem value="Caissier">Caissier</SelectItem>
-                    <SelectItem value="Gestionnaire de Stock">Gestionnaire de Stock</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit">Enregistrer l'Utilisateur</Button>
-            </DialogFooter>
+            <form onSubmit={handleSubmit}>
+                <DialogHeader>
+                <DialogTitle>{isEditMode ? "Modifier l'Utilisateur" : "Ajouter un Nouvel Utilisateur"}</DialogTitle>
+                <DialogDescription>
+                    {isEditMode ? "Modifiez les informations de l'utilisateur." : "Remplissez les détails du nouvel utilisateur."}
+                </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="name" className="text-right">Nom Complet</Label>
+                    <Input id="name" value={formData.name} onChange={handleFormChange} placeholder="John Doe" className="col-span-3" required />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="email" className="text-right">Email</Label>
+                    <Input id="email" type="email" value={formData.email} onChange={handleFormChange} placeholder="john@example.com" className="col-span-3" required disabled={isEditMode}/>
+                </div>
+                {!isEditMode && (
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="password" className="text-right">Mot de passe</Label>
+                        <Input id="password" type="password" value={formData.password} onChange={handleFormChange} placeholder="********" className="col-span-3" required />
+                    </div>
+                )}
+                <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="role" className="text-right">Rôle</Label>
+                    <Select onValueChange={(value) => handleFormChange(value, 'role')} value={formData.role}>
+                    <SelectTrigger className="col-span-3">
+                        <SelectValue placeholder="Sélectionnez un rôle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Admin">Admin</SelectItem>
+                        <SelectItem value="Caissier">Caissier</SelectItem>
+                        <SelectItem value="Gestionnaire de Stock">Gestionnaire de Stock</SelectItem>
+                    </SelectContent>
+                    </Select>
+                </div>
+                </div>
+                <DialogFooter>
+                <Button type="submit">Enregistrer</Button>
+                </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -100,17 +204,32 @@ export default function UsersPage() {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                        <Button aria-haspopup="true" size="icon" variant="ghost" disabled={user.id === adminUser?.uid}>
                           <MoreHorizontal className="h-4 w-4" />
                           <span className="sr-only">Ouvrir le menu</span>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Modifier</DropdownMenuItem>
-                        <DropdownMenuItem>Réinitialiser le mot de passe</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDialogOpen(user)}>Modifier</DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive">Supprimer</DropdownMenuItem>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()}>Supprimer</DropdownMenuItem>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Cette action est irréversible. Le compte de l'utilisateur et toutes ses données associées seront définitivement supprimés.
+                                </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Supprimer</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

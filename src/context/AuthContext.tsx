@@ -19,6 +19,7 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<any>;
   signup: (email: string, pass: string, fullName: string, restaurantName: string) => Promise<any>;
   logout: () => Promise<void>;
+  createUser: (email: string, pass: string) => Promise<User>;
 }
 
 const AuthContext = createContext<AuthContextType>({ 
@@ -27,6 +28,7 @@ const AuthContext = createContext<AuthContextType>({
     login: async () => {},
     signup: async () => {},
     logout: async () => {},
+    createUser: async () => { throw new Error('createUser not implemented'); },
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -66,7 +68,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     if (!user && !isAuthPage) {
       router.push('/login');
-    } else if (user && (isAuthPage || pathname === '/admin')) {
+    } else if (user && isAuthPage) {
       router.push('/dashboard');
     }
   }, [user, loading, router, pathname]);
@@ -74,8 +76,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = (email: string, pass: string) => {
       return signInWithEmailAndPassword(auth, email, pass);
   }
+  
+  const createUser = async (email: string, pass: string) => {
+    const { user: createdUser } = await createUserWithEmailAndPassword(auth, email, pass);
+    return createdUser;
+  };
 
-  const signup = async (email: string, pass: string, fullName: string, restaurantName: string) => {
+
+  const signup = async (email: string, pass:string, fullName: string, restaurantName: string) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const user = userCredential.user;
 
@@ -118,7 +126,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, createUser }}>
       {children}
     </AuthContext.Provider>
   );
