@@ -11,7 +11,7 @@ const firebaseConfig = {
   "apiKey": "AIzaSyBZo9MrJBXzIaTkIeErm5CnkGn6iXAwW-A",
   "authDomain": "tableauchef.firebaseapp.com",
   "measurementId": "",
-  "messagingSenderId": "435090684209"
+  "messagingSenderId": "4_3_5_0_9_0_6_8_4_2_0_9"
 };
 
 
