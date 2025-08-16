@@ -51,13 +51,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const userData = userDoc.data();
             setUser({
               ...firebaseUser,
-              displayName: firebaseUser.displayName || userData.name, 
+              displayName: userData.name, // Always get name from Firestore
               role: userData.role,
               restaurantName: userData.restaurantName,
             });
         } else {
-             // This might happen briefly during signup before the doc is created.
-             setUser(firebaseUser);
+             setUser(firebaseUser); // e.g. during signup
         }
       } else {
         setUser(null);
@@ -112,8 +111,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (!adminUser) {
           throw new Error("L'administrateur n'est pas connecté.");
       }
+      const adminEmail = adminUser.email;
+      const adminPassword = prompt("Pour des raisons de sécurité, veuillez entrer à nouveau votre mot de passe administrateur :");
+      if (!adminEmail || !adminPassword) {
+        toast({variant: 'destructive', title: 'Opération annulée'});
+        return;
+      }
 
-      // This will sign out the admin and sign in the new user
+      // This will sign out the admin and sign in the new user temporarily
       const newUserCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const newUser = newUserCredential.user;
       
@@ -127,25 +132,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           role: role,
       });
 
-      // Sign out the newly created user immediately
-      await signOut(auth);
+      // Sign back in as admin
+      await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
 
-      // Inform the admin and redirect to login. They have been logged out.
-      router.push('/login');
-      // We throw an error to stop the execution flow in the component
-      // and display a toast message there.
       toast({
         title: "Utilisateur créé avec succès",
-        description: "Veuillez vous reconnecter pour continuer."
+        description: `${fullName} a été ajouté avec le rôle de ${role}.`
       });
-      throw new Error("Veuillez vous reconnecter.");
   }
 
 
   const logout = () => {
-    setUser(null);
-    router.push('/login');
-    return signOut(auth);
+    return signOut(auth).then(() => {
+        setUser(null);
+        router.push('/login');
+    });
   }
 
   if (loading && !['/', '/login', '/signup'].includes(pathname)) {

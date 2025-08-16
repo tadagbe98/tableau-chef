@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import { collection, doc, getDocs, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
   AlertDialog,
@@ -113,7 +113,7 @@ export default function UsersPage() {
     if (typeof e === 'string') {
         setFormData(prev => ({ ...prev, [field]: e }));
     } else {
-        setFormData(prev => ({ ...prev, [e.target.id]: e.target.value }));
+        setFormData(prev => ({ ...prev, [field]: e.target.value }));
     }
   };
 
