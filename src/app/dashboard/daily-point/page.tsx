@@ -108,7 +108,10 @@ export default function DailyPointPage() {
                     <Label>Caissier</Label>
                     <div className="flex items-center gap-2 mt-1">
                         <UserCircle className="text-muted-foreground"/>
-                        <p className="font-medium">{user?.displayName || 'Utilisateur'} <Badge variant="secondary">{user?.role || 'Rôle inconnu'}</Badge></p>
+                        <div className="font-medium">
+                            <span>{user?.displayName || 'Utilisateur'} </span>
+                            <Badge variant="secondary">{user?.role || 'Rôle inconnu'}</Badge>
+                        </div>
                     </div>
                 </div>
                 <div>
@@ -212,7 +215,7 @@ export default function DailyPointPage() {
             <CardContent className="space-y-4">
                 <div>
                 <Label>Fonds de Caisse Initial</Label>
-                <Input value={`${parseFloat(openingCash).toFixed(2)} €`} disabled />
+                <Input value={`${parseFloat(openingCash || '0').toFixed(2)} €`} disabled />
                 </div>
                 <div>
                 <Label>Espèces Attendues en Caisse</Label>
