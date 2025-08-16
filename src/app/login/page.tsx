@@ -50,9 +50,9 @@ export default function LoginPage() {
             <Logo className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold tracking-tight">TableauChef</span>
           </Link>
-          <CardTitle className="text-2xl">Connexion Caissier</CardTitle>
+          <CardTitle className="text-2xl">Connexion</CardTitle>
           <CardDescription>
-            Entrez votre email et mot de passe pour commencer la journée.
+            Entrez vos identifiants pour accéder à votre espace.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -90,6 +90,12 @@ export default function LoginPage() {
               {loading ? 'Connexion en cours...' : 'Se connecter'}
             </Button>
           </form>
+           <div className="mt-4 text-center text-sm">
+            Vous n'avez pas de compte ?{" "}
+            <Link href="/signup" className="underline">
+              S'inscrire
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
