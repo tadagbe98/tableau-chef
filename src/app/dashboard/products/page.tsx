@@ -65,6 +65,10 @@ export default function ProductsPage() {
                             <Input id="stock" type="number" placeholder="50" className="col-span-3" />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="image" className="text-right">Image</Label>
+                             <Input id="image" type="file" className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="recipe" className="text-right">Notes de Recette</Label>
                             <Textarea id="recipe" placeholder="Détails de la recette, ingrédients, etc." className="col-span-3" />
                         </div>

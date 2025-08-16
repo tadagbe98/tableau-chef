@@ -5,8 +5,9 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { DollarSign, CreditCard, Smartphone, AlertCircle, TrendingUp, TrendingDown, CheckCircle } from 'lucide-react';
+import { DollarSign, CreditCard, Smartphone, AlertCircle, TrendingUp, TrendingDown, CheckCircle, UserCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 const dailySummary = {
     totalSales: 2450.75,
@@ -18,11 +19,18 @@ const dailySummary = {
     taxes: 181.54,
 };
 
+const currentUser = {
+    name: "Jean Dupont"
+};
+
 export default function DailyPointPage() {
     const [cashInDrawer, setCashInDrawer] = useState('');
     const [openingCash, setOpeningCash] = useState('');
     const [variance, setVariance] = useState(null);
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+    const [openedBy, setOpenedBy] = useState(null);
+    const [openTime, setOpenTime] = useState(null);
+
     const { toast } = useToast();
 
     const handleOpenRegister = () => {
@@ -35,9 +43,11 @@ export default function DailyPointPage() {
             return;
         }
         setIsRegisterOpen(true);
+        setOpenedBy(currentUser.name);
+        setOpenTime(new Date());
         toast({
             title: "Caisse Ouverte",
-            description: `La caisse a été ouverte avec un fonds de ${parseFloat(openingCash).toFixed(2)} €.`
+            description: `La caisse a été ouverte par ${currentUser.name} avec un fonds de ${parseFloat(openingCash).toFixed(2)} €.`
         });
     };
 
@@ -63,9 +73,11 @@ export default function DailyPointPage() {
             setOpeningCash('');
             setCashInDrawer('');
             setVariance(null);
+            setOpenedBy(null);
+            setOpenTime(null);
             toast({
                 title: "Point de Vente Fermé",
-                description: "Le journal d'aujourd'hui a été créé et la caisse est fermée."
+                description: `Le journal d'aujourd'hui a été créé et la caisse fermée par ${currentUser.name}.`
             });
         }
     }
@@ -79,15 +91,24 @@ export default function DailyPointPage() {
                 <CardTitle>Ouvrir la Caisse</CardTitle>
                 <CardDescription>Commencez la journée en enregistrant votre fonds de caisse initial.</CardDescription>
             </CardHeader>
-            <CardContent>
-                <Label htmlFor="opening-cash">Fonds de Caisse Initial</Label>
-                <Input 
-                    id="opening-cash"
-                    type="number"
-                    placeholder="Entrer le montant"
-                    value={openingCash}
-                    onChange={(e) => setOpeningCash(e.target.value)}
-                />
+            <CardContent className="space-y-4">
+                 <div>
+                    <Label>Caissier</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                        <UserCircle className="text-muted-foreground"/>
+                        <p className="font-medium">{currentUser.name}</p>
+                    </div>
+                </div>
+                <div>
+                    <Label htmlFor="opening-cash">Fonds de Caisse Initial</Label>
+                    <Input 
+                        id="opening-cash"
+                        type="number"
+                        placeholder="Entrer le montant"
+                        value={openingCash}
+                        onChange={(e) => setOpeningCash(e.target.value)}
+                    />
+                </div>
             </CardContent>
             <CardFooter>
                 <Button onClick={handleOpenRegister} className="w-full">Ouvrir la Caisse</Button>
@@ -97,8 +118,18 @@ export default function DailyPointPage() {
         <div className="grid md:grid-cols-2 gap-6">
             <Card className="md:col-span-2">
                 <CardHeader>
-                    <CardTitle>Résumé des Ventes Journalières</CardTitle>
-                    <CardDescription>Revue des activités financières du jour. La caisse est actuellement ouverte.</CardDescription>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <CardTitle>Résumé des Ventes Journalières</CardTitle>
+                            <CardDescription>Revue des activités financières du jour. La caisse est actuellement ouverte.</CardDescription>
+                        </div>
+                        {openedBy && openTime && (
+                             <Badge variant="outline" className="flex items-center gap-2 text-sm p-2">
+                                <UserCircle/>
+                                Ouverte par {openedBy} à {openTime.toLocaleTimeString('fr-FR')}
+                            </Badge>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="p-4 bg-secondary rounded-lg">
