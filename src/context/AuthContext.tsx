@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, signInWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { onAuthStateChanged, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter, usePathname } from 'next/navigation';
@@ -41,22 +41,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
       if (firebaseUser) {
-        // Fetch user profile from Firestore
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
             const userData = userDoc.data();
             setUser({
               ...firebaseUser,
-              // Make sure display name is consistent
               displayName: firebaseUser.displayName || userData.name, 
               role: userData.role,
               restaurantName: userData.restaurantName,
             });
         } else {
-             // This might happen briefly during signup before the Firestore doc is created
-             console.log("User exists in Auth but not in Firestore yet.");
              setUser(firebaseUser);
         }
       } else {
@@ -70,7 +67,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (loading) return;
-
     const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/';
     
     if (!user && !isAuthPage) {
@@ -90,7 +86,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       await updateProfile(newUser, { displayName: fullName });
       
-      // Use UID as document ID
       const userDocRef = doc(db, "users", newUser.uid);
       const userData = {
         uid: newUser.uid,
@@ -101,7 +96,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       };
       await setDoc(userDocRef, userData);
 
-      // Set user state immediately after signup to include custom data
       setUser({
         ...newUser,
         displayName: fullName,
@@ -110,21 +104,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
   }
   
-  // This function allows an admin to create a new user without being logged out.
   const createUser = async (email: string, pass: string, fullName: string, role: string) => {
       const adminUser = auth.currentUser;
-      if (!adminUser || !adminUser.email) {
-          throw new Error("Admin user is not properly logged in or email is missing.");
+      if (!adminUser) {
+          throw new Error("L'administrateur n'est pas connecté.");
       }
-      
-      // We need the admin's password to sign them back in, which we don't have.
-      // The workaround is to create a temporary, secondary Firebase app instance.
-      // However, that's overly complex for this context.
-      // The simplest (yet flawed) approach is to create the user, which signs out the admin,
-      // and then provide a clear path for the admin to sign back in.
 
-      // A better client-side-only approach is to inform the user of the limitation.
-      // Let's create the user, which will sign out the admin as a side effect.
+      // This will sign out the admin and sign in the new user
       const newUserCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const newUser = newUserCredential.user;
       
@@ -138,27 +124,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           role: role,
       });
 
-      // The line above signs in the new user and signs out the admin.
-      // This is a Firebase Auth behavior on the web.
-      // To fix this, we'd need to sign the admin back in.
-      // Since we don't have the admin's password, we cannot use `signInWithEmailAndPassword`.
-      
-      // For this prototype, we'll accept the admin gets logged out and has to log back in.
-      // We'll throw an error to be caught by the form to inform the admin.
-      // This is better than a silent failure.
-      
-      // Log out the newly created user to end their session.
+      // Sign out the newly created user immediately
       await signOut(auth);
 
-      // We cannot automatically sign the admin back in without credentials.
-      // We'll redirect to login and let the context handler do its job.
-      router.push('/login'); 
-      throw new Error("Utilisateur créé. Veuillez vous reconnecter.");
+      // Redirect admin to login. They have been logged out by the process.
+      router.push('/login');
+      throw new Error("Utilisateur créé avec succès. Veuillez vous reconnecter.");
   }
 
 
   const logout = () => {
     setUser(null);
+    router.push('/login');
     return signOut(auth);
   }
 

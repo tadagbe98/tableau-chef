@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from "react";
@@ -13,8 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { getUsers, updateUser, deleteUser, UserData } from "@/services/userService";
 import { useAuth } from "@/context/AuthContext";
+import { collection, doc, getDocs, updateDoc, deleteDoc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +26,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+export interface UserData {
+    id: string; 
+    uid: string; 
+    name: string;
+    email: string;
+    role: 'Admin' | 'Caissier' | 'Gestionnaire de Stock';
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -33,21 +41,24 @@ export default function UsersPage() {
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
   const [formData, setFormData] = useState({ name: '', email: '', password: '', role: '' });
   const { toast } = useToast();
-  const { user: adminUser, createUser } = useAuth(); // Using createUser from context
+  const { user: adminUser, createUser } = useAuth();
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const usersCollectionRef = collection(db, 'users');
 
   const fetchUsers = async () => {
     try {
-      const fetchedUsers = await getUsers();
+      const snapshot = await getDocs(usersCollectionRef);
+      const fetchedUsers = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as UserData));
       setUsers(fetchedUsers);
     } catch (error) {
       console.error("Failed to fetch users:", error);
       toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les utilisateurs.' });
     }
   };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleDialogOpen = (user: UserData | null = null) => {
     if (user) {
@@ -68,15 +79,33 @@ export default function UsersPage() {
           return;
       }
       try {
-          // This only deletes from Firestore in the current implementation
-          await deleteUser(userToDelete.uid);
-          toast({ title: 'Succès', description: 'Utilisateur supprimé de la base de données. Supprimez-le aussi de la console Firebase Auth.' });
+          const userDocRef = doc(db, 'users', userToDelete.uid);
+          await deleteDoc(userDocRef);
+          toast({ title: 'Succès', description: "Utilisateur supprimé de Firestore. N'oubliez pas de le supprimer de la console d'authentification Firebase." });
           fetchUsers();
       } catch (error) {
           toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de supprimer l'utilisateur."});
           console.error(error);
       }
   }
+
+    const handleUpdateUser = async () => {
+        if (!currentUser) return;
+        try {
+            const userDocRef = doc(db, 'users', currentUser.uid);
+            await updateDoc(userDocRef, {
+                name: formData.name,
+                role: formData.role,
+            });
+            toast({ title: 'Succès', description: "Utilisateur mis à jour." });
+            fetchUsers();
+            setIsDialogOpen(false);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de mettre à jour l'utilisateur."});
+            console.error(error);
+        }
+    }
+
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement> | string, field: string) => {
     if (typeof e === 'string') {
@@ -88,22 +117,18 @@ export default function UsersPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isEditMode) {
+        await handleUpdateUser();
+        return;
+    }
+
     try {
-        if (isEditMode && currentUser) {
-            await updateUser(currentUser.uid, {
-                name: formData.name,
-                role: formData.role
-            });
-            toast({ title: 'Succès', description: "Utilisateur mis à jour avec succès." });
-        } else {
-             if (formData.password.length < 6) {
-                toast({ variant: 'destructive', title: "Erreur", description: "Le mot de passe doit faire au moins 6 caractères." });
-                return;
-            }
-            // Using the createUser function from AuthContext
-            await createUser(formData.email, formData.password, formData.name, formData.role);
-            toast({ title: 'Utilisateur créé', description: "L'administrateur a été déconnecté. Veuillez vous reconnecter." });
+        if (formData.password.length < 6) {
+            toast({ variant: 'destructive', title: "Erreur", description: "Le mot de passe doit faire au moins 6 caractères." });
+            return;
         }
+        await createUser(formData.email, formData.password, formData.name, formData.role);
+        toast({ title: 'Utilisateur créé', description: "L'administrateur a été déconnecté et doit se reconnecter." });
         fetchUsers();
         setIsDialogOpen(false);
     } catch (error: any) {
