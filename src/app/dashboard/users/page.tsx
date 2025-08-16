@@ -102,7 +102,7 @@ export default function UsersPage() {
             }
             // Using the createUser function from AuthContext
             await createUser(formData.email, formData.password, formData.name, formData.role);
-            toast({ title: 'Succès', description: "Utilisateur ajouté avec succès." });
+            toast({ title: 'Utilisateur créé', description: "L'administrateur a été déconnecté. Veuillez vous reconnecter." });
         }
         fetchUsers();
         setIsDialogOpen(false);
@@ -110,10 +110,10 @@ export default function UsersPage() {
         let description = "Une erreur est survenue.";
         if (error.code === 'auth/email-already-in-use') {
             description = "Cet email est déjà utilisé."
+        } else if (error.message.includes("Veuillez vous reconnecter")) {
+            description = error.message;
         }
-        if (error.code === 'auth/requires-recent-login') {
-            description = "Cette action requiert une reconnexion. Veuillez vous déconnecter et vous reconnecter."
-        }
+        
         toast({ variant: 'destructive', title: 'Erreur', description });
         console.error("Form submission error:", error);
     }

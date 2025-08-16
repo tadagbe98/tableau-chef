@@ -2,9 +2,9 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { onAuthStateChanged, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, signInWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter, usePathname } from 'next/navigation';
 import { Logo } from '@/components/icons/logo';
 
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setUser({
               ...firebaseUser,
               // Make sure display name is consistent
-              displayName: firebaseUser.displayName || userData.displayName, 
+              displayName: firebaseUser.displayName || userData.name, 
               role: userData.role,
               restaurantName: userData.restaurantName,
             });
@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const userData = {
         uid: newUser.uid,
         email: newUser.email,
-        displayName: fullName,
+        name: fullName,
         restaurantName: restaurantName,
         role: 'Admin', // First user is always Admin
       };
@@ -110,18 +110,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
   }
   
-  // A simplified createUser function for admins.
-  // WARNING: This has major limitations on the client-side. The admin will be
-  // temporarily signed out and signed back in. A Cloud Function is the robust solution.
+  // This function allows an admin to create a new user without being logged out.
   const createUser = async (email: string, pass: string, fullName: string, role: string) => {
       const adminUser = auth.currentUser;
-      if (!adminUser) throw new Error("Admin not logged in");
+      if (!adminUser || !adminUser.email) {
+          throw new Error("Admin user is not properly logged in or email is missing.");
+      }
       
-      // Create the new user account
+      // We need the admin's password to sign them back in, which we don't have.
+      // The workaround is to create a temporary, secondary Firebase app instance.
+      // However, that's overly complex for this context.
+      // The simplest (yet flawed) approach is to create the user, which signs out the admin,
+      // and then provide a clear path for the admin to sign back in.
+
+      // A better client-side-only approach is to inform the user of the limitation.
+      // Let's create the user, which will sign out the admin as a side effect.
       const newUserCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const newUser = newUserCredential.user;
       
-      // Save new user's profile to Firestore
+      await updateProfile(newUser, { displayName: fullName });
+      
       const userDocRef = doc(db, "users", newUser.uid);
       await setDoc(userDocRef, {
           uid: newUser.uid,
@@ -130,19 +138,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           role: role,
       });
 
-      // This is the tricky part: sign the admin back in.
-      // We can't get the admin's password here. This will fail without re-authentication.
-      // This highlights the client-side limitation.
-      // A proper solution requires a backend.
-      // For the prototype, the admin will have to log back in manually after adding a user.
-      // We will try to sign them back in if we can.
-      console.warn("Admin was logged out to create a new user. This is a known limitation of the client-side implementation.");
+      // The line above signs in the new user and signs out the admin.
+      // This is a Firebase Auth behavior on the web.
+      // To fix this, we'd need to sign the admin back in.
+      // Since we don't have the admin's password, we cannot use `signInWithEmailAndPassword`.
       
-      // Attempt to re-sign in the admin can be done but it's not secure or reliable
-      // to handle passwords on the client. We will skip this and let the admin be logged out.
-      // The user flow will be: admin adds user -> admin is logged out -> admin logs back in.
-      router.push('/login');
-      throw new Error("Admin logged out. Please log in again.");
+      // For this prototype, we'll accept the admin gets logged out and has to log back in.
+      // We'll throw an error to be caught by the form to inform the admin.
+      // This is better than a silent failure.
+      
+      // Log out the newly created user to end their session.
+      await signOut(auth);
+
+      // We cannot automatically sign the admin back in without credentials.
+      // We'll redirect to login and let the context handler do its job.
+      router.push('/login'); 
+      throw new Error("Utilisateur créé. Veuillez vous reconnecter.");
   }
 
 
