@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from "react";
@@ -12,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { addUser, getUsers, updateUser, deleteUser, UserData } from "@/services/userService";
+import { getUsers, updateUser, deleteUser, UserData } from "@/services/userService";
 import { useAuth } from "@/context/AuthContext";
 import {
   AlertDialog,
@@ -23,9 +24,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-
 
 export default function UsersPage() {
   const [users, setUsers] = useState<UserData[]>([]);
@@ -34,7 +33,7 @@ export default function UsersPage() {
   const [currentUser, setCurrentUser] = useState<UserData | null>(null);
   const [formData, setFormData] = useState({ name: '', email: '', password: '', role: '' });
   const { toast } = useToast();
-  const { user: adminUser, createUser } = useAuth();
+  const { user: adminUser, createUser } = useAuth(); // Using createUser from context
 
   useEffect(() => {
     fetchUsers();
@@ -45,6 +44,7 @@ export default function UsersPage() {
       const fetchedUsers = await getUsers();
       setUsers(fetchedUsers);
     } catch (error) {
+      console.error("Failed to fetch users:", error);
       toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les utilisateurs.' });
     }
   };
@@ -62,14 +62,15 @@ export default function UsersPage() {
     setIsDialogOpen(true);
   };
   
-  const handleDeleteUser = async (userId: string) => {
-      if (userId === adminUser?.uid) {
+  const handleDeleteUser = async (userToDelete: UserData) => {
+      if (userToDelete.uid === adminUser?.uid) {
           toast({ variant: 'destructive', title: 'Action impossible', description: 'Vous ne pouvez pas supprimer votre propre compte.' });
           return;
       }
       try {
-          await deleteUser(userId);
-          toast({ title: 'Succès', description: 'Utilisateur supprimé avec succès.' });
+          // This only deletes from Firestore in the current implementation
+          await deleteUser(userToDelete.uid);
+          toast({ title: 'Succès', description: 'Utilisateur supprimé de la base de données. Supprimez-le aussi de la console Firebase Auth.' });
           fetchUsers();
       } catch (error) {
           toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de supprimer l'utilisateur."});
@@ -89,7 +90,7 @@ export default function UsersPage() {
     e.preventDefault();
     try {
         if (isEditMode && currentUser) {
-            await updateUser(currentUser.id, {
+            await updateUser(currentUser.uid, {
                 name: formData.name,
                 role: formData.role
             });
@@ -99,12 +100,8 @@ export default function UsersPage() {
                 toast({ variant: 'destructive', title: "Erreur", description: "Le mot de passe doit faire au moins 6 caractères." });
                 return;
             }
-            await addUser({
-                email: formData.email,
-                password: formData.password,
-                name: formData.name,
-                role: formData.role
-            });
+            // Using the createUser function from AuthContext
+            await createUser(formData.email, formData.password, formData.name, formData.role);
             toast({ title: 'Succès', description: "Utilisateur ajouté avec succès." });
         }
         fetchUsers();
@@ -114,8 +111,11 @@ export default function UsersPage() {
         if (error.code === 'auth/email-already-in-use') {
             description = "Cet email est déjà utilisé."
         }
+        if (error.code === 'auth/requires-recent-login') {
+            description = "Cette action requiert une reconnexion. Veuillez vous déconnecter et vous reconnecter."
+        }
         toast({ variant: 'destructive', title: 'Erreur', description });
-        console.error(error);
+        console.error("Form submission error:", error);
     }
   };
 
@@ -141,21 +141,21 @@ export default function UsersPage() {
                 <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="name" className="text-right">Nom Complet</Label>
-                    <Input id="name" value={formData.name} onChange={handleFormChange} placeholder="John Doe" className="col-span-3" required />
+                    <Input id="name" value={formData.name} onChange={(e) => handleFormChange(e, 'name')} placeholder="John Doe" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="email" className="text-right">Email</Label>
-                    <Input id="email" type="email" value={formData.email} onChange={handleFormChange} placeholder="john@example.com" className="col-span-3" required disabled={isEditMode}/>
+                    <Input id="email" type="email" value={formData.email} onChange={(e) => handleFormChange(e, 'email')} placeholder="john@example.com" className="col-span-3" required disabled={isEditMode}/>
                 </div>
                 {!isEditMode && (
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="password" className="text-right">Mot de passe</Label>
-                        <Input id="password" type="password" value={formData.password} onChange={handleFormChange} placeholder="********" className="col-span-3" required />
+                        <Input id="password" type="password" value={formData.password} onChange={(e) => handleFormChange(e, 'password')} placeholder="********" className="col-span-3" required />
                     </div>
                 )}
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="role" className="text-right">Rôle</Label>
-                    <Select onValueChange={(value) => handleFormChange(value, 'role')} value={formData.role}>
+                    <Select onValueChange={(value) => handleFormChange(value, 'role')} value={formData.role} required>
                     <SelectTrigger className="col-span-3">
                         <SelectValue placeholder="Sélectionnez un rôle" />
                     </SelectTrigger>
@@ -193,7 +193,7 @@ export default function UsersPage() {
             </TableHeader>
             <TableBody>
               {users.map(user => (
-                <TableRow key={user.id}>
+                <TableRow key={user.uid}>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
@@ -204,7 +204,7 @@ export default function UsersPage() {
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost" disabled={user.id === adminUser?.uid}>
+                        <Button aria-haspopup="true" size="icon" variant="ghost" disabled={user.uid === adminUser?.uid}>
                           <MoreHorizontal className="h-4 w-4" />
                           <span className="sr-only">Ouvrir le menu</span>
                         </Button>
@@ -221,12 +221,12 @@ export default function UsersPage() {
                                 <AlertDialogHeader>
                                 <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    Cette action est irréversible. Le compte de l'utilisateur et toutes ses données associées seront définitivement supprimés.
+                                    Cette action est irréversible. Le compte de l'utilisateur sera supprimé de la base de données (mais pas de Firebase Auth).
                                 </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                 <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Supprimer</AlertDialogAction>
+                                <AlertDialogAction onClick={() => handleDeleteUser(user)}>Supprimer</AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
                         </AlertDialog>
