@@ -39,14 +39,15 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useEffect } from 'react';
 
 
 const allNavItems = [
   { href: '/dashboard', icon: Home, label: 'Tableau de bord', roles: ['Admin', 'Caissier', 'Gestionnaire de Stock'] },
   { href: '/dashboard/orders', icon: UtensilsCrossed, label: 'Commandes', roles: ['Admin', 'Caissier'] },
   { href: '/dashboard/products', icon: ShoppingBasket, label: 'Produits', roles: ['Admin', 'Caissier', 'Gestionnaire de Stock'] },
-  { href: '/dashboard/inventory', icon: Warehouse, label: 'Inventaire', roles: ['Admin', 'Caissier', 'Gestionnaire de Stock'] },
-  { href: '/dashboard/reports', icon: BarChart, label: 'Rapports', roles: ['Admin', 'Caissier'] },
+  { href: '/dashboard/inventory', icon: Warehouse, label: 'Inventaire', roles: ['Admin', 'Gestionnaire de Stock'] },
+  { href: '/dashboard/reports', icon: BarChart, label: 'Rapports', roles: ['Admin'] },
   { href: '/dashboard/daily-point', icon: BookOpenCheck, label: 'Point Journalier', roles: ['Admin', 'Caissier'] },
   { href: '/dashboard/users', icon: Users, label: 'Utilisateurs', roles: ['Admin'] },
 ];
@@ -60,6 +61,12 @@ export default function DashboardLayout({
   const { user, logout } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+    }
+  }, [user, router]);
 
   const handleLogout = async () => {
     try {
