@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     if (!user && !isAuthPage) {
       router.push('/login');
-    } else if (user && isAuthPage) {
+    } else if (user && (isAuthPage || pathname === '/admin')) {
       router.push('/dashboard');
     }
   }, [user, loading, router, pathname]);
@@ -80,19 +80,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const user = userCredential.user;
 
       await updateProfile(user, { displayName: fullName });
-
-      await setDoc(doc(db, "users", user.uid), {
+      
+      const userDocRef = doc(db, "users", user.uid);
+      await setDoc(userDocRef, {
         uid: user.uid,
         email: user.email,
         displayName: fullName,
         restaurantName: restaurantName,
-        role: 'Admin', // Le premier utilisateur est toujours Admin
+        role: 'Admin',
       });
 
-      setUser({ ...user, displayName: fullName, role: 'Admin' });
+      const userDoc = await getDoc(userDocRef);
+      if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUser({
+            ...user,
+            displayName: fullName,
+            role: userData.role,
+          });
+      }
   }
 
   const logout = () => {
+    setUser(null);
     return signOut(auth);
   }
 
