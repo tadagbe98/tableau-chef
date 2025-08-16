@@ -23,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { collection, addDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 const categories = ["Pizzas", "Burgers", "Salades", "Pâtes", "Accompagnements", "Boissons"];
 
@@ -48,16 +49,28 @@ export default function ProductsPage() {
         image: '',
     });
     const { toast } = useToast();
+    const { user } = useAuth(); // Utiliser le hook d'authentification
     const productsCollectionRef = collection(db, 'products');
 
     useEffect(() => {
+        // Ne lancez l'écouteur que si l'utilisateur est connecté
+        if (!user) return;
+
         const unsubscribe = onSnapshot(productsCollectionRef, (snapshot) => {
             const fetchedProducts = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Product));
             setProducts(fetchedProducts);
+        }, (error) => {
+            console.error("Erreur de snapshot Firestore:", error);
+            toast({
+                variant: "destructive",
+                title: "Erreur de chargement",
+                description: "Impossible de charger les produits. Vérifiez vos permissions Firestore.",
+            });
         });
 
+        // Nettoyer l'écouteur lors du démontage du composant
         return () => unsubscribe();
-    }, []);
+    }, [user]); // L'effet se redéclenchera si l'état de l'utilisateur change
     
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { id, value } = e.target;
