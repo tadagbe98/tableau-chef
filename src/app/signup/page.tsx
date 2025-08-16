@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Logo } from "@/components/icons/logo"
 import { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
@@ -31,14 +31,26 @@ export default function SignupPage() {
     e.preventDefault();
     setLoading(true);
     try {
+      if (password.length < 6) {
+        toast({
+            variant: "destructive",
+            title: "Erreur d'Inscription",
+            description: "Le mot de passe doit contenir au moins 6 caractères.",
+        });
+        setLoading(false);
+        return;
+      }
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
+      // Mettre à jour le profil utilisateur Firebase avec le nom complet
+      await updateProfile(user, { displayName: fullName });
 
       // Créer un document utilisateur dans Firestore avec le rôle 'Admin'
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         email: user.email,
-        fullName: fullName,
+        displayName: fullName,
         restaurantName: restaurantName,
         role: 'Admin', // Le premier utilisateur est toujours Admin
       });
@@ -51,10 +63,14 @@ export default function SignupPage() {
       router.push('/dashboard');
 
     } catch (error: any) {
+       let description = "Impossible de créer le compte. Veuillez réessayer.";
+       if (error.code === 'auth/email-already-in-use') {
+           description = "Cet email est déjà utilisé par un autre compte.";
+       }
        toast({
         variant: "destructive",
         title: "Erreur d'Inscription",
-        description: "Impossible de créer le compte. L'email est peut-être déjà utilisé.",
+        description: description,
       });
       console.error("Signup Error:", error);
     } finally {

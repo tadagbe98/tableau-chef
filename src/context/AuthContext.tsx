@@ -34,7 +34,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
             const userData = userDoc.data();
-            setUser({ ...firebaseUser, role: userData.role });
+            setUser({
+              ...firebaseUser,
+              displayName: firebaseUser.displayName || userData.displayName, // Assurer que le displayName est présent
+              role: userData.role,
+            });
         } else {
             // Document non trouvé, l'utilisateur n'a pas de rôle défini
              setUser(firebaseUser);
@@ -52,7 +56,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (loading) return;
 
-    const isAuthPage = pathname === '/login' || pathname === '/admin' || pathname === '/signup' || pathname === '/';
+    const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/';
     
     if (!user && !isAuthPage) {
       router.push('/login');
