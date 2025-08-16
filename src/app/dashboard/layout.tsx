@@ -42,8 +42,8 @@ import { useState, useEffect } from 'react';
 // Simulation de l'utilisateur connecté
 // Pour tester, changez le rôle en 'Caissier' ou 'Admin'
 const currentUser = {
-  name: "Marie Curie",
-  role: "Caissier" // ou "Admin"
+  name: "Jean Dupont",
+  role: "Admin" // Changez ici pour 'Caissier' pour tester
 };
 
 
