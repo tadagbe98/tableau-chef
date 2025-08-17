@@ -27,6 +27,10 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           setAdminUser(user);
         } else {
           setAdminUser(null);
+          // If a non-super-admin user is somehow logged in, sign them out from this area
+          if(pathname.startsWith('/admin/dashboard')) {
+             await auth.signOut();
+          }
         }
       } else {
         setAdminUser(null);
@@ -34,7 +38,18 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
     return () => unsubscribe();
-  }, []);
+  }, [pathname]);
+
+  useEffect(() => {
+      if (loading) return; // Do nothing while loading
+
+      if (!adminUser && pathname !== '/admin') {
+          router.push('/admin');
+      }
+      if (adminUser && pathname === '/admin') {
+          router.push('/admin/dashboard');
+      }
+  }, [adminUser, loading, pathname, router]);
   
   const handleLogout = async () => {
     await auth.signOut();
@@ -54,19 +69,11 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
   // If not logged in as Super Admin, only the /admin page (login page) is accessible
   if (!adminUser) {
-    if (pathname !== '/admin') {
-      router.push('/admin');
-      return null; // Render nothing while redirecting
-    }
+    // The useEffect handles redirection, just render the login page children
     return <>{children}</>;
   }
   
-  // If logged in as Super Admin, redirect from login page to dashboard
-  if (pathname === '/admin') {
-      router.push('/admin/dashboard');
-      return null; // Render nothing while redirecting
-  }
-
+  // If logged in as Super Admin, render the dashboard layout
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
