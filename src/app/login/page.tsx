@@ -103,10 +103,6 @@ export default function LoginPage() {
                 <Link href="/contact" className="underline">
                     Contacter le support
                 </Link>
-                <Separator orientation="vertical" className="h-4" />
-                <Link href="/admin" className="underline">
-                    Accès Admin
-                </Link>
           </div>
         </CardContent>
       </Card>

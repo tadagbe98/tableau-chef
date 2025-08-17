@@ -45,7 +45,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { collection, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, orderBy, limit, writeBatch, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -138,11 +138,7 @@ export default function DashboardLayout({
     // Default logic for other roles
     return allNavItems
       .filter(item => {
-        // Hide what's not relevant at all for certain roles to declutter
-        const isCaissier = user.role === 'Caissier';
         const isGestionnaire = user.role === 'Gestionnaire de Stock';
-        
-        if (isCaissier && (item.href === '/dashboard/reports' || item.href === '/dashboard/users')) return false;
         if (isGestionnaire && (item.href === '/dashboard/reports' || item.href === '/dashboard/users')) return false;
         
         return true;
@@ -157,6 +153,17 @@ export default function DashboardLayout({
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  }
+  
+  const markAllAsRead = async () => {
+    if (filteredNotifications.length === 0) return;
+    const batch = writeBatch(db);
+    const notifIds = filteredNotifications.map(n => n.id);
+    notifIds.forEach(id => {
+        const notifRef = doc(db, "notifications", id);
+        batch.update(notifRef, { isRead: true });
+    });
+    await batch.commit();
   }
 
   return (
@@ -238,7 +245,14 @@ export default function DashboardLayout({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80">
-                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                <div className="flex justify-between items-center pr-2">
+                    <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                    {filteredNotifications.length > 0 && (
+                        <Button variant="link" size="sm" onClick={markAllAsRead} className="text-xs">
+                            Tout marquer comme lu
+                        </Button>
+                    )}
+                </div>
                 <DropdownMenuSeparator />
                 {filteredNotifications.length > 0 ? (
                     filteredNotifications.map(notif => (

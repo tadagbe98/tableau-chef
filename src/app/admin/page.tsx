@@ -1,110 +1,90 @@
 
 'use client';
-import { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Logo } from "@/components/icons/logo"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
-interface ContactMessage {
-    id: string;
-    name: string;
-    email: string;
-    message: string;
-    createdAt: { seconds: number; nanoseconds: number; };
-}
-
-export default function AdminPage() {
-  const [messages, setMessages] = useState<ContactMessage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { user, loading: authLoading } = useAuth();
+export default function AdminLoginPage() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
+  const { login } = useAuth();
 
-  useEffect(() => {
-    // Redirect if not authenticated and auth check is complete
-    if (!authLoading && !user) {
-      router.push('/login');
-      return;
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await login(email, password);
+      // Redirection is handled by the layout
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Erreur de Connexion",
+        description: "Email ou mot de passe incorrect. Assurez-vous d'utiliser un compte Super Admin.",
+      });
+      console.error("Admin Login Error:", error);
+    } finally {
+      setLoading(false);
     }
-
-    if (user) {
-        const messagesCollectionRef = collection(db, 'contact_messages');
-        const q = query(messagesCollectionRef, orderBy('createdAt', 'desc'));
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-          const fetchedMessages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContactMessage));
-          setMessages(fetchedMessages);
-          setLoading(false);
-        }, (error) => {
-          console.error("Failed to fetch contact messages:", error);
-          setLoading(false);
-        });
-
-        return () => unsubscribe();
-    }
-  }, [user, authLoading, router]);
-
-  if (authLoading || !user) {
-      return (
-          <div className="flex justify-center items-center h-screen">
-              <p>Chargement...</p>
-          </div>
-      )
-  }
+  };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Messages du Support</h1>
-      <Card>
-        <CardHeader>
-          <CardTitle>Boîte de réception</CardTitle>
+    <div className="flex min-h-screen items-center justify-center bg-secondary">
+      <Card className="mx-auto max-w-sm w-full">
+        <CardHeader className="text-center">
+          <Link href="/" className="flex items-center justify-center gap-2 mb-4">
+            <Logo className="h-8 w-8 text-primary" />
+            <span className="text-2xl font-bold tracking-tight">TableauChef</span>
+          </Link>
+          <CardTitle className="text-2xl">Connexion Super Admin</CardTitle>
           <CardDescription>
-            Voici les messages envoyés depuis le formulaire de contact.
+            Accès réservé aux administrateurs de la plateforme.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Nom</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Message</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
-                    Chargement des messages...
-                  </TableCell>
-                </TableRow>
-              ) : messages.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
-                    Aucun message pour le moment.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                messages.map((msg) => (
-                  <TableRow key={msg.id}>
-                    <TableCell className="text-xs text-muted-foreground">
-                       {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt.seconds * 1000), { addSuffix: true, locale: fr }) : '...'}
-                    </TableCell>
-                    <TableCell className="font-medium">{msg.name}</TableCell>
-                    <TableCell>{msg.email}</TableCell>
-                    <TableCell className="max-w-sm whitespace-pre-wrap">{msg.message}</TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <form onSubmit={handleLogin} className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="admin@tableauchef.app"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Mot de passe</Label>
+              <Input 
+                id="password" 
+                type="password" 
+                required 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? 'Connexion...' : 'Se connecter'}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

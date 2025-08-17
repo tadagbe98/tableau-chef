@@ -12,8 +12,10 @@ import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ContactPage() {
+  const { user } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -56,6 +58,12 @@ export default function ContactPage() {
       setLoading(false);
     }
   };
+  
+  const getBackLink = () => {
+      if (user?.role === 'Admin') return '/admin/dashboard';
+      if (user) return '/dashboard';
+      return '/login';
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-secondary">
@@ -121,7 +129,7 @@ export default function ContactPage() {
                 {loading ? 'Envoi en cours...' : 'Envoyer le Message'}
               </Button>
               <Button variant="ghost" asChild>
-                <Link href="/login">Retour à la connexion</Link>
+                <Link href={getBackLink()}>Retour</Link>
               </Button>
             </CardFooter>
           </form>
