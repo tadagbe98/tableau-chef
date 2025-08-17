@@ -49,51 +49,61 @@ export default function MessagesPage() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-            <Table>
-                <TableHeader>
-                <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>De</TableHead>
-                    <TableHead>Message</TableHead>
-                </TableRow>
-                </TableHeader>
-                <TableBody>
-                {loadingMessages ? (
+             <Accordion type="single" collapsible className="w-full">
+                <Table>
+                    <TableHeader>
                     <TableRow>
-                    <TableCell colSpan={3} className="h-24 text-center">
-                        Chargement...
-                    </TableCell>
+                        <TableHead className="w-1/4">Date</TableHead>
+                        <TableHead className="w-1/4">De</TableHead>
+                        <TableHead className="w-2/4">Aperçu du Message</TableHead>
+                        <TableHead className="w-[40px]"><span className="sr-only">Déplier</span></TableHead>
                     </TableRow>
-                ) : messages.length === 0 ? (
-                    <TableRow>
-                    <TableCell colSpan={3} className="h-24 text-center">
-                        Aucun message.
-                    </TableCell>
-                    </TableRow>
-                ) : (
-                    <Accordion type="single" collapsible className="w-full">
-                        {messages.map((msg) => (
-                            <AccordionItem value={msg.id} key={msg.id}>
-                                <AccordionTrigger className="hover:no-underline">
-                                    <TableRow className="w-full hover:bg-transparent">
-                                        <TableCell className="text-xs text-muted-foreground">
-                                        {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt.seconds * 1000), { addSuffix: true, locale: fr }) : '...'}
-                                        </TableCell>
-                                        <TableCell className="font-medium">{msg.name} <span className="text-muted-foreground">({msg.email})</span></TableCell>
-                                        <TableCell className="max-w-md truncate">{msg.message}</TableCell>
-                                    </TableRow>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                    <div className="p-4 bg-secondary rounded-md">
-                                        <p className="whitespace-pre-wrap">{msg.message}</p>
-                                    </div>
+                    </TableHeader>
+                    <TableBody>
+                    {loadingMessages ? (
+                        <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">
+                            Chargement...
+                        </TableCell>
+                        </TableRow>
+                    ) : messages.length === 0 ? (
+                        <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">
+                            Aucun message.
+                        </TableCell>
+                        </TableRow>
+                    ) : (
+                        messages.map((msg) => (
+                            <AccordionItem value={msg.id} key={msg.id} asChild>
+                                <>
+                                 <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                    <td colSpan={4} className="p-0">
+                                       <AccordionTrigger className="flex w-full items-center p-4 text-left hover:no-underline">
+                                            <div className="w-1/4 text-xs text-muted-foreground">
+                                                {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt.seconds * 1000), { addSuffix: true, locale: fr }) : '...'}
+                                            </div>
+                                            <div className="w-1/4 font-medium">{msg.name} <span className="text-muted-foreground">({msg.email})</span></div>
+                                            <div className="w-2/4 max-w-md truncate pr-4">{msg.message}</div>
+                                       </AccordionTrigger>
+                                    </td>
+                                </tr>
+                                <AccordionContent asChild>
+                                    <tr>
+                                        <td colSpan={4} className="p-0">
+                                            <div className="p-4 bg-secondary rounded-md m-2">
+                                                <p className="whitespace-pre-wrap">{msg.message}</p>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 </AccordionContent>
+                                </>
                             </AccordionItem>
-                        ))}
-                   </Accordion>
-                )}
-                </TableBody>
-            </Table>
+                        ))
+                   
+                    )}
+                    </TableBody>
+                </Table>
+            </Accordion>
             </CardContent>
         </Card>
     </div>
