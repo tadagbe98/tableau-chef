@@ -385,14 +385,14 @@ function OrdersContent() {
       
       {/* Receipt Dialog */}
       <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-center">Paiement Réussi</DialogTitle>
           </DialogHeader>
           <div className="my-4 text-center">
             <p className="text-muted-foreground">Que souhaitez-vous faire maintenant ?</p>
           </div>
-           <DialogFooter className="flex-col gap-2">
+           <DialogFooter className="flex-col gap-2 sm:gap-3">
             <Button className="w-full" onClick={handlePrintReceipt}><Printer className="mr-2 h-4 w-4"/> Imprimer le Reçu Client</Button>
             <Button className="w-full" variant="secondary" onClick={handlePrintKitchenTicket}><ChefHat className="mr-2 h-4 w-4"/> Imprimer le Ticket de Cuisine</Button>
             <Button className="w-full" variant="outline" onClick={handleNewOrder}>Commencer une Nouvelle Commande</Button>
@@ -404,8 +404,7 @@ function OrdersContent() {
       <div className="hidden">
         <div ref={receiptRef}>
             <div className="text-center mb-6">
-                <Logo className="h-12 w-12 mx-auto mb-2"/>
-                <h2 className="text-2xl font-bold">TableauChef</h2>
+                <h2 className="text-2xl font-bold">{user?.restaurantName || 'TableauChef'}</h2>
                 <p>123 Rue du Restaurant, 75001 Paris</p>
                 <p>01 23 45 67 89</p>
                 <p>{new Date().toLocaleString('fr-FR')}</p>
@@ -439,7 +438,7 @@ function OrdersContent() {
             </div>
              <div className="text-center mt-6 space-y-1">
                 <p>Payé en {paymentMethod}</p>
-                <p>Merci de votre visite !</p>
+                <p>Merci de votre visite et à bientôt !</p>
             </div>
         </div>
         <div ref={kitchenTicketRef}>
