@@ -1,6 +1,7 @@
+
 'use client'
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -20,24 +21,16 @@ import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/icons/logo';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-const products = [
-  { id: 1, name: "Pizza Margherita", price: 12.99, image: "https://placehold.co/300x200.png", category: "Pizzas", "data-ai-hint": "pizza food" },
-  { id: 2, name: "Cheeseburger", price: 8.99, image: "https://placehold.co/300x200.png", category: "Burgers", "data-ai-hint": "burger food" },
-  { id: 3, name: "Salade César", price: 7.50, image: "https://placehold.co/300x200.png", category: "Salades", "data-ai-hint": "salad food" },
-  { id: 4, name: "Spaghetti Carbonara", price: 14.00, image: "https://placehold.co/300x200.png", category: "Pâtes", "data-ai-hint": "pasta food" },
-  { id: 5, name: "Frites", price: 3.99, image: "https://placehold.co/300x200.png", category: "Accompagnements", "data-ai-hint": "fries food" },
-  { id: 6, name: "Coca-Cola", price: 1.99, image: "https://placehold.co/300x200.png", category: "Boissons", "data-ai-hint": "soda drink" },
-  { id: 7, name: "Pizza Pepperoni", price: 14.99, image: "https://placehold.co/300x200.png", category: "Pizzas", "data-ai-hint": "pizza food" },
-  { id: 8, name: "Burger Végétarien", price: 9.50, image: "https://placehold.co/300x200.png", category: "Burgers", "data-ai-hint": "burger food" },
-];
-
-const categories = ["Tout", "Pizzas", "Burgers", "Salades", "Pâtes", "Accompagnements", "Boissons"];
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { Product } from '@/app/dashboard/products/page';
 
 const tables = Array.from({ length: 12 }, (_, i) => ({ id: i + 1, name: `T${i + 1}`, status: 'disponible' }));
 
 export default function OrdersPage() {
-  const [orderItems, setOrderItems] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>(["Tout"]);
+  const [orderItems, setOrderItems] = useState<any[]>([]);
   const [orderType, setOrderType] = useState("Sur place");
   const [activeCategory, setActiveCategory] = useState("Tout");
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -52,6 +45,26 @@ export default function OrdersPage() {
   
   const receiptRef = useRef<HTMLDivElement>(null);
   const kitchenTicketRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'products'), (snapshot) => {
+        const fetchedProducts = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Product));
+        setProducts(fetchedProducts);
+
+        const fetchedCategories = ["Tout", ...Array.from(new Set(fetchedProducts.map(p => p.category)))];
+        setCategories(fetchedCategories);
+    }, (error) => {
+        console.error("Erreur de chargement des produits:", error);
+        toast({
+            variant: "destructive",
+            title: "Erreur de chargement",
+            description: "Impossible de charger les produits depuis la base de données.",
+        });
+    });
+
+    return () => unsubscribe();
+  }, [toast]);
+
 
   const handlePrint = (contentRef: React.RefObject<HTMLDivElement>) => {
     const content = contentRef.current;
@@ -75,7 +88,7 @@ export default function OrdersPage() {
   const handlePrintKitchenTicket = () => handlePrint(kitchenTicketRef);
 
 
-  const addToOrder = (product) => {
+  const addToOrder = (product: Product) => {
     setOrderItems(currentItems => {
       const existingItem = currentItems.find(item => item.id === product.id);
       if (existingItem) {
@@ -87,7 +100,7 @@ export default function OrdersPage() {
     });
   };
   
-  const updateQuantity = (productId, newQuantity) => {
+  const updateQuantity = (productId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
       setOrderItems(currentItems => currentItems.filter(item => item.id !== productId));
     } else {
@@ -123,7 +136,7 @@ export default function OrdersPage() {
     setIsPaymentDialogOpen(true);
   };
   
-  const handlePayment = (method) => {
+  const handlePayment = (method: string) => {
     console.log(`Payé avec ${method}`);
     setIsPaymentDialogOpen(false);
     setIsReceiptDialogOpen(true);
@@ -229,7 +242,7 @@ export default function OrdersPage() {
             {filteredProducts.map(product => (
                 <Card key={product.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => addToOrder(product)}>
                 <CardContent className="p-0">
-                    <Image src={product.image} alt={product.name} width={300} height={200} className="rounded-t-lg object-cover aspect-video" data-ai-hint={product['data-ai-hint']} />
+                    <Image src={product.image || 'https://placehold.co/300x200.png'} alt={product.name} width={300} height={200} className="rounded-t-lg object-cover aspect-video" data-ai-hint="product image" />
                     <div className="p-3">
                         <h3 className="font-semibold text-sm truncate">{product.name}</h3>
                         <p className="text-muted-foreground text-sm">{product.price.toFixed(2)} €</p>
