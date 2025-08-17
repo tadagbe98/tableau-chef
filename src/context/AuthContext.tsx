@@ -191,9 +191,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         email: newUser.email,
         name: data.fullName,
         restaurantName: data.restaurantName,
-        language: data.language || 'fr',
         currency: data.currency || 'EUR',
-        vatRate: data.vatRate || 20,
+        language: 'fr',
+        vatRate: 20,
         role: 'Admin',
         status: 'actif',
       };

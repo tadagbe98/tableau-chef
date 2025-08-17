@@ -19,21 +19,13 @@ import { useAuth } from "@/context/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const currencies = ['EUR', 'USD', 'GBP', 'CHF', 'XOF'];
-const languages = [
-    { code: 'fr', name: 'Français' },
-    { code: 'en', name: 'English' },
-    { code: 'it', name: 'Italiano' },
-    { code: 'pt', name: 'Português (BR)' },
-];
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('');
   const [restaurantName, setRestaurantName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [language, setLanguage] = useState('fr');
   const [currency, setCurrency] = useState('EUR');
-  const [vatRate, setVatRate] = useState('20');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -56,9 +48,7 @@ export default function SignupPage() {
       const signupData = {
           fullName,
           restaurantName,
-          language,
           currency,
-          vatRate: parseFloat(vatRate)
       }
       await signup(email, password, signupData);
       
@@ -125,34 +115,16 @@ export default function SignupPage() {
               <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                    <Label htmlFor="language">Langue</Label>
-                    <Select onValueChange={setLanguage} defaultValue={language}>
-                        <SelectTrigger><SelectValue/></SelectTrigger>
-                        <SelectContent>
-                            {languages.map(lang => (
-                                <SelectItem key={lang.code} value={lang.code}>{lang.name}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="grid gap-2">
-                    <Label htmlFor="currency">Devise</Label>
-                    <Select onValueChange={setCurrency} defaultValue={currency}>
-                        <SelectTrigger><SelectValue/></SelectTrigger>
-                        <SelectContent>
-                             {currencies.map(c => (
-                                <SelectItem key={c} value={c}>{c}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-            </div>
-
-             <div className="grid gap-2">
-                <Label htmlFor="vatRate">Taux de TVA (%)</Label>
-                <Input id="vatRate" type="number" step="0.01" placeholder="20" required value={vatRate} onChange={(e) => setVatRate(e.target.value)} />
+            <div className="grid gap-2">
+                <Label htmlFor="currency">Devise</Label>
+                <Select onValueChange={setCurrency} defaultValue={currency}>
+                    <SelectTrigger><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                         {currencies.map(c => (
+                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
