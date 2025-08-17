@@ -211,6 +211,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         vatRate: 20,
         role: 'Admin',
         status: 'actif',
+        restaurantAddress: '',
+        restaurantPhone: '',
       };
       
       await updateProfile(newUser, { displayName: data.fullName });
@@ -283,7 +285,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       status: 'actif',
       language: 'fr',
       currency: currency || 'EUR',
-      vatRate: 20
+      vatRate: 20,
+      restaurantAddress: '',
+      restaurantPhone: '',
     });
 
     await seedInitialData(restaurantName);
@@ -314,3 +318,5 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+
+    
