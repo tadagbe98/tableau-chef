@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth, AppUser } from "@/context/AuthContext";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 
 const dailySummary = {
@@ -21,6 +22,12 @@ const dailySummary = {
     discounts: 75.20,
     taxes: 181.54,
 };
+
+const journalHistory = [
+    { date: '2024-05-20', totalSales: 2345.50, variance: -5.50, openingCash: 200, closedBy: 'Alice' },
+    { date: '2024-05-19', totalSales: 2180.00, variance: 0.00, openingCash: 200, closedBy: 'Alice' },
+    { date: '2024-05-18', totalSales: 2510.25, variance: 10.25, openingCash: 150, closedBy: 'Jean Dupont' },
+];
 
 export default function DailyPointPage() {
     const { user, isRegisterOpen, openedBy, openTime, openingCash, openRegister, closeRegister } = useAuth();
@@ -82,6 +89,7 @@ export default function DailyPointPage() {
         }
         calculateVariance();
         if(cashInDrawer) {
+            // Here we would save the journal entry to Firestore
             closeRegister();
             setCashInDrawer('');
             setCurrentOpeningCash('');
@@ -95,7 +103,7 @@ export default function DailyPointPage() {
 
   return (
     <TooltipProvider>
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto space-y-8">
       <h1 className="text-2xl font-bold mb-6">Gestion de Caisse et Point Journalier</h1>
       {!isRegisterOpen ? (
         <Card>
@@ -108,9 +116,9 @@ export default function DailyPointPage() {
                     <Label>Caissier</Label>
                     <div className="flex items-center gap-2 mt-1">
                         <UserCircle className="text-muted-foreground"/>
-                        <div className="font-medium">
-                            <span>{user?.displayName || 'Utilisateur'} </span>
-                            <Badge variant="secondary">{user?.role || 'Rôle inconnu'}</Badge>
+                        <div className="font-medium flex items-center gap-2">
+                           <span>{user?.displayName || 'Utilisateur'} </span>
+                           <Badge variant="secondary">{user?.role || 'Rôle inconnu'}</Badge>
                         </div>
                     </div>
                 </div>
@@ -302,6 +310,43 @@ export default function DailyPointPage() {
                 </Tooltip>
             </div>
         </div>
+      )}
+
+      {user?.role === 'Admin' && (
+        <Card>
+            <CardHeader>
+                <CardTitle>Historique des Journaux</CardTitle>
+                <CardDescription>Consultez les clôtures de caisse des jours précédents.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Ventes Totales</TableHead>
+                            <TableHead>Fonds Initial</TableHead>
+                            <TableHead>Écart de Caisse</TableHead>
+                            <TableHead>Fermé par</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {journalHistory.map((entry, index) => (
+                            <TableRow key={index}>
+                                <TableCell>{entry.date}</TableCell>
+                                <TableCell>{entry.totalSales.toFixed(2)} €</TableCell>
+                                <TableCell>{entry.openingCash.toFixed(2)} €</TableCell>
+                                <TableCell>
+                                    <Badge variant={entry.variance === 0 ? 'default' : 'destructive'} className={entry.variance === 0 ? 'bg-green-500' : ''}>
+                                        {entry.variance.toFixed(2)} €
+                                    </Badge>
+                                </TableCell>
+                                <TableCell>{entry.closedBy}</TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+        </Card>
       )}
     </div>
     </TooltipProvider>
