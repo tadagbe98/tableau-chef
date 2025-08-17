@@ -167,19 +167,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (loading) return;
-    const publicPages = [`/${locale}/`, `/${locale}/login`, `/${locale}/signup`, `/${locale}/contact`, `/${locale}/privacy`, `/${locale}/terms`];
-    const isAdminArea = pathname.includes('/admin');
-    
-    // Check if the current path is one of the public pages
-    const isPublicPage = publicPages.some(p => p === pathname) || isAdminArea;
 
-    if (!user && !isPublicPage) {
-      router.push(`/${locale}/login`);
-    } else if (user && [`/${locale}/login`, `/${locale}/signup`, `/${locale}/`].includes(pathname) && !isAdminArea) {
-      if(user.role !== 'Super Admin'){
-        router.push(`/${user.language || locale}/dashboard`);
-      }
+    const isAuthPage = pathname.endsWith('/login') || pathname.endsWith('/signup');
+    const isPublicPage = isAuthPage || pathname.endsWith('/contact') || pathname.endsWith('/privacy') || pathname.endsWith('/terms') || pathname === `/${locale}` || pathname === '/';
+    const isAdminArea = pathname.includes('/admin');
+
+    if (!user && !isPublicPage && !isAdminArea) {
+      router.push('/login');
+    } else if (user && isAuthPage) {
+      router.push('/dashboard');
     }
+
   }, [user, loading, router, pathname, locale]);
 
   const login = (email: string, pass: string) => {
@@ -190,20 +188,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const newUser = userCredential.user;
 
-      await updateProfile(newUser, { displayName: data.fullName });
-      
-      const userDocRef = doc(db, "users", newUser.uid);
       const userData = {
         uid: newUser.uid,
         email: newUser.email,
         name: data.fullName,
         restaurantName: data.restaurantName,
-        language: data.language,
-        currency: data.currency,
-        vatRate: data.vatRate,
+        language: data.language || 'fr',
+        currency: data.currency || 'EUR',
+        vatRate: data.vatRate || 20,
         role: 'Admin',
         status: 'actif',
       };
+      
+      await updateProfile(newUser, { displayName: data.fullName });
+      const userDocRef = doc(db, "users", newUser.uid);
       await setDoc(userDocRef, userData);
       
       await seedInitialData();
@@ -270,6 +268,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       restaurantName: restaurantName,
       role: 'Admin',
       status: 'actif',
+      language: 'fr',
+      currency: 'EUR',
+      vatRate: 20
     });
   }
 
@@ -277,7 +278,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return signOut(auth);
   }
   
-  const isAuthProtected = ![`/${locale}/`, `/${locale}/login`, `/${locale}/signup`, `/${locale}/contact`].includes(pathname) && !pathname.includes('/admin');
+  const isAuthProtected = ![`/${locale}/`, `/${locale}/login`, `/${locale}/signup`, `/${locale}/contact`, `/${locale}/privacy`, `/${locale}/terms`].includes(pathname) && !pathname.includes('/admin');
 
   if (loading && isAuthProtected) {
     return (

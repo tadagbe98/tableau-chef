@@ -33,12 +33,12 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      // The redirect is handled by the AuthContext now
-      // router.push('/dashboard');
+      router.push('/dashboard');
+
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Erreur de Connexion",
+        title: t('loadingButton'),
         description: "Email ou mot de passe incorrect.",
       });
       console.error("Login Error:", error);
