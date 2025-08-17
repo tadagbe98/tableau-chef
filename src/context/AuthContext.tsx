@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, getAuth } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
 import { useRouter, usePathname } from 'next/navigation';
 import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
@@ -46,6 +46,48 @@ const AuthContext = createContext<AuthContextType>({
     openRegister: () => {},
     closeRegister: () => {},
 });
+
+const seedInitialData = async () => {
+    const batch = writeBatch(db);
+
+    // Default Products
+    const products = [
+        { name: 'Poulet Yassa', category: 'Plats Africains', price: 15.50, stock: 20, image: 'https://placehold.co/300x200.png?text=Poulet+Yassa', recipeNotes: 'Poulet mariné avec oignons et citron.' },
+        { name: 'Riz Jollof', category: 'Plats Africains', price: 12.00, stock: 30, image: 'https://placehold.co/300x200.png?text=Riz+Jollof', recipeNotes: 'Riz cuit dans une sauce tomate épicée.' },
+        { name: 'Pizza Margherita', category: 'Pizzas', price: 10.00, stock: 50, image: 'https://placehold.co/300x200.png?text=Margherita', recipeNotes: 'Sauce tomate, mozzarella, basilic.' },
+        { name: 'Classic Burger', category: 'Burgers', price: 11.50, stock: 40, image: 'https://placehold.co/300x200.png?text=Burger', recipeNotes: 'Steak, salade, tomate, oignon, sauce maison.' },
+        { name: 'Salade César', category: 'Salades', price: 9.50, stock: 25, image: 'https://placehold.co/300x200.png?text=Salade', recipeNotes: 'Laitue, poulet grillé, croûtons, parmesan.' },
+        { name: 'Coca-Cola', category: 'Boissons', price: 2.50, stock: 100, image: 'https://placehold.co/300x200.png?text=Coca' },
+        { name: 'Eau Minérale', category: 'Boissons', price: 2.00, stock: 100, image: 'https://placehold.co/300x200.png?text=Eau' },
+        { name: 'Sauce Pili-Pili', category: 'Sauces', price: 1.00, stock: 50, image: 'https://placehold.co/300x200.png?text=Sauce' },
+        { name: 'Alloco', category: 'Accompagnements', price: 5.00, stock: 40, image: 'https://placehold.co/300x200.png?text=Alloco' }
+    ];
+
+    products.forEach(product => {
+        const productRef = doc(collection(db, 'products'));
+        batch.set(productRef, product);
+    });
+
+    // Default Inventory Items
+    const inventoryItems = [
+        { name: 'Poulet', category: 'Viande', stock: 50, maxStock: 100, unit: 'kg', lowStockThreshold: 10 },
+        { name: 'Riz', category: 'Céréale', stock: 80, maxStock: 150, unit: 'kg', lowStockThreshold: 20 },
+        { name: 'Tomate', category: 'Légume', stock: 30, maxStock: 50, unit: 'kg', lowStockThreshold: 5 },
+        { name: 'Oignon', category: 'Légume', stock: 40, maxStock: 60, unit: 'kg', lowStockThreshold: 10 },
+        { name: 'Farine', category: 'Épicerie', stock: 100, maxStock: 200, unit: 'kg', lowStockThreshold: 25 },
+        { name: 'Fromage Mozzarella', category: 'Produit Laitier', stock: 20, maxStock: 40, unit: 'kg', lowStockThreshold: 5 },
+        { name: 'Pain Burger', category: 'Boulangerie', stock: 60, maxStock: 120, unit: 'unités', lowStockThreshold: 24 },
+        { name: 'Banane Plantain', category: 'Légume', stock: 30, maxStock: 70, unit: 'kg', lowStockThreshold: 10 }
+    ];
+
+    inventoryItems.forEach(item => {
+        const inventoryRef = doc(collection(db, 'inventory'));
+        batch.set(inventoryRef, item);
+    });
+    
+    await batch.commit();
+}
+
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AppUser | null>(null);
@@ -129,6 +171,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         role: 'Admin',
       };
       await setDoc(userDocRef, userData);
+      
+      await seedInitialData();
 
       setUser({
         ...newUser,
