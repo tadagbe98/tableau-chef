@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { PlusCircle, MinusCircle, CreditCard, Smartphone, DollarSign, ShoppingBasket, Printer, ChefHat, Plus } from "lucide-react";
+import { PlusCircle, MinusCircle, CreditCard, Smartphone, DollarSign, ShoppingBasket, Printer, ChefHat, Plus, AlertCircle } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import {
@@ -24,10 +24,13 @@ import { Label } from '@/components/ui/label';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Product } from '@/app/dashboard/products/page';
+import { useAuth } from '@/context/AuthContext';
+import Link from 'next/link';
 
 const tables = Array.from({ length: 12 }, (_, i) => ({ id: i + 1, name: `T${i + 1}`, status: 'disponible' }));
 
 export default function OrdersPage() {
+  const { user, isRegisterOpen } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>(["Tout"]);
   const [orderItems, setOrderItems] = useState<any[]>([]);
@@ -65,6 +68,28 @@ export default function OrdersPage() {
     return () => unsubscribe();
   }, [toast]);
 
+  if (user?.role === 'Caissier' && !isRegisterOpen) {
+    return (
+        <div className="flex items-center justify-center h-full">
+            <Card className="max-w-md w-full text-center">
+                <CardHeader>
+                    <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
+                    <CardTitle>Caisse Fermée</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-muted-foreground">
+                        Vous devez ouvrir la caisse avant de pouvoir prendre des commandes.
+                    </p>
+                </CardContent>
+                <CardFooter>
+                    <Button asChild className="w-full">
+                        <Link href="/dashboard/daily-point">Ouvrir la caisse</Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+        </div>
+    );
+  }
 
   const handlePrint = (contentRef: React.RefObject<HTMLDivElement>) => {
     const content = contentRef.current;
