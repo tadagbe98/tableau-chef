@@ -16,6 +16,9 @@ import { Label } from '@/components/ui/label';
 import { PlusCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const currencies = ['EUR', 'USD', 'GBP', 'CHF', 'XOF'];
 
 export default function AddRestaurantForm() {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,6 +27,7 @@ export default function AddRestaurantForm() {
     adminName: '',
     email: '',
     password: '',
+    currency: 'EUR',
   });
   const [loading, setLoading] = useState(false);
   const { createRestaurantWithAdmin } = useAuth();
@@ -34,12 +38,17 @@ export default function AddRestaurantForm() {
     setFormData(prev => ({ ...prev, [id]: value }));
   };
 
+  const handleCurrencyChange = (value: string) => {
+    setFormData(prev => ({ ...prev, currency: value }));
+  };
+
   const resetForm = () => {
     setFormData({
       restaurantName: '',
       adminName: '',
       email: '',
       password: '',
+      currency: 'EUR',
     });
   };
 
@@ -56,15 +65,13 @@ export default function AddRestaurantForm() {
 
     setLoading(true);
     try {
-      await createRestaurantWithAdmin(formData.email, formData.password, formData.adminName, formData.restaurantName);
+      await createRestaurantWithAdmin(formData.email, formData.password, formData.adminName, formData.restaurantName, formData.currency);
       toast({
         title: 'Succès !',
         description: `Le restaurant "${formData.restaurantName}" et son administrateur ont été créés.`,
       });
       setIsOpen(false);
       resetForm();
-      // Note: A page refresh might be needed to see the new restaurant in the list,
-      // as the list is fetched on component mount. Or we can pass a refresh function as a prop.
     } catch (error: any) {
       let description = "Une erreur est survenue.";
       if (error.code === 'auth/email-already-in-use') {
@@ -106,7 +113,7 @@ export default function AddRestaurantForm() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="adminName">Nom Complet de l'Admin</Label>
-              <Input id="adminName" value={formData.adminName} onChange={handleInputChange} placeholder="Fifi Dupont" required />
+              <Input id="adminName" value={formData.adminName} onChange={handleInputChange} placeholder="Tadagbe Massolokonon" required />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email de l'Admin</Label>
@@ -115,6 +122,17 @@ export default function AddRestaurantForm() {
             <div className="grid gap-2">
               <Label htmlFor="password">Mot de Passe Initial</Label>
               <Input id="password" type="password" value={formData.password} onChange={handleInputChange} required />
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor="currency">Devise par Défaut</Label>
+                <Select onValueChange={handleCurrencyChange} defaultValue={formData.currency}>
+                    <SelectTrigger id="currency"><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                         {currencies.map(c => (
+                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
           </div>
           <DialogFooter>

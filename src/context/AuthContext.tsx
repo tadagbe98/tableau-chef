@@ -28,7 +28,7 @@ interface AuthContextType {
   signup: (email: string, pass: string, data: Record<string, any>) => Promise<any>;
   logout: () => Promise<void>;
   createUser: (email: string, pass: string, fullName: string, role: string) => Promise<void>;
-  createRestaurantWithAdmin: (email: string, pass: string, adminName: string, restaurantName: string) => Promise<void>;
+  createRestaurantWithAdmin: (email: string, pass: string, adminName: string, restaurantName: string, currency: string) => Promise<void>;
   isRegisterOpen: boolean;
   openedBy: string | null;
   openTime: Date | null;
@@ -250,7 +250,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }
 
-  const createRestaurantWithAdmin = async (email: string, pass: string, adminName: string, restaurantName: string) => {
+  const createRestaurantWithAdmin = async (email: string, pass: string, adminName: string, restaurantName: string, currency: string) => {
     const superAdminUser = auth.currentUser;
     if (!superAdminUser || user?.role !== 'Super Admin') {
       throw new Error("Seul un Super Admin peut créer un nouveau restaurant.");
@@ -267,7 +267,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       role: 'Admin',
       status: 'actif',
       language: 'fr',
-      currency: 'EUR',
+      currency: currency || 'EUR',
       vatRate: 20
     });
 

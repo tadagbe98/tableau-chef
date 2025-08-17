@@ -17,6 +17,7 @@ interface User {
     role: string;
     restaurantName: string;
     status: 'actif' | 'inactif';
+    currency?: string;
 }
 
 interface Restaurant {
@@ -24,6 +25,7 @@ interface Restaurant {
     admin: User | null;
     employees: User[];
     status: 'actif' | 'inactif';
+    currency: string;
 }
 
 export default function RestaurantsList() {
@@ -47,12 +49,14 @@ export default function RestaurantsList() {
                         admin: null,
                         employees: [],
                         status: 'inactif', // Default to inactive, will be updated by admin's status
+                        currency: 'EUR', // Default currency
                     };
                 }
 
                 if (user.role === 'Admin') {
                     acc[restaurantName].admin = user;
                     acc[restaurantName].status = user.status || 'actif';
+                    acc[restaurantName].currency = user.currency || 'EUR';
                 } else {
                     acc[restaurantName].employees.push(user);
                 }
@@ -93,6 +97,7 @@ export default function RestaurantsList() {
                 <TableRow>
                     <TableHead>Restaurant</TableHead>
                     <TableHead>Admin</TableHead>
+                    <TableHead>Devise</TableHead>
                     <TableHead>Statut</TableHead>
                     <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableRow>
@@ -110,6 +115,9 @@ export default function RestaurantsList() {
                             ) : (
                                 <span className="text-sm text-orange-500">Aucun admin</span>
                             )}
+                        </TableCell>
+                        <TableCell>
+                            <Badge variant="outline">{restaurant.currency}</Badge>
                         </TableCell>
                         <TableCell>
                             <Badge variant={restaurant.status === 'actif' ? 'default' : 'destructive'} className={restaurant.status === 'actif' ? 'bg-green-500' : ''}>
