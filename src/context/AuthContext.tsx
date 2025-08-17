@@ -15,6 +15,7 @@ import { initializeApp, deleteApp } from 'firebase/app';
 export interface AppUser extends User {
   role?: string;
   restaurantName?: string;
+  status?: 'actif' | 'inactif';
 }
 
 interface AuthContextType {
@@ -123,14 +124,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
             const userData = userDoc.data();
-            setUser({
+            const appUser: AppUser = {
               ...firebaseUser,
               displayName: userData.name,
               role: userData.role,
               restaurantName: userData.restaurantName,
-            });
+              status: userData.status || 'actif',
+            };
+            
+            if (appUser.role !== 'Super Admin' && appUser.status === 'inactif') {
+                await signOut(auth);
+                toast({
+                    variant: 'destructive',
+                    title: 'Accès Refusé',
+                    description: "Votre compte a été désactivé. Veuillez contacter un administrateur."
+                });
+                setUser(null);
+            } else {
+                setUser(appUser);
+            }
         } else {
-             setUser(firebaseUser);
+             setUser(firebaseUser); // User exists in Auth but not in Firestore
         }
       } else {
         setUser(null);
@@ -139,7 +153,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     if (loading) return;
@@ -173,6 +187,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         name: fullName,
         restaurantName: restaurantName,
         role: 'Admin',
+        status: 'actif',
       };
       await setDoc(userDocRef, userData);
       
@@ -180,9 +195,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       setUser({
         ...newUser,
-        displayName: fullName,
-        role: userData.role,
-        restaurantName: userData.restaurantName,
+        ...userData,
       });
   }
   
@@ -215,6 +228,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           name: fullName,
           role: role,
           restaurantName: restaurantName, // Add restaurant name to new user
+          status: 'actif',
       });
 
     } catch (error: any) {

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface User {
     id: string;
@@ -15,12 +16,14 @@ interface User {
     email: string;
     role: string;
     restaurantName: string;
+    status: 'actif' | 'inactif';
 }
 
 interface Restaurant {
     name: string;
     admin: User | null;
     employees: User[];
+    status: 'actif' | 'inactif';
 }
 
 export default function RestaurantsList() {
@@ -42,12 +45,14 @@ export default function RestaurantsList() {
                     acc[restaurantName] = {
                         name: restaurantName,
                         admin: null,
-                        employees: []
+                        employees: [],
+                        status: 'inactif', // Default to inactive, will be updated by admin's status
                     };
                 }
 
                 if (user.role === 'Admin') {
                     acc[restaurantName].admin = user;
+                    acc[restaurantName].status = user.status || 'actif';
                 } else {
                     acc[restaurantName].employees.push(user);
                 }
@@ -88,6 +93,7 @@ export default function RestaurantsList() {
                 <TableRow>
                     <TableHead>Restaurant</TableHead>
                     <TableHead>Admin</TableHead>
+                    <TableHead>Statut</TableHead>
                     <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableRow>
             </TableHeader>
@@ -104,6 +110,11 @@ export default function RestaurantsList() {
                             ) : (
                                 <span className="text-sm text-orange-500">Aucun admin</span>
                             )}
+                        </TableCell>
+                        <TableCell>
+                            <Badge variant={restaurant.status === 'actif' ? 'default' : 'destructive'} className={restaurant.status === 'actif' ? 'bg-green-500' : ''}>
+                                {restaurant.status}
+                            </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                            <Button asChild variant="outline" size="sm">

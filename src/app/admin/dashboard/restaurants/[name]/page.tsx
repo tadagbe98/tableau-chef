@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShieldAlert } from 'lucide-react';
+import { Trash2, ShieldAlert, Ban, CheckCircle } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,18 +28,20 @@ interface User {
     email: string;
     role: string;
     restaurantName: string;
+    status: 'actif' | 'inactif';
 }
 
 interface RestaurantDetails {
     name: string;
     admin: User | null;
     staff: User[]; // Combined list of admin and employees
+    status: 'actif' | 'inactif';
 }
 
 export default function RestaurantDetailPage({ params }: { params: { name: string } }) {
     const [restaurant, setRestaurant] = useState<RestaurantDetails | null>(null);
     const [loading, setLoading] = useState(true);
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
     const restaurantName = decodeURIComponent(params.name);
     const router = useRouter();
     const { toast } = useToast();
@@ -69,7 +71,8 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
             setRestaurant({
                 name: restaurantName,
                 admin,
-                staff: sortedUsers
+                staff: sortedUsers,
+                status: admin?.status || 'actif',
             });
             setLoading(false);
         }, (error) => {
@@ -81,7 +84,7 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
     }, [restaurantName]);
     
     const handleDeleteRestaurant = async () => {
-        setIsDeleting(true);
+        setIsProcessing(true);
         try {
             const usersQuery = query(collection(db, 'users'), where("restaurantName", "==", restaurantName));
             const usersSnapshot = await getDocs(usersQuery);
@@ -114,7 +117,39 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
                 description: "Une erreur est survenue. Veuillez réessayer."
             });
         } finally {
-            setIsDeleting(false);
+            setIsProcessing(false);
+        }
+    }
+    
+    const handleToggleStatus = async () => {
+        if (!restaurant) return;
+        setIsProcessing(true);
+        const newStatus = restaurant.status === 'actif' ? 'inactif' : 'actif';
+        try {
+            const usersQuery = query(collection(db, 'users'), where("restaurantName", "==", restaurantName));
+            const usersSnapshot = await getDocs(usersQuery);
+            
+            const batch = writeBatch(db);
+            usersSnapshot.forEach(doc => {
+                batch.update(doc.ref, { status: newStatus });
+            });
+            
+            await batch.commit();
+            
+            toast({
+                title: `Restaurant ${newStatus === 'actif' ? 'Réactivé' : 'Désactivé'}`,
+                description: `Le statut du restaurant "${restaurantName}" est maintenant "${newStatus}".`
+            });
+
+        } catch (error) {
+             console.error("Failed to toggle restaurant status:", error);
+             toast({
+                variant: 'destructive',
+                title: "Erreur de mise à jour",
+                description: "Une erreur est survenue. Veuillez réessayer."
+            });
+        } finally {
+            setIsProcessing(false);
         }
     }
 
@@ -150,16 +185,24 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>{restaurant.name}</CardTitle>
-                    {restaurant.admin ? (
-                        <CardDescription>
-                           Administré par {restaurant.admin.name} ({restaurant.admin.email})
-                        </CardDescription>
-                    ) : (
-                         <CardDescription className="text-orange-500">
-                           Aucun administrateur principal n'est assigné à ce restaurant.
-                        </CardDescription>
-                    )}
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <CardTitle>{restaurant.name}</CardTitle>
+                            {restaurant.admin ? (
+                                <CardDescription>
+                                   Administré par {restaurant.admin.name} ({restaurant.admin.email})
+                                </CardDescription>
+                            ) : (
+                                 <CardDescription className="text-orange-500">
+                                   Aucun administrateur principal n'est assigné à ce restaurant.
+                                </CardDescription>
+                            )}
+                        </div>
+                        <Badge variant={restaurant.status === 'actif' ? 'default' : 'secondary'} className={restaurant.status === 'actif' ? 'bg-green-500' : 'bg-gray-500'}>
+                           {restaurant.status === 'actif' ? <CheckCircle className="mr-2 h-4 w-4"/> : <Ban className="mr-2 h-4 w-4"/>}
+                           {restaurant.status}
+                        </Badge>
+                    </div>
                 </CardHeader>
             </Card>
 
@@ -177,6 +220,7 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
                                 <TableHead>Nom</TableHead>
                                 <TableHead>Email</TableHead>
                                 <TableHead>Rôle</TableHead>
+                                <TableHead>Statut</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -190,11 +234,16 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
                                                 {member.role}
                                             </Badge>
                                         </TableCell>
+                                        <TableCell>
+                                            <Badge variant={member.status === 'actif' ? 'outline' : 'secondary'}>
+                                                {member.status || 'actif'}
+                                            </Badge>
+                                        </TableCell>
                                     </TableRow>
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={3} className="text-center h-20">
+                                    <TableCell colSpan={4} className="text-center h-20">
                                         Aucun personnel assigné à ce restaurant.
                                     </TableCell>
                                 </TableRow>
@@ -210,20 +259,61 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
                         <ShieldAlert /> Zone de Danger
                     </CardTitle>
                      <CardDescription>
-                       Actions irréversibles concernant ce restaurant.
+                       Actions irréversibles ou importantes concernant ce restaurant.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm mb-4">
-                        La suppression d'un restaurant est définitive. Elle effacera le restaurant ainsi que tous les comptes utilisateurs (Admin et employés) qui y sont associés dans la base de données.
-                    </p>
+                    <div className="space-y-4">
+                        <div>
+                            <h3 className="font-semibold">Désactiver / Réactiver le restaurant</h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                               Désactiver un restaurant empêchera tous ses utilisateurs (y compris l'admin) de se connecter. Leurs données sont conservées et vous pouvez les réactiver à tout moment.
+                            </p>
+                        </div>
+                         <div>
+                            <h3 className="font-semibold">Supprimer le restaurant</h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                               La suppression est définitive. Elle effacera le restaurant ainsi que tous les comptes utilisateurs (Admin et employés) qui y sont associés dans la base de données.
+                            </p>
+                        </div>
+                    </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="flex gap-4">
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="destructive" disabled={isDeleting}>
+                            <Button variant="outline" disabled={isProcessing}>
+                                {restaurant.status === 'actif' ? (
+                                    <><Ban className="mr-2 h-4 w-4" /> Désactiver</>
+                                ) : (
+                                    <><CheckCircle className="mr-2 h-4 w-4" /> Réactiver</>
+                                )}
+                            </Button>
+                        </AlertDialogTrigger>
+                         <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmer la modification de statut</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Vous êtes sur le point de {restaurant.status === 'actif' ? 'désactiver' : 'réactiver'} le restaurant "{restaurantName}". 
+                                    {restaurant.status === 'actif' 
+                                        ? " Ses utilisateurs ne pourront plus se connecter." 
+                                        : " Ses utilisateurs pourront de nouveau se connecter."
+                                    }
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleToggleStatus}>
+                                    Oui, {restaurant.status === 'actif' ? 'désactiver' : 'réactiver'}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" disabled={isProcessing}>
                                 <Trash2 className="mr-2 h-4 w-4"/>
-                                {isDeleting ? "Suppression en cours..." : "Supprimer le Restaurant"}
+                                {isProcessing ? "Traitement..." : "Supprimer"}
                             </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
