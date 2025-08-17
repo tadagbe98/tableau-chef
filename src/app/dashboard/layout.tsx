@@ -49,6 +49,7 @@ import { collection, onSnapshot, query, where, orderBy, limit, writeBatch, getDo
 import { db } from '@/lib/firebase';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 interface Notification {
     id: string;
@@ -225,13 +226,14 @@ export default function DashboardLayout({
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
           <SidebarTrigger className="md:hidden" />
-          <div className="flex w-full items-center justify-end gap-4">
+          <div className="flex w-full items-center justify-end gap-2">
             {isRegisterOpen && (
               <Badge variant="outline" className="flex items-center gap-2 text-sm p-2 border-green-500 text-green-500">
                   <CheckCircle className="h-4 w-4" />
                   Caisse Ouverte ({openedBy})
               </Badge>
             )}
+            <ThemeSwitcher />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">

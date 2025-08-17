@@ -1,7 +1,7 @@
 
 'use client';
 
-import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { AuthProvider } from '@/context/AuthContext';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '@/components/icons/logo';
@@ -11,6 +11,7 @@ import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const [adminUser, setAdminUser] = useState<User | null>(null);
@@ -82,6 +83,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
           <span className="text-xl font-semibold">TableauChef - Super Admin</span>
         </Link>
         <div className="ml-auto flex items-center gap-4">
+            <ThemeSwitcher />
             <Button variant="ghost" asChild>
                 <Link href="/contact">
                     <MessageSquare className="mr-2 h-4 w-4"/> Support Client
