@@ -1,7 +1,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, Package, Sprout, BarChart, Bell, Users } from 'lucide-react';
+import { UtensilsCrossed, Package, Sprout, BarChart, Bell, Users, Heart } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
@@ -24,6 +24,11 @@ export default function Home() {
           <Button asChild>
             <Link href="/signup">Sign up</Link>
           </Button>
+           <Button variant="secondary" asChild>
+                <Link href="/contact">
+                    <Heart className="mr-2 h-4 w-4" /> Faites un don
+                </Link>
+            </Button>
         </nav>
       </header>
 

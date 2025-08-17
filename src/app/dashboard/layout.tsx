@@ -29,6 +29,7 @@ import {
   CheckCircle,
   Lock,
   MessageSquare,
+  Heart,
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import { Button } from '@/components/ui/button';
@@ -198,6 +199,14 @@ export default function DashboardLayout({
         </SidebarContent>
         <SidebarFooter>
           <SidebarMenu>
+             <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip={'Faites un don'}>
+                    <Link href="/contact" className="bg-primary/10 text-primary hover:bg-primary/20">
+                        <Heart />
+                        <span>Faites un don</span>
+                    </Link>
+                </SidebarMenuButton>
+             </SidebarMenuItem>
              <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname === '/contact'} tooltip={'Contacter le Support'}>
                 <Link href="/contact">

@@ -17,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { Separator } from "@/components/ui/separator";
+import { Heart } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -103,6 +104,10 @@ export default function LoginPage() {
            <div className="flex justify-center items-center text-sm gap-4">
                 <Link href="/contact" className="underline">
                     Contacter le support
+                </Link>
+                 <span className="text-muted-foreground">|</span>
+                 <Link href="/contact" className="underline text-primary font-medium flex items-center gap-1">
+                    <Heart className="h-4 w-4" /> Faites un don
                 </Link>
           </div>
         </CardContent>

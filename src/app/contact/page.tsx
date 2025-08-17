@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/icons/logo';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Phone } from 'lucide-react';
+import { Mail, Phone, Heart } from 'lucide-react';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -103,6 +103,21 @@ export default function ContactPage() {
               </div>
             </div>
           </div>
+           <Card className="bg-gradient-to-br from-primary/10 to-transparent">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Heart className="text-primary"/> Soutenez le Projet
+                </CardTitle>
+                <CardDescription>
+                    Si TableauChef vous est utile, pensez à faire un don pour soutenir son développement continu et l'ajout de nouvelles fonctionnalités.
+                </CardDescription>
+              </CardHeader>
+              <CardFooter>
+                 <Button asChild>
+                    <a href="https://wa.me/2250586615430" target="_blank">Faire un don</a>
+                </Button>
+              </CardFooter>
+          </Card>
         </div>
 
         <Card>
