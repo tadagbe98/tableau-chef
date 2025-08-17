@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface ContactMessage {
     id: string;
@@ -20,22 +21,40 @@ interface ContactMessage {
 export default function AdminPage() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    const messagesCollectionRef = collection(db, 'contact_messages');
-    const q = query(messagesCollectionRef, orderBy('createdAt', 'desc'));
+    // Redirect if not authenticated and auth check is complete
+    if (!authLoading && !user) {
+      router.push('/login');
+      return;
+    }
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedMessages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContactMessage));
-      setMessages(fetchedMessages);
-      setLoading(false);
-    }, (error) => {
-      console.error("Failed to fetch contact messages:", error);
-      setLoading(false);
-    });
+    if (user) {
+        const messagesCollectionRef = collection(db, 'contact_messages');
+        const q = query(messagesCollectionRef, orderBy('createdAt', 'desc'));
 
-    return () => unsubscribe();
-  }, []);
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const fetchedMessages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContactMessage));
+          setMessages(fetchedMessages);
+          setLoading(false);
+        }, (error) => {
+          console.error("Failed to fetch contact messages:", error);
+          setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }
+  }, [user, authLoading, router]);
+
+  if (authLoading || !user) {
+      return (
+          <div className="flex justify-center items-center h-screen">
+              <p>Chargement...</p>
+          </div>
+      )
+  }
 
   return (
     <div>
