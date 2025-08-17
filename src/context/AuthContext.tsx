@@ -9,7 +9,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
 import { initializeApp, deleteApp } from 'firebase/app';
-import { useLocale } from 'next-intl';
 
 
 // Définir un type pour notre utilisateur qui inclut le rôle
@@ -101,7 +100,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-  const locale = useLocale();
   const { toast } = useToast();
 
   // Register state
@@ -169,7 +167,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (loading) return;
 
     const isAuthPage = pathname.endsWith('/login') || pathname.endsWith('/signup');
-    const isPublicPage = isAuthPage || pathname.endsWith('/contact') || pathname.endsWith('/privacy') || pathname.endsWith('/terms') || pathname === `/${locale}` || pathname === '/';
+    const isPublicPage = isAuthPage || pathname.endsWith('/contact') || pathname.endsWith('/privacy') || pathname.endsWith('/terms') || pathname === '/';
     const isAdminArea = pathname.includes('/admin');
 
     if (!user && !isPublicPage && !isAdminArea) {
@@ -178,7 +176,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       router.push('/dashboard');
     }
 
-  }, [user, loading, router, pathname, locale]);
+  }, [user, loading, router, pathname]);
 
   const login = (email: string, pass: string) => {
       return signInWithEmailAndPassword(auth, email, pass);
@@ -278,7 +276,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return signOut(auth);
   }
   
-  const isAuthProtected = ![`/${locale}/`, `/${locale}/login`, `/${locale}/signup`, `/${locale}/contact`, `/${locale}/privacy`, `/${locale}/terms`].includes(pathname) && !pathname.includes('/admin');
+  const isAuthProtected = !['/', '/login', '/signup', '/contact', '/privacy', '/terms'].includes(pathname) && !pathname.includes('/admin');
 
   if (loading && isAuthProtected) {
     return (

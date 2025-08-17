@@ -16,25 +16,22 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import { useTranslations, useLocale } from 'next-intl';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const currencies = ['EUR', 'USD', 'GBP', 'CHF'];
+const currencies = ['EUR', 'USD', 'GBP', 'CHF', 'XOF'];
 const languages = [
-    { code: 'en', name: 'English' },
     { code: 'fr', name: 'Français' },
+    { code: 'en', name: 'English' },
     { code: 'it', name: 'Italiano' },
     { code: 'pt', name: 'Português (BR)' },
 ];
 
 export default function SignupPage() {
-  const t = useTranslations('SignupPage');
-  const locale = useLocale();
   const [fullName, setFullName] = useState('');
   const [restaurantName, setRestaurantName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [language, setLanguage] = useState(locale);
+  const [language, setLanguage] = useState('fr');
   const [currency, setCurrency] = useState('EUR');
   const [vatRate, setVatRate] = useState('20');
   const [loading, setLoading] = useState(false);
@@ -70,7 +67,7 @@ export default function SignupPage() {
           description: "Votre compte administrateur a été créé avec succès."
       });
 
-      router.push(`/${language}/dashboard`);
+      router.push('/dashboard');
 
     } catch (error: any) {
        let description = "Impossible de créer le compte. Veuillez réessayer.";
@@ -99,21 +96,21 @@ export default function SignupPage() {
             <Logo className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold tracking-tight">TableauChef</span>
           </Link>
-          <CardTitle className="text-2xl">{t('title')}</CardTitle>
-          <CardDescription>{t('description')}</CardDescription>
+          <CardTitle className="text-2xl">Créez votre restaurant</CardTitle>
+          <CardDescription>Entrez vos informations pour créer un compte</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignup} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="full-name">{t('fullNameLabel')}</Label>
+              <Label htmlFor="full-name">Nom Complet</Label>
               <Input id="full-name" placeholder="John Doe" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="restaurant-name">{t('restaurantNameLabel')}</Label>
+              <Label htmlFor="restaurant-name">Nom du Restaurant</Label>
               <Input id="restaurant-name" placeholder="The Good Place" required value={restaurantName} onChange={(e) => setRestaurantName(e.target.value)} />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="email">{t('emailLabel')}</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -124,13 +121,13 @@ export default function SignupPage() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">{t('passwordLabel')}</Label>
+              <Label htmlFor="password">Mot de passe</Label>
               <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                    <Label htmlFor="language">{t('languageLabel')}</Label>
+                    <Label htmlFor="language">Langue</Label>
                     <Select onValueChange={setLanguage} defaultValue={language}>
                         <SelectTrigger><SelectValue/></SelectTrigger>
                         <SelectContent>
@@ -141,7 +138,7 @@ export default function SignupPage() {
                     </Select>
                 </div>
                 <div className="grid gap-2">
-                    <Label htmlFor="currency">{t('currencyLabel')}</Label>
+                    <Label htmlFor="currency">Devise</Label>
                     <Select onValueChange={setCurrency} defaultValue={currency}>
                         <SelectTrigger><SelectValue/></SelectTrigger>
                         <SelectContent>
@@ -154,18 +151,18 @@ export default function SignupPage() {
             </div>
 
              <div className="grid gap-2">
-                <Label htmlFor="vatRate">{t('vatLabel')}</Label>
+                <Label htmlFor="vatRate">Taux de TVA (%)</Label>
                 <Input id="vatRate" type="number" step="0.01" placeholder="20" required value={vatRate} onChange={(e) => setVatRate(e.target.value)} />
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-               {loading ? t('loadingButton') : t('submitButton')}
+               {loading ? "Création..." : "Créer un compte"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
-            {t('hasAccount')}{" "}
+            Vous avez déjà un compte ?{" "}
             <Link href="/login" className="underline">
-              {t('logIn')}
+              Se connecter
             </Link>
           </div>
         </CardContent>

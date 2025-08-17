@@ -17,10 +17,8 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { Separator } from "@/components/ui/separator";
-import { useTranslations } from 'next-intl';
 
 export default function LoginPage() {
-  const t = useTranslations('LoginPage');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -38,7 +36,7 @@ export default function LoginPage() {
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: t('loadingButton'),
+        title: "Erreur de connexion",
         description: "Email ou mot de passe incorrect.",
       });
       console.error("Login Error:", error);
@@ -55,15 +53,15 @@ export default function LoginPage() {
             <Logo className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold tracking-tight">TableauChef</span>
           </Link>
-          <CardTitle className="text-2xl">{t('title')}</CardTitle>
+          <CardTitle className="text-2xl">Connexion</CardTitle>
           <CardDescription>
-            {t('description')}
+            Entrez vos identifiants pour accéder à votre espace.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">{t('emailLabel')}</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -75,12 +73,12 @@ export default function LoginPage() {
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
-                <Label htmlFor="password">{t('passwordLabel')}</Label>
+                <Label htmlFor="password">Mot de passe</Label>
                 <Link
                   href="#"
                   className="ml-auto inline-block text-sm underline"
                 >
-                  {t('forgotPassword')}
+                  Mot de passe oublié ?
                 </Link>
               </div>
               <Input 
@@ -92,19 +90,19 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? t('loadingButton') : t('submitButton')}
+              {loading ? "Connexion en cours..." : "Se connecter"}
             </Button>
           </form>
            <div className="mt-4 text-center text-sm">
-            {t('noAccount')}{" "}
+            Vous n'avez pas de compte ?{" "}
             <Link href="/signup" className="underline">
-              {t('signUp')}
+              S'inscrire
             </Link>
           </div>
           <Separator className="my-4" />
            <div className="flex justify-center items-center text-sm gap-4">
                 <Link href="/contact" className="underline">
-                    {t('contactSupport')}
+                    Contacter le support
                 </Link>
           </div>
         </CardContent>
