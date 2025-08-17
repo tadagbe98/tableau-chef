@@ -76,10 +76,10 @@ export default function AdminLoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Identifiant Super Admin</Label>
+              <Label htmlFor="email">Email Super Admin</Label>
               <Input
                 id="email"
-                type="text"
+                type="email"
                 placeholder="admin@tableauchef.app"
                 required
                 value={email}
