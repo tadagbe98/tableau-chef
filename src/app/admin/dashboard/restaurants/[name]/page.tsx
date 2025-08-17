@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { collection, onSnapshot, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -38,11 +38,12 @@ interface RestaurantDetails {
     status: 'actif' | 'inactif';
 }
 
-export default function RestaurantDetailPage({ params }: { params: { name: string } }) {
+export default function RestaurantDetailPage({ params }: { params: Promise<{ name: string }> }) {
+    const { name } = use(params);
     const [restaurant, setRestaurant] = useState<RestaurantDetails | null>(null);
     const [loading, setLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
-    const restaurantName = decodeURIComponent(params.name);
+    const restaurantName = decodeURIComponent(name);
     const router = useRouter();
     const { toast } = useToast();
 
