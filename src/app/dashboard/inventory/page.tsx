@@ -249,11 +249,11 @@ export default function InventoryPage() {
                         <Input id="category" value={newItem.category} onChange={handleNewItemChange} className="col-span-3" placeholder="Ex: Épicerie" />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="stock" className="text-right">Stock Initial</Label>
+                        <Label htmlFor="stock" className="text-right">Quantité Actuelle</Label>
                         <Input id="stock" type="number" value={newItem.stock} onChange={handleNewItemChange} className="col-span-3" placeholder="0" />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="maxStock" className="text-right">Stock Max</Label>
+                        <Label htmlFor="maxStock" className="text-right">Quantité Maximale</Label>
                         <Input id="maxStock" type="number" value={newItem.maxStock} onChange={handleNewItemChange} className="col-span-3" placeholder="100" />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
