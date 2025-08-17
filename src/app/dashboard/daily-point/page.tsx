@@ -457,8 +457,4 @@ export default function DailyPointPage() {
     </div>
     </TooltipProvider>
   );
-
-    
-
-
-    
+}

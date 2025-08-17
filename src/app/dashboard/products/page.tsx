@@ -375,8 +375,4 @@ export default function ProductsPage() {
       </Card>
     </div>
   );
-
-    
-
-
-
+}
