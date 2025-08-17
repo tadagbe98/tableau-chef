@@ -9,6 +9,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
 import { initializeApp, deleteApp } from 'firebase/app';
+import { useLocale } from 'next-intl';
 
 
 // Définir un type pour notre utilisateur qui inclut le rôle
@@ -16,13 +17,16 @@ export interface AppUser extends User {
   role?: string;
   restaurantName?: string;
   status?: 'actif' | 'inactif';
+  language?: string;
+  currency?: string;
+  vatRate?: number;
 }
 
 interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
   login: (email: string, pass: string) => Promise<any>;
-  signup: (email: string, pass: string, fullName: string, restaurantName: string) => Promise<any>;
+  signup: (email: string, pass: string, data: Record<string, any>) => Promise<any>;
   logout: () => Promise<void>;
   createUser: (email: string, pass: string, fullName: string, role: string) => Promise<void>;
   createRestaurantWithAdmin: (email: string, pass: string, adminName: string, restaurantName: string) => Promise<void>;
@@ -97,6 +101,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
+  const locale = useLocale();
   const { toast } = useToast();
 
   // Register state
@@ -132,6 +137,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               role: userData.role,
               restaurantName: userData.restaurantName,
               status: userData.status || 'actif',
+              language: userData.language || 'fr',
+              currency: userData.currency || 'EUR',
+              vatRate: userData.vatRate || 20,
             };
             
             if (appUser.role !== 'Super Admin' && appUser.status === 'inactif') {
@@ -159,35 +167,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (loading) return;
-    const publicPages = ['/', '/login', '/signup', '/contact'];
-    const isAdminArea = pathname.startsWith('/admin');
-    const isPublicPage = publicPages.includes(pathname) || isAdminArea;
+    const publicPages = [`/${locale}/`, `/${locale}/login`, `/${locale}/signup`, `/${locale}/contact`, `/${locale}/privacy`, `/${locale}/terms`];
+    const isAdminArea = pathname.includes('/admin');
     
+    // Check if the current path is one of the public pages
+    const isPublicPage = publicPages.some(p => p === pathname) || isAdminArea;
+
     if (!user && !isPublicPage) {
-      router.push('/login');
-    } else if (user && (pathname === '/login' || pathname === '/signup' || pathname === '/') && !isAdminArea) {
+      router.push(`/${locale}/login`);
+    } else if (user && [`/${locale}/login`, `/${locale}/signup`, `/${locale}/`].includes(pathname) && !isAdminArea) {
       if(user.role !== 'Super Admin'){
-        router.push('/dashboard');
+        router.push(`/${user.language || locale}/dashboard`);
       }
     }
-  }, [user, loading, router, pathname]);
+  }, [user, loading, router, pathname, locale]);
 
   const login = (email: string, pass: string) => {
       return signInWithEmailAndPassword(auth, email, pass);
   }
 
-  const signup = async (email: string, pass:string, fullName: string, restaurantName: string) => {
+  const signup = async (email: string, pass:string, data: Record<string, any>) => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       const newUser = userCredential.user;
 
-      await updateProfile(newUser, { displayName: fullName });
+      await updateProfile(newUser, { displayName: data.fullName });
       
       const userDocRef = doc(db, "users", newUser.uid);
       const userData = {
         uid: newUser.uid,
         email: newUser.email,
-        name: fullName,
-        restaurantName: restaurantName,
+        name: data.fullName,
+        restaurantName: data.restaurantName,
+        language: data.language,
+        currency: data.currency,
+        vatRate: data.vatRate,
         role: 'Admin',
         status: 'actif',
       };
@@ -202,8 +215,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
   
   const createSecondaryAuthUser = async (email: string, pass: string) => {
-    // This function creates a user in a temporary Firebase app instance
-    // to avoid signing out the current admin user.
     const appName = `secondary-app-${new Date().getTime()}`;
     const secondaryApp = initializeApp({
         apiKey: auth.app.options.apiKey,
@@ -260,15 +271,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       role: 'Admin',
       status: 'actif',
     });
-    // Note: We are NOT calling seedInitialData here, because that would populate
-    // the new restaurant's products/inventory, which should be done by the restaurant's admin.
   }
 
   const logout = () => {
     return signOut(auth);
   }
   
-  const isAuthProtected = !['/', '/login', '/signup', '/contact'].includes(pathname) && !pathname.startsWith('/admin');
+  const isAuthProtected = ![`/${locale}/`, `/${locale}/login`, `/${locale}/signup`, `/${locale}/contact`].includes(pathname) && !pathname.includes('/admin');
 
   if (loading && isAuthProtected) {
     return (

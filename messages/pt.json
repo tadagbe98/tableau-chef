@@ -1,0 +1,47 @@
+{
+  "LoginPage": {
+    "title": "Login",
+    "description": "Digite suas credenciais para acessar seu espaço.",
+    "emailLabel": "Email",
+    "passwordLabel": "Senha",
+    "forgotPassword": "Esqueceu a senha?",
+    "submitButton": "Entrar",
+    "loadingButton": "Entrando...",
+    "noAccount": "Não tem uma conta?",
+    "signUp": "Cadastre-se",
+    "contactSupport": "Contatar Suporte"
+  },
+  "SignupPage": {
+    "title": "Crie seu restaurante",
+    "description": "Insira suas informações para criar uma conta",
+    "fullNameLabel": "Nome Completo",
+    "restaurantNameLabel": "Nome do Restaurante",
+    "emailLabel": "Email",
+    "passwordLabel": "Senha",
+    "languageLabel": "Idioma",
+    "currencyLabel": "Moeda",
+    "vatLabel": "Taxa de IVA (%)",
+    "submitButton": "Criar conta",
+    "loadingButton": "Criando...",
+    "hasAccount": "Já tem uma conta?",
+    "logIn": "Entrar"
+  },
+  "HomePage": {
+    "contact": "Contato",
+    "login": "Login",
+    "signup": "Cadastre-se",
+    "main_title": "A Plataforma Definitiva de Gestão de Restaurantes",
+    "main_description": "Do inventário e receitas aos pedidos e pagamentos, o TableauChef reúne todas as operações do seu restaurante em um único painel elegante.",
+    "start_free": "Comece Gratuitamente",
+    "contact_us": "Contate-nos",
+    "features_title": "Tudo o que você precisa, nada supérfluo.",
+    "features_description": "Recursos poderosos para otimizar o sucesso do seu restaurante."
+  },
+  "LanguageSwitcher": {
+    "toggle": "Mudar idioma",
+    "en": "Inglês",
+    "fr": "Francês",
+    "it": "Italiano",
+    "pt": "Português (BR)"
+  }
+}

@@ -1,4 +1,5 @@
 
+
 'use client';
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
@@ -74,28 +75,28 @@ export default function MessagesPage() {
                         </TableRow>
                     ) : (
                         messages.map((msg) => (
-                            <AccordionItem value={msg.id} key={msg.id} asChild>
+                           <AccordionItem value={msg.id} key={msg.id} asChild>
                                 <>
-                                 <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-                                    <td colSpan={4} className="p-0">
-                                       <AccordionTrigger className="flex w-full items-center p-4 text-left hover:no-underline">
-                                            <div className="w-1/4 text-xs text-muted-foreground">
-                                                {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt.seconds * 1000), { addSuffix: true, locale: fr }) : '...'}
-                                            </div>
-                                            <div className="w-1/4 font-medium">{msg.name} <span className="text-muted-foreground">({msg.email})</span></div>
-                                            <div className="w-2/4 max-w-md truncate pr-4">{msg.message}</div>
-                                       </AccordionTrigger>
-                                    </td>
-                                </tr>
-                                <AccordionContent asChild>
-                                    <tr>
-                                        <td colSpan={4} className="p-0">
-                                            <div className="p-4 bg-secondary rounded-md m-2">
-                                                <p className="whitespace-pre-wrap">{msg.message}</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </AccordionContent>
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="p-0">
+                                            <AccordionTrigger className="flex w-full items-center p-4 text-left hover:no-underline">
+                                                <div className="w-1/4 text-xs text-muted-foreground">
+                                                    {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt.seconds * 1000), { addSuffix: true, locale: fr }) : '...'}
+                                                </div>
+                                                <div className="w-1/4 font-medium">{msg.name} <span className="text-muted-foreground">({msg.email})</span></div>
+                                                <div className="w-2/4 max-w-md truncate pr-4">{msg.message}</div>
+                                            </AccordionTrigger>
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="p-0">
+                                            <AccordionContent>
+                                                <div className="p-4 bg-secondary rounded-md m-2">
+                                                    <p className="whitespace-pre-wrap">{msg.message}</p>
+                                                </div>
+                                            </AccordionContent>
+                                        </TableCell>
+                                    </TableRow>
                                 </>
                             </AccordionItem>
                         ))
