@@ -1,23 +1,17 @@
+
 'use client';
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, ShoppingBag, Users, UtensilsCrossed } from 'lucide-react';
+import { DollarSign, ShoppingBag, Users, UtensilsCrossed, HelpCircle } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, Tooltip } from 'recharts';
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
-
-const salesData = [
-  { date: 'Lun', sales: 4000 },
-  { date: 'Mar', sales: 3000 },
-  { date: 'Mer', sales: 2000 },
-  { date: 'Jeu', sales: 2780 },
-  { date: 'Ven', sales: 1890 },
-  { date: 'Sam', sales: 2390 },
-  { date: 'Dim', sales: 3490 },
-];
+import { useEffect, useState } from 'react';
+import { collection, query, where, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const chartConfig = {
   sales: {
@@ -43,6 +37,63 @@ const recentOrders = [
 ]
 
 function AdminDashboard() {
+    const { user } = useAuth();
+    const [stats, setStats] = useState({ totalRevenue: 0, userCount: 0 });
+    const [salesData, setSalesData] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (!user?.restaurantName) return;
+        setLoading(true);
+
+        const fetchStats = async () => {
+            // Fetch users count
+            const usersQuery = query(
+                collection(db, 'users'), 
+                where("restaurantName", "==", user.restaurantName)
+            );
+            const usersSnapshot = await getDocs(usersQuery);
+            setStats(prev => ({ ...prev, userCount: usersSnapshot.size }));
+        };
+
+        fetchStats();
+        
+        // Listen for journal updates
+        const journalsQuery = query(
+            collection(db, 'journals'), 
+            orderBy('date', 'desc')
+        );
+        
+        const unsubscribe = onSnapshot(journalsQuery, (snapshot) => {
+            const journals = snapshot.docs.map(doc => doc.data());
+            
+            const totalRevenue = journals.reduce((acc, journal) => acc + journal.totalSales, 0);
+            
+            const dailySales = journals.reduce((acc, journal) => {
+                const date = new Date(journal.date).toLocaleDateString('fr-CA');
+                if (!acc[date]) {
+                    acc[date] = 0;
+                }
+                acc[date] += journal.totalSales;
+                return acc;
+            }, {});
+
+            const formattedSalesData = Object.entries(dailySales)
+                .map(([date, sales]) => ({
+                    date: new Date(date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }),
+                    sales: sales
+                }))
+                .reverse();
+
+            setSalesData(formattedSalesData);
+            setStats(prev => ({ ...prev, totalRevenue }));
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
+
+    }, [user?.restaurantName]);
+
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -52,8 +103,12 @@ function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">45,231.89 €</div>
-            <p className="text-xs text-muted-foreground">+20.1% par rapport au mois dernier</p>
+            {loading ? (
+                <div className="h-7 w-28 bg-muted animate-pulse rounded-md" />
+            ) : (
+                <div className="text-2xl font-bold">{stats.totalRevenue.toFixed(2)} {user?.currency}</div>
+            )}
+            <p className="text-xs text-muted-foreground">Basé sur toutes les clôtures de caisse</p>
           </CardContent>
         </Card>
         <Card>
@@ -62,28 +117,32 @@ function AdminDashboard() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+2350</div>
-            <p className="text-xs text-muted-foreground">+180.1% par rapport au mois dernier</p>
+             {loading ? (
+                <div className="h-7 w-12 bg-muted animate-pulse rounded-md" />
+            ) : (
+                <div className="text-2xl font-bold">{stats.userCount}</div>
+            )}
+            <p className="text-xs text-muted-foreground">Total des utilisateurs du restaurant</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Commandes</CardTitle>
-            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+             <HelpCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">+12,234</div>
-            <p className="text-xs text-muted-foreground">+19% par rapport au mois dernier</p>
+            <div className="text-2xl font-bold">À venir</div>
+            <p className="text-xs text-muted-foreground">Sera disponible avec la gestion des commandes</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Panier Moyen</CardTitle>
-            <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
+             <HelpCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">28.50 €</div>
-            <p className="text-xs text-muted-foreground">+5.2% par rapport au mois dernier</p>
+            <div className="text-2xl font-bold">À venir</div>
+            <p className="text-xs text-muted-foreground">Sera disponible avec la gestion des commandes</p>
           </CardContent>
         </Card>
       </div>
@@ -92,7 +151,7 @@ function AdminDashboard() {
         <Card className="md:col-span-3">
           <CardHeader>
             <CardTitle>Aperçu des Ventes</CardTitle>
-            <CardDescription>Performance des ventes de cette semaine.</CardDescription>
+            <CardDescription>Performance des ventes sur les derniers jours d'activité.</CardDescription>
           </CardHeader>
           <CardContent>
              <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
@@ -106,21 +165,30 @@ function AdminDashboard() {
                 >
                     <CartesianGrid vertical={false} />
                     <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
+                        dataKey="date"
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                    />
+                    <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        tickMargin={8}
+                        tickFormatter={(value) => `${value} ${user?.currency}`}
                     />
                     <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dot" />}
+                        cursor={false}
+                        content={<ChartTooltipContent 
+                            formatter={(value) => `${(value as number).toFixed(2)} ${user?.currency}`}
+                            indicator="dot" 
+                        />}
                     />
                     <Line
-                    dataKey="sales"
-                    type="monotone"
-                    stroke="var(--color-sales)"
-                    strokeWidth={2}
-                    dot={false}
+                        dataKey="sales"
+                        type="monotone"
+                        stroke="var(--color-sales)"
+                        strokeWidth={2}
+                        dot={true}
                     />
                 </LineChart>
             </ChartContainer>
@@ -129,7 +197,7 @@ function AdminDashboard() {
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>Produits les Plus Vendus</CardTitle>
-            <CardDescription>Vos meilleures ventes cette semaine.</CardDescription>
+            <CardDescription>Vos meilleures ventes. (Données d'exemple)</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
@@ -137,7 +205,13 @@ function AdminDashboard() {
                     <CartesianGrid horizontal={false} />
                     <XAxis type="number" dataKey="sales" hide />
                     <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={120} />
-                    <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                    <ChartTooltip 
+                        cursor={false} 
+                        content={<ChartTooltipContent 
+                            indicator="dot" 
+                            formatter={(value, name) => `${value} ventes`}
+                        />} 
+                    />
                     <Bar dataKey="sales" fill="var(--color-sales)" radius={[0, 4, 4, 0]} />
                 </BarChart>
             </ChartContainer>
@@ -148,6 +222,7 @@ function AdminDashboard() {
        <Card>
         <CardHeader>
           <CardTitle>Suivi des Commandes en Temps Réel</CardTitle>
+           <CardDescription>Les dernières commandes de votre restaurant. (Données d'exemple)</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -210,3 +285,5 @@ export default function DashboardPage() {
         </div>
     )
 }
+
+    
