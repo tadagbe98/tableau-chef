@@ -5,92 +5,156 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { MoreHorizontal, PlusCircle, MinusCircle, CheckCircle } from "lucide-react";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { collection, onSnapshot, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useToast } from "@/hooks/use-toast";
 
-const inventoryItems = [
-  { id: 1, name: "Pâte à Pizza", category: "Ingrédients", stock: 80, maxStock: 100, unit: "kg" },
-  { id: 2, name: "Sauce Tomate", category: "Ingrédients", stock: 50, maxStock: 100, unit: "litres" },
-  { id: 3, name: "Fromage Mozzarella", category: "Ingrédients", stock: 25, maxStock: 50, unit: "kg" },
-  { id: 4, name: "Steaks de Boeuf", category: "Ingrédients", stock: 120, maxStock: 200, unit: "unités" },
-  { id: 5, name: "Pains à Burger", category: "Ingrédients", stock: 90, maxStock: 200, unit: "unités" },
-  { id: 6, name: "Laitue", category: "Légumes", stock: 15, maxStock: 30, unit: "têtes" },
-  { id: 7, name: "Canettes de Coca", category: "Boissons", stock: 180, maxStock: 240, unit: "canettes" },
-];
+interface InventoryItem {
+    id: string;
+    name: string;
+    category: string;
+    stock: number;
+    maxStock: number;
+    unit: string;
+    lowStockThreshold: number;
+}
 
 export default function InventoryPage() {
-    const [dialogType, setDialogType] = useState(null);
-    const [selectedItem, setSelectedItem] = useState(null);
-    
-    const openDialog = (type, item) => {
+    const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [dialogType, setDialogType] = useState<'add' | 'use' | 'count' | null>(null);
+    const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+    const [quantity, setQuantity] = useState('');
+    const { toast } = useToast();
+
+    const inventoryCollectionRef = collection(db, 'inventory');
+    const notificationsCollectionRef = collection(db, 'notifications');
+
+    useEffect(() => {
+        const unsubscribe = onSnapshot(inventoryCollectionRef, (snapshot) => {
+            const fetchedItems = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as InventoryItem));
+            setInventoryItems(fetchedItems);
+        }, (error) => {
+            console.error("Erreur de snapshot Firestore pour l'inventaire:", error);
+            toast({
+                variant: "destructive",
+                title: "Erreur de chargement",
+                description: "Impossible de charger l'inventaire. Vérifiez vos permissions Firestore.",
+            });
+        });
+        return () => unsubscribe();
+    }, []);
+
+    const openDialog = (type: 'add' | 'use' | 'count', item: InventoryItem) => {
         setDialogType(type);
         setSelectedItem(item);
+        setIsDialogOpen(true);
+        setQuantity('');
     }
 
     const closeDialog = () => {
+        setIsDialogOpen(false);
         setDialogType(null);
         setSelectedItem(null);
+        setQuantity('');
     }
+
+    const handleNotification = async (item: InventoryItem, newStock: number) => {
+        const threshold = item.maxStock * (item.lowStockThreshold || 0.2); // 20% par défaut
+        if (newStock <= threshold && item.stock > threshold) {
+            await addDoc(notificationsCollectionRef, {
+                message: `Stock bas : ${item.name} est à ${newStock} ${item.unit}.`,
+                type: 'stock',
+                isRead: false,
+                createdAt: serverTimestamp(),
+            });
+            toast({
+                title: "Alerte de Stock Bas",
+                description: `Une notification a été générée pour ${item.name}.`,
+            });
+        }
+    };
     
+    const handleUpdateStock = async () => {
+        if (!selectedItem || !quantity) return;
+
+        const currentStock = selectedItem.stock;
+        const amount = parseInt(quantity, 10);
+        let newStock: number;
+
+        if (dialogType === 'add') {
+            newStock = currentStock + amount;
+        } else if (dialogType === 'use') {
+            newStock = currentStock - amount;
+        } else if (dialogType === 'count') {
+            newStock = amount;
+        } else {
+            return;
+        }
+        
+        if (newStock < 0) {
+            toast({ variant: 'destructive', title: 'Stock Négatif', description: 'Le stock ne peut pas être négatif.'});
+            return;
+        }
+
+        const itemDocRef = doc(db, 'inventory', selectedItem.id);
+        try {
+            await updateDoc(itemDocRef, { stock: newStock });
+            await handleNotification(selectedItem, newStock);
+            toast({ title: 'Succès', description: `Stock de ${selectedItem.name} mis à jour.`});
+            closeDialog();
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour le stock.'});
+            console.error(error);
+        }
+    }
+
     const getDialogContent = () => {
         if (!selectedItem) return null;
         
         switch(dialogType) {
             case 'add':
-                return (
-                    <>
-                        <DialogTitle>Ajouter du Stock</DialogTitle>
-                        <DialogDescription>Ajouter du nouveau stock pour {selectedItem.name}. Stock actuel : {selectedItem.stock} {selectedItem.unit}.</DialogDescription>
-                         <div className="grid gap-4 py-4">
-                            <Label htmlFor="add-quantity">Quantité à Ajouter</Label>
-                            <Input id="add-quantity" type="number" placeholder="0" />
-                        </div>
-                    </>
-                );
+                return {
+                    title: "Ajouter du Stock",
+                    description: `Ajouter du nouveau stock pour ${selectedItem.name}. Stock actuel : ${selectedItem.stock} ${selectedItem.unit}.`,
+                    label: "Quantité à Ajouter",
+                    placeholder: "0"
+                };
             case 'use':
-                 return (
-                    <>
-                        <DialogTitle>Utiliser du Stock</DialogTitle>
-                        <DialogDescription>Enregistrer le stock utilisé pour {selectedItem.name}. Stock actuel : {selectedItem.stock} {selectedItem.unit}.</DialogDescription>
-                         <div className="grid gap-4 py-4">
-                            <Label htmlFor="use-quantity">Quantité à Utiliser</Label>
-                            <Input id="use-quantity" type="number" placeholder="0" />
-                        </div>
-                    </>
-                );
+                 return {
+                    title: "Utiliser du Stock",
+                    description: `Enregistrer le stock utilisé pour ${selectedItem.name}. Stock actuel : ${selectedItem.stock} ${selectedItem.unit}.`,
+                    label: "Quantité à Utiliser",
+                    placeholder: "0"
+                };
             case 'count':
-                 return (
-                    <>
-                        <DialogTitle>Comptage Physique</DialogTitle>
-                        <DialogDescription>Mettre à jour le stock pour {selectedItem.name} après un comptage physique. Stock actuel : {selectedItem.stock} {selectedItem.unit}.</DialogDescription>
-                         <div className="grid gap-4 py-4">
-                            <Label htmlFor="count-quantity">Nouvelle Quantité Totale</Label>
-                            <Input id="count-quantity" type="number" placeholder={selectedItem.stock} />
-                        </div>
-                    </>
-                );
+                 return {
+                    title: "Comptage Physique",
+                    description: `Mettre à jour le stock pour ${selectedItem.name} après un comptage physique. Stock actuel : ${selectedItem.stock} ${selectedItem.unit}.`,
+                    label: "Nouvelle Quantité Totale",
+                    placeholder: String(selectedItem.stock)
+                };
             default:
                 return null;
         }
     }
+    
+    const dialogContent = getDialogContent();
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Inventaire</h1>
-        <div className="flex gap-2">
-            <Button variant="outline"><MinusCircle className="mr-2 h-4 w-4" /> Utiliser Stock</Button>
-            <Button><PlusCircle className="mr-2 h-4 w-4" /> Ajouter Stock</Button>
-            <Button variant="secondary"><CheckCircle className="mr-2 h-4 w-4" /> Comptage Physique</Button>
-        </div>
       </div>
       <Card>
         <CardHeader>
           <CardTitle>Articles en Inventaire</CardTitle>
-          <CardDescription>Suivez et gérez vos niveaux de stock.</CardDescription>
+          <CardDescription>Suivez et gérez vos niveaux de stock. Les données sont en temps réel.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -117,30 +181,26 @@ export default function InventoryPage() {
                     </TableCell>
                     <TableCell className="text-right">{item.stock} / {item.maxStock} {item.unit}</TableCell>
                     <TableCell>
-                        <Dialog>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                <Button aria-haspopup="true" size="icon" variant="ghost">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                    <span className="sr-only">Ouvrir le menu</span>
-                                </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                <DialogTrigger asChild onClick={() => openDialog('add', item)}><DropdownMenuItem>Ajouter Stock</DropdownMenuItem></DialogTrigger>
-                                <DialogTrigger asChild onClick={() => openDialog('use', item)}><DropdownMenuItem>Utiliser Stock</DropdownMenuItem></DialogTrigger>
-                                <DialogTrigger asChild onClick={() => openDialog('count', item)}><DropdownMenuItem>Comptage Physique</DropdownMenuItem></DialogTrigger>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                            <DialogContent className="sm:max-w-[425px]">
-                                <DialogHeader>
-                                    {getDialogContent()}
-                                </DialogHeader>
-                                <DialogFooter>
-                                    <Button type="submit">Enregistrer</Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Ouvrir le menu</span>
+                            </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onSelect={() => openDialog('add', item)}>
+                                <PlusCircle className="mr-2 h-4 w-4"/> Ajouter Stock
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => openDialog('use', item)}>
+                                <MinusCircle className="mr-2 h-4 w-4"/> Utiliser Stock
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => openDialog('count', item)}>
+                                <CheckCircle className="mr-2 h-4 w-4"/> Comptage Physique
+                            </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 );
@@ -149,6 +209,28 @@ export default function InventoryPage() {
           </Table>
         </CardContent>
       </Card>
+      
+      <Dialog open={isDialogOpen} onOpenChange={closeDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+                <DialogTitle>{dialogContent?.title}</DialogTitle>
+                <DialogDescription>{dialogContent?.description}</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+                <Label htmlFor="quantity">{dialogContent?.label}</Label>
+                <Input 
+                    id="quantity" 
+                    type="number" 
+                    placeholder={dialogContent?.placeholder} 
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                />
+            </div>
+            <DialogFooter>
+                <Button onClick={handleUpdateStock}>Enregistrer</Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
     </div>
   );
 }

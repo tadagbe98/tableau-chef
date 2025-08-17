@@ -40,9 +40,18 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
+interface Notification {
+    id: string;
+    message: string;
+    createdAt: { seconds: number; nanoseconds: number; };
+}
 
 const allNavItems = [
   { href: '/dashboard', icon: Home, label: 'Tableau de bord', roles: ['Admin', 'Caissier', 'Gestionnaire de Stock'] },
@@ -63,12 +72,27 @@ export default function DashboardLayout({
   const { user, logout, isRegisterOpen, openedBy } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
     if (!user) {
       router.push('/login');
     }
   }, [user, router]);
+  
+  useEffect(() => {
+      if(!user) return;
+      
+      const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(5));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+          const fetchedNotifications = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Notification));
+          setNotifications(fetchedNotifications);
+      }, (error) => {
+          console.error("Erreur de notifications:", error);
+      });
+      
+      return () => unsubscribe();
+  }, [user]);
 
   const handleLogout = async () => {
     try {
@@ -151,24 +175,29 @@ export default function DashboardLayout({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
-                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
-                  </span>
+                  {notifications.length > 0 && (
+                     <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
+                    </span>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-80">
                 <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <span className="font-semibold">Stock bas : </span>&nbsp;Les tomates sont bientôt épuisées.
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <span className="font-semibold">Commande #124 : </span>&nbsp;Prête pour le retrait.
-                </DropdownMenuItem>
-                 <DropdownMenuItem>
-                  <span className="font-semibold">Rapport quotidien : </span>&nbsp;Prêt pour consultation.
-                </DropdownMenuItem>
+                {notifications.length > 0 ? (
+                    notifications.map(notif => (
+                        <DropdownMenuItem key={notif.id} className="flex flex-col items-start gap-1">
+                          <p className="text-sm font-medium">{notif.message}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {notif.createdAt ? formatDistanceToNow(new Date(notif.createdAt.seconds * 1000), { addSuffix: true, locale: fr }) : '...'}
+                          </p>
+                        </DropdownMenuItem>
+                    ))
+                ) : (
+                    <p className="p-2 text-sm text-muted-foreground text-center">Aucune nouvelle notification.</p>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
             <DropdownMenu>
