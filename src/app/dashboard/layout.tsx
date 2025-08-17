@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -40,7 +41,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -50,6 +51,7 @@ import { fr } from 'date-fns/locale';
 interface Notification {
     id: string;
     message: string;
+    type: 'stock' | 'order' | 'general';
     createdAt: { seconds: number; nanoseconds: number; };
 }
 
@@ -83,7 +85,7 @@ export default function DashboardLayout({
   useEffect(() => {
       if(!user) return;
       
-      const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(5));
+      const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(10));
       const unsubscribe = onSnapshot(q, (snapshot) => {
           const fetchedNotifications = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Notification));
           setNotifications(fetchedNotifications);
@@ -93,6 +95,16 @@ export default function DashboardLayout({
       
       return () => unsubscribe();
   }, [user]);
+  
+  const filteredNotifications = useMemo(() => {
+      if (!user) return [];
+      const userRole = user.role;
+      if (userRole === 'Admin' || userRole === 'Gestionnaire de Stock') {
+          return notifications; // Admins and Stock Managers see all notifications
+      }
+      // Other roles (e.g., Caissier) only see non-stock related notifications
+      return notifications.filter(notif => notif.type !== 'stock');
+  }, [notifications, user]);
 
   const handleLogout = async () => {
     try {
@@ -175,7 +187,7 @@ export default function DashboardLayout({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
-                  {notifications.length > 0 && (
+                  {filteredNotifications.length > 0 && (
                      <span className="absolute -top-1 -right-1 flex h-3 w-3">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-destructive"></span>
@@ -186,8 +198,8 @@ export default function DashboardLayout({
               <DropdownMenuContent align="end" className="w-80">
                 <DropdownMenuLabel>Notifications</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                {notifications.length > 0 ? (
-                    notifications.map(notif => (
+                {filteredNotifications.length > 0 ? (
+                    filteredNotifications.map(notif => (
                         <DropdownMenuItem key={notif.id} className="flex flex-col items-start gap-1">
                           <p className="text-sm font-medium">{notif.message}</p>
                           <p className="text-xs text-muted-foreground">

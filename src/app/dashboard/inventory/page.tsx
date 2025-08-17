@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
-import { MoreHorizontal, PlusCircle, MinusCircle, CheckCircle } from "lucide-react";
+import { MoreHorizontal, PlusCircle, MinusCircle, CheckCircle, Lock } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,9 @@ import { useState, useEffect } from "react";
 import { collection, onSnapshot, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 interface InventoryItem {
     id: string;
@@ -26,6 +29,7 @@ interface InventoryItem {
 }
 
 export default function InventoryPage() {
+    const { user } = useAuth();
     const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
     const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -41,6 +45,7 @@ export default function InventoryPage() {
         lowStockThreshold: '20', // Default to 20%
     });
     const { toast } = useToast();
+    const isAuthorized = user?.role === 'Admin' || user?.role === 'Gestionnaire de Stock';
 
     const inventoryCollectionRef = collection(db, 'inventory');
     const notificationsCollectionRef = collection(db, 'notifications');
@@ -61,6 +66,7 @@ export default function InventoryPage() {
     }, [toast]);
 
     const openUpdateDialog = (type: 'add' | 'use' | 'count', item: InventoryItem) => {
+        if (!isAuthorized) return;
         setDialogType(type);
         setSelectedItem(item);
         setIsUpdateDialogOpen(true);
@@ -105,19 +111,19 @@ export default function InventoryPage() {
         }
     };
 
-    const handleNotification = async (item: InventoryItem, newStock: number) => {
-        const threshold = item.maxStock * item.lowStockThreshold;
+    const handleNotification = async (itemBeforeUpdate: InventoryItem, newStock: number) => {
+        const threshold = itemBeforeUpdate.maxStock * itemBeforeUpdate.lowStockThreshold;
         // Check if stock was above threshold and now is below
-        if (newStock <= threshold && item.stock > threshold) {
+        if (newStock <= threshold && itemBeforeUpdate.stock > threshold) {
             await addDoc(notificationsCollectionRef, {
-                message: `Stock bas : ${item.name} est à ${newStock} ${item.unit}.`,
+                message: `Stock bas : ${itemBeforeUpdate.name} est à ${newStock} ${itemBeforeUpdate.unit}.`,
                 type: 'stock',
                 isRead: false,
                 createdAt: serverTimestamp(),
             });
             toast({
                 title: "Alerte de Stock Bas",
-                description: `Une notification a été générée pour ${item.name}.`,
+                description: `Une notification a été générée pour ${itemBeforeUpdate.name}.`,
             });
         }
     };
@@ -147,7 +153,8 @@ export default function InventoryPage() {
         const itemDocRef = doc(db, 'inventory', selectedItem.id);
         try {
             await updateDoc(itemDocRef, { stock: newStock });
-            await handleNotification({ ...selectedItem, stock: currentStock }, newStock);
+            // Pass the state of the item *before* the update to the notification handler
+            await handleNotification(selectedItem, newStock);
             toast({ title: 'Succès', description: `Stock de ${selectedItem.name} mis à jour.`});
             closeUpdateDialog();
         } catch (error) {
@@ -189,15 +196,28 @@ export default function InventoryPage() {
     const updateDialogContent = getUpdateDialogContent();
 
   return (
+    <TooltipProvider>
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Inventaire</h1>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-                <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un article
-                </Button>
-            </DialogTrigger>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <div tabIndex={isAuthorized ? undefined : 0}>
+                        <DialogTrigger asChild>
+                            <Button disabled={!isAuthorized}>
+                                { !isAuthorized && <Lock className="mr-2 h-4 w-4" /> }
+                                <PlusCircle className="mr-2 h-4 w-4" /> Ajouter un article
+                            </Button>
+                        </DialogTrigger>
+                    </div>
+                </TooltipTrigger>
+                {!isAuthorized && (
+                    <TooltipContent>
+                        <p>Seuls les Admins et Gestionnaires de Stock peuvent ajouter des articles.</p>
+                    </TooltipContent>
+                )}
+            </Tooltip>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Ajouter un Nouvel Article à l'Inventaire</DialogTitle>
@@ -269,23 +289,26 @@ export default function InventoryPage() {
                     <TableCell>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                            <Button aria-haspopup="true" size="icon" variant="ghost">
-                                <MoreHorizontal className="h-4 w-4" />
+                            <Button aria-haspopup="true" size="icon" variant="ghost" disabled={!isAuthorized}>
+                                { !isAuthorized && <Lock className="h-4 w-4" /> }
+                                { isAuthorized && <MoreHorizontal className="h-4 w-4" /> }
                                 <span className="sr-only">Ouvrir le menu</span>
                             </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions de Stock</DropdownMenuLabel>
-                            <DropdownMenuItem onSelect={() => openUpdateDialog('add', item)}>
-                                <PlusCircle className="mr-2 h-4 w-4"/> Ajouter Stock
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => openUpdateDialog('use', item)}>
-                                <MinusCircle className="mr-2 h-4 w-4"/> Utiliser Stock
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => openUpdateDialog('count', item)}>
-                                <CheckCircle className="mr-2 h-4 w-4"/> Comptage Physique
-                            </DropdownMenuItem>
-                            </DropdownMenuContent>
+                           {isAuthorized && (
+                             <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions de Stock</DropdownMenuLabel>
+                                <DropdownMenuItem onSelect={() => openUpdateDialog('add', item)}>
+                                    <PlusCircle className="mr-2 h-4 w-4"/> Ajouter Stock
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => openUpdateDialog('use', item)}>
+                                    <MinusCircle className="mr-2 h-4 w-4"/> Utiliser Stock
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => openUpdateDialog('count', item)}>
+                                    <CheckCircle className="mr-2 h-4 w-4"/> Comptage Physique
+                                </DropdownMenuItem>
+                                </DropdownMenuContent>
+                           )}
                         </DropdownMenu>
                     </TableCell>
                   </TableRow>
@@ -318,6 +341,6 @@ export default function InventoryPage() {
         </DialogContent>
     </Dialog>
     </div>
+    </TooltipProvider>
   );
 }
-
