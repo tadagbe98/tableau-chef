@@ -34,6 +34,8 @@ export default function RestaurantsList() {
             const users = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as User));
             
             const restaurantsMap = users.reduce((acc, user) => {
+                if (user.role === 'Super Admin') return acc; // Exclude Super Admin from any restaurant list
+
                 const restaurantName = user.restaurantName || 'Non assigné';
                 if (!acc[restaurantName]) {
                     acc[restaurantName] = {
@@ -45,7 +47,7 @@ export default function RestaurantsList() {
 
                 if (user.role === 'Admin') {
                     acc[restaurantName].admin = user;
-                } else if (user.role !== 'Super Admin') {
+                } else {
                     acc[restaurantName].employees.push(user);
                 }
                 
@@ -67,20 +69,33 @@ export default function RestaurantsList() {
     }
 
     if (restaurants.length === 0) {
-        return <p>Aucun restaurant trouvé.</p>;
+        return (
+             <Card className="mt-4">
+                <CardHeader>
+                    <CardTitle>Aucun Restaurant</CardTitle>
+                    <CardDescription>
+                        Aucun restaurant n'a encore été créé par un utilisateur Admin.
+                    </CardDescription>
+                </CardHeader>
+            </Card>
+        );
     }
 
     return (
         <Accordion type="single" collapsible className="w-full space-y-4">
             {restaurants.map(restaurant => (
-                <Card key={restaurant.name}>
+                <Card key={restaurant.name} className="transition-shadow hover:shadow-md">
                     <AccordionItem value={restaurant.name} className="border-b-0">
-                        <AccordionTrigger className="p-6">
+                        <AccordionTrigger className="p-6 text-left">
                             <div className="flex flex-col items-start">
                                 <CardTitle>{restaurant.name}</CardTitle>
-                                {restaurant.admin && (
+                                {restaurant.admin ? (
                                      <CardDescription className="text-left mt-1">
                                         Admin: {restaurant.admin.name} ({restaurant.admin.email})
+                                    </CardDescription>
+                                ) : (
+                                    <CardDescription className="text-left mt-1 text-orange-500">
+                                        Aucun admin assigné à ce restaurant.
                                     </CardDescription>
                                 )}
                             </div>
@@ -106,7 +121,7 @@ export default function RestaurantsList() {
                                         ))
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={3} className="text-center">
+                                            <TableCell colSpan={3} className="text-center h-20">
                                                 Aucun employé pour ce restaurant.
                                             </TableCell>
                                         </TableRow>
