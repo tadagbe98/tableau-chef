@@ -1,13 +1,15 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import RestaurantsList from './RestaurantsList';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 interface ContactMessage {
     id: string;
@@ -19,30 +21,31 @@ interface ContactMessage {
 
 export default function AdminDashboardPage() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(true);
 
   useEffect(() => {
     const messagesCollectionRef = collection(db, 'contact_messages');
-    const q = query(messagesCollectionRef, orderBy('createdAt', 'desc'));
+    // Limit to the last 5 messages for the dashboard view
+    const q = query(messagesCollectionRef, orderBy('createdAt', 'desc'), limit(5));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedMessages = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as ContactMessage));
       setMessages(fetchedMessages);
-      setLoading(false);
+      setLoadingMessages(false);
     }, (error) => {
       console.error("Failed to fetch contact messages:", error);
-      setLoading(false);
+      setLoadingMessages(false);
     });
 
     return () => unsubscribe();
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
        <Card>
         <CardHeader>
           <CardTitle>Suivi des Restaurants</CardTitle>
-          <CardDescription>Liste de tous les restaurants et de leurs employés enregistrés.</CardDescription>
+          <CardDescription>Liste de tous les restaurants enregistrés.</CardDescription>
         </CardHeader>
         <CardContent>
           <RestaurantsList />
@@ -51,9 +54,9 @@ export default function AdminDashboardPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Messages du Support</CardTitle>
+          <CardTitle>Derniers Messages du Support</CardTitle>
           <CardDescription>
-            Voici les messages envoyés depuis le formulaire de contact.
+            Voici les 5 messages les plus récents.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -62,21 +65,20 @@ export default function AdminDashboardPage() {
               <TableRow>
                 <TableHead>Date</TableHead>
                 <TableHead>Nom</TableHead>
-                <TableHead>Email</TableHead>
                 <TableHead>Message</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
+              {loadingMessages ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
-                    Chargement des messages...
+                  <TableCell colSpan={3} className="h-24 text-center">
+                    Chargement...
                   </TableCell>
                 </TableRow>
               ) : messages.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="h-24 text-center">
-                    Aucun message pour le moment.
+                  <TableCell colSpan={3} className="h-24 text-center">
+                    Aucun message.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -86,14 +88,19 @@ export default function AdminDashboardPage() {
                       {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt.seconds * 1000), { addSuffix: true, locale: fr }) : '...'}
                     </TableCell>
                     <TableCell className="font-medium">{msg.name}</TableCell>
-                    <TableCell>{msg.email}</TableCell>
-                    <TableCell className="max-w-sm whitespace-pre-wrap">{msg.message}</TableCell>
+                    <TableCell className="max-w-xs truncate">{msg.message}</TableCell>
                   </TableRow>
                 ))
               )}
             </TableBody>
           </Table>
         </CardContent>
+        <CardFooter className="justify-end">
+            {/* This button could lead to a full page of messages in the future */}
+            <Button variant="link" asChild>
+                <Link href="#">Voir tout</Link>
+            </Button>
+        </CardFooter>
       </Card>
     </div>
   );

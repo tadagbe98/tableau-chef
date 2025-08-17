@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface User {
     id: string;
@@ -34,7 +35,7 @@ export default function RestaurantsList() {
             const users = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as User));
             
             const restaurantsMap = users.reduce((acc, user) => {
-                if (user.role === 'Super Admin') return acc; // Exclude Super Admin from any restaurant list
+                if (user.role === 'Super Admin') return acc;
 
                 const restaurantName = user.restaurantName || 'Non assigné';
                 if (!acc[restaurantName]) {
@@ -70,11 +71,11 @@ export default function RestaurantsList() {
 
     if (restaurants.length === 0) {
         return (
-             <Card className="mt-4">
-                <CardHeader>
+             <Card className="mt-4 border-dashed">
+                <CardHeader className="text-center">
                     <CardTitle>Aucun Restaurant</CardTitle>
                     <CardDescription>
-                        Aucun restaurant n'a encore été créé par un utilisateur Admin.
+                        Aucun restaurant n'a encore été créé.
                     </CardDescription>
                 </CardHeader>
             </Card>
@@ -82,53 +83,39 @@ export default function RestaurantsList() {
     }
 
     return (
-        <Accordion type="single" collapsible className="w-full">
-            {restaurants.map(restaurant => (
-                <AccordionItem value={restaurant.name} key={restaurant.name}>
-                    <AccordionTrigger>
-                        <div className="flex flex-col items-start text-left">
-                            <span className="font-semibold text-base">{restaurant.name}</span>
+        <Table>
+            <TableHeader>
+                <TableRow>
+                    <TableHead>Restaurant</TableHead>
+                    <TableHead>Admin</TableHead>
+                    <TableHead><span className="sr-only">Actions</span></TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {restaurants.map(restaurant => (
+                    <TableRow key={restaurant.name}>
+                        <TableCell className="font-medium">{restaurant.name}</TableCell>
+                        <TableCell>
                             {restaurant.admin ? (
-                                <span className="text-sm text-muted-foreground">
-                                    Admin: {restaurant.admin.name} ({restaurant.admin.email})
-                                </span>
+                                <div className="flex flex-col">
+                                    <span>{restaurant.admin.name}</span>
+                                    <span className="text-xs text-muted-foreground">{restaurant.admin.email}</span>
+                                </div>
                             ) : (
-                                <span className="text-sm text-orange-500">
-                                    Aucun admin assigné.
-                                </span>
+                                <span className="text-sm text-orange-500">Aucun admin</span>
                             )}
-                        </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Employé</TableHead>
-                                    <TableHead>Email</TableHead>
-                                    <TableHead>Rôle</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {restaurant.employees.length > 0 ? (
-                                    restaurant.employees.map(emp => (
-                                        <TableRow key={emp.id}>
-                                            <TableCell>{emp.name}</TableCell>
-                                            <TableCell>{emp.email}</TableCell>
-                                            <TableCell><Badge variant="secondary">{emp.role}</Badge></TableCell>
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={3} className="text-center h-20">
-                                            Aucun employé pour ce restaurant.
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </AccordionContent>
-                </AccordionItem>
-            ))}
-        </Accordion>
+                        </TableCell>
+                        <TableCell className="text-right">
+                           <Button asChild variant="outline" size="sm">
+                               <Link href={`/admin/dashboard/restaurants/${encodeURIComponent(restaurant.name)}`}>
+                                   Voir plus
+                                   <ArrowRight className="ml-2 h-4 w-4"/>
+                               </Link>
+                           </Button>
+                        </TableCell>
+                    </TableRow>
+                ))}
+            </TableBody>
+        </Table>
     );
 }
