@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, getAuth } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, setDoc, writeBatch, collection } from 'firebase/firestore';
 import { useRouter, usePathname } from 'next/navigation';
 import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
@@ -144,12 +144,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (loading) return;
     const publicPages = ['/', '/login', '/signup', '/contact'];
-    const isPublicPage = publicPages.includes(pathname) || pathname.startsWith('/admin');
+    const isAdminArea = pathname.startsWith('/admin');
+    const isPublicPage = publicPages.includes(pathname) || isAdminArea;
     
     if (!user && !isPublicPage) {
       router.push('/login');
-    } else if (user && (pathname === '/login' || pathname === '/signup' || pathname === '/')) {
-      router.push('/dashboard');
+    } else if (user && (pathname === '/login' || pathname === '/signup' || pathname === '/') && !isAdminArea) {
+      if(user.role !== 'Super Admin'){
+        router.push('/dashboard');
+      }
     }
   }, [user, loading, router, pathname]);
 
@@ -189,6 +192,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         throw new Error("L'administrateur doit être connecté pour créer un utilisateur.");
     }
     
+    // Get the current admin's restaurant name
+    const adminDocRef = doc(db, 'users', adminUser.uid);
+    const adminDoc = await getDoc(adminDocRef);
+    const restaurantName = adminDoc.exists() ? adminDoc.data().restaurantName : 'Restaurant Inconnu';
+    
     const appName = `secondary-app-${new Date().getTime()}`;
     const secondaryApp = initializeApp({
         apiKey: auth.app.options.apiKey,
@@ -199,9 +207,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const newUserCredential = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
       const newUser = newUserCredential.user;
-      
-      // We are not updating the profile on the auth object anymore to avoid issues
-      // await updateProfile(newUser, { displayName: fullName });
     
       const userDocRef = doc(db, "users", newUser.uid);
       await setDoc(userDocRef, {
@@ -209,6 +214,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           email: newUser.email,
           name: fullName,
           role: role,
+          restaurantName: restaurantName, // Add restaurant name to new user
       });
 
     } catch (error: any) {
