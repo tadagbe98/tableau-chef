@@ -47,7 +47,7 @@ export default function DailyPointPage() {
     const journalsCollectionRef = collection(db, 'journals');
 
     useEffect(() => {
-        if (user?.role !== 'Admin') return;
+        if (!user || user.role !== 'Admin') return;
 
         const q = query(journalsCollectionRef, orderBy("date", "desc"));
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -118,7 +118,7 @@ export default function DailyPointPage() {
         if(cashInDrawer && variance !== null) {
             try {
                 await addDoc(journalsCollectionRef, {
-                    date: new Date().toISOString().split('T')[0],
+                    date: new Date().toISOString(),
                     totalSales: dailySummary.totalSales,
                     openingCash: parseFloat(openingCash),
                     variance: variance,
