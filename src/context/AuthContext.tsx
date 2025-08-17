@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { onAuthStateChanged, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, getAuth } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, writeBatch, collection, where, query } from 'firebase/firestore';
@@ -15,6 +15,8 @@ import { initializeApp, deleteApp } from 'firebase/app';
 export interface AppUser extends User {
   role?: string;
   restaurantName?: string;
+  restaurantAddress?: string;
+  restaurantPhone?: string;
   status?: 'actif' | 'inactif';
   language?: string;
   currency?: string;
@@ -24,6 +26,7 @@ export interface AppUser extends User {
 interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
+  refetchUser?: () => Promise<void>;
   login: (email: string, pass: string) => Promise<any>;
   signup: (email: string, pass: string, data: Record<string, any>) => Promise<any>;
   logout: () => Promise<void>;
@@ -121,9 +124,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setOpenedBy(null);
     setOpenTime(null);
   };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+  
+  const fetchUserData = useCallback(async (firebaseUser: User | null): Promise<AppUser | null> => {
       if (firebaseUser) {
         const userDocRef = doc(db, 'users', firebaseUser.uid);
         const userDoc = await getDoc(userDocRef);
@@ -134,6 +136,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               displayName: userData.name,
               role: userData.role,
               restaurantName: userData.restaurantName,
+              restaurantAddress: userData.restaurantAddress,
+              restaurantPhone: userData.restaurantPhone,
               status: userData.status || 'actif',
               language: userData.language || 'fr',
               currency: userData.currency || 'EUR',
@@ -147,21 +151,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     title: 'Accès Refusé',
                     description: "Votre compte a été désactivé. Veuillez contacter un administrateur."
                 });
-                setUser(null);
+                return null;
             } else {
-                setUser(appUser);
+                return appUser;
             }
         } else {
-             setUser(firebaseUser); // User exists in Auth but not in Firestore
+             return firebaseUser; // User exists in Auth but not in Firestore
         }
-      } else {
-        setUser(null);
       }
+      return null;
+  }, [toast]);
+  
+  const refetchUser = useCallback(async () => {
+    const firebaseUser = auth.currentUser;
+    const appUser = await fetchUserData(firebaseUser);
+    setUser(appUser);
+  }, [fetchUserData]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      const appUser = await fetchUserData(firebaseUser);
+      setUser(appUser);
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [toast]);
+  }, [fetchUserData]);
 
   useEffect(() => {
     if (loading) return;
@@ -292,7 +307,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, createUser, createRestaurantWithAdmin, isRegisterOpen, openedBy, openTime, openingCash, openRegister, closeRegister }}>
+    <AuthContext.Provider value={{ user, loading, refetchUser, login, signup, logout, createUser, createRestaurantWithAdmin, isRegisterOpen, openedBy, openTime, openingCash, openRegister, closeRegister }}>
       {children}
     </AuthContext.Provider>
   );

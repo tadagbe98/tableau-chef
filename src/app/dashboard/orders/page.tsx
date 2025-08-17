@@ -18,7 +18,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Logo } from '@/components/icons/logo';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { collection, onSnapshot, addDoc, serverTimestamp, query, where } from 'firebase/firestore';
@@ -388,11 +387,11 @@ function OrdersContent() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-center">Paiement Réussi</DialogTitle>
+             <DialogDescription className="text-center">
+                Que souhaitez-vous faire maintenant ?
+            </DialogDescription>
           </DialogHeader>
-          <div className="my-4 text-center">
-            <p className="text-muted-foreground">Que souhaitez-vous faire maintenant ?</p>
-          </div>
-           <DialogFooter className="flex flex-col gap-2">
+           <DialogFooter className="flex-col gap-2">
             <Button className="w-full" onClick={handlePrintReceipt}><Printer className="mr-2 h-4 w-4"/> Imprimer le Reçu Client</Button>
             <Button className="w-full" variant="secondary" onClick={handlePrintKitchenTicket}><ChefHat className="mr-2 h-4 w-4"/> Imprimer le Ticket de Cuisine</Button>
             <Button className="w-full" variant="outline" onClick={handleNewOrder}>Commencer une Nouvelle Commande</Button>
@@ -405,9 +404,9 @@ function OrdersContent() {
         <div ref={receiptRef}>
             <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold">{user?.restaurantName || 'TableauChef'}</h2>
-                <p>123 Rue du Restaurant, 75001 Paris</p>
-                <p>01 23 45 67 89</p>
-                <p>{new Date().toLocaleString('fr-FR')}</p>
+                 <p className="text-sm">{user?.restaurantAddress}</p>
+                 <p className="text-sm">{user?.restaurantPhone}</p>
+                 <p className="text-sm">{new Date().toLocaleString('fr-FR')}</p>
             </div>
             <div className="text-center mb-4">
               <p className="font-bold">Commande #{orderNumber}</p>
@@ -436,7 +435,7 @@ function OrdersContent() {
                   <span>{total.toFixed(2)} {currency}</span>
                 </div>
             </div>
-             <div className="text-center mt-6 space-y-1">
+             <div className="text-center mt-6 space-y-1 text-sm">
                 <p>Payé en {paymentMethod}</p>
                 <p>Merci de votre visite et à bientôt !</p>
             </div>
