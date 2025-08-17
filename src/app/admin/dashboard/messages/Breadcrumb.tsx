@@ -11,8 +11,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 
-export function RestaurantDetailBreadcrumb({ name }: { name: string }) {
-  const decodedName = decodeURIComponent(name);
+export function MessagesBreadcrumb() {
   return (
     <Breadcrumb>
       <BreadcrumbList>
@@ -23,13 +22,7 @@ export function RestaurantDetailBreadcrumb({ name }: { name: string }) {
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-             <BreadcrumbLink asChild>
-                <Link href="/admin/dashboard/restaurants">Restaurants</Link>
-            </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          <BreadcrumbPage>{decodedName}</BreadcrumbPage>
+          <BreadcrumbPage>Messages</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>

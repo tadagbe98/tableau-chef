@@ -1,5 +1,5 @@
 
-import { RestaurantBreadcrumb } from './Breadcrumb';
+import { RestaurantDetailBreadcrumb } from './Breadcrumb';
 
 export default function RestaurantDetailLayout({
   children,
@@ -10,7 +10,7 @@ export default function RestaurantDetailLayout({
 }) {
   return (
     <div className="space-y-4">
-      <RestaurantBreadcrumb name={params.name} />
+      <RestaurantDetailBreadcrumb name={params.name} />
       <div>{children}</div>
     </div>
   );
