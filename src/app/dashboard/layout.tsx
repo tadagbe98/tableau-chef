@@ -28,6 +28,7 @@ import {
   Users,
   CheckCircle,
   Lock,
+  MessageSquare,
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import { Button } from '@/components/ui/button';
@@ -55,6 +56,7 @@ interface Notification {
     type: 'stock' | 'order' | 'general';
     isRead: boolean;
     createdAt: { seconds: number; nanoseconds: number; };
+    productId?: string;
 }
 
 const allNavItems = [
@@ -127,25 +129,21 @@ export default function DashboardLayout({
     return null;
   }
   
-  // Show all items to Admin, but filter for others to show locked state
   const navItems = useMemo(() => {
     if (!user?.role) return [];
     if (user.role === 'Admin') {
       return allNavItems.map(item => ({ ...item, isAllowed: true }));
     }
+    
+    // Default logic for other roles
     return allNavItems
       .filter(item => {
-        // Admins see everything. For other roles, we need to decide what to show (locked or unlocked)
-        // A user should see an item if they have ANY of the defined roles for that item.
-        // Let's refine the logic. Every role should see every menu item, but some are disabled.
-        // What roles should be able to see what?
-        // Admin: all
-        // Caissier: Dashboard, Commandes, Point Journalier (unlocked). Produits, Inventaire (locked). Rapports, Utilisateurs (hidden).
-        // Gestionnaire de stock: Dashboard, Produits, Inventaire (unlocked). Commandes, Point Journalier (locked). Rapports, Utilisateurs (hidden).
+        // Hide what's not relevant at all for certain roles to declutter
+        const isCaissier = user.role === 'Caissier';
+        const isGestionnaire = user.role === 'Gestionnaire de Stock';
         
-        // Let's hide what's not relevant at all.
-        if (user.role === 'Caissier' && (item.href === '/dashboard/reports' || item.href === '/dashboard/users')) return false;
-        if (user.role === 'Gestionnaire de Stock' && (item.href === '/dashboard/reports' || item.href === '/dashboard/users')) return false;
+        if (isCaissier && (item.href === '/dashboard/reports' || item.href === '/dashboard/users')) return false;
+        if (isGestionnaire && (item.href === '/dashboard/reports' || item.href === '/dashboard/users')) return false;
         
         return true;
       })
@@ -192,6 +190,14 @@ export default function DashboardLayout({
         </SidebarContent>
         <SidebarFooter>
           <SidebarMenu>
+             <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive={pathname === '/contact'} tooltip={'Contacter le Support'}>
+                <Link href="/contact">
+                  <MessageSquare />
+                  <span>{'Contacter le Support'}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild isActive={pathname === '/dashboard/settings'} tooltip={'Paramètres'}>
                 <Link href="/dashboard/settings">

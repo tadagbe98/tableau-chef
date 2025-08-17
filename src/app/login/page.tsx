@@ -1,3 +1,4 @@
+
 'use client';
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -15,6 +16,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { Separator } from "@/components/ui/separator";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -94,6 +96,13 @@ export default function LoginPage() {
             Vous n'avez pas de compte ?{" "}
             <Link href="/signup" className="underline">
               S'inscrire
+            </Link>
+          </div>
+          <Separator className="my-4" />
+           <div className="text-center text-sm">
+            Besoin d'aide ?{" "}
+            <Link href="/contact" className="underline">
+              Contacter le support
             </Link>
           </div>
         </CardContent>
