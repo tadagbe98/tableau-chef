@@ -92,8 +92,8 @@ export default function Home() {
           <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} TableauChef. Tous droits réservés.</p>
         </div>
         <nav className="flex gap-4">
-          <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">Confidentialité</Link>
-          <Link href="#" className="text-sm text-muted-foreground hover:text-foreground">Conditions</Link>
+          <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground">Confidentialité</Link>
+          <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground">Conditions</Link>
         </nav>
       </footer>
     </div>
