@@ -143,11 +143,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (loading) return;
-    const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/';
+    const publicPages = ['/', '/login', '/signup', '/contact'];
+    const isPublicPage = publicPages.includes(pathname) || pathname.startsWith('/admin');
     
-    if (!user && !isAuthPage) {
+    if (!user && !isPublicPage) {
       router.push('/login');
-    } else if (user && isAuthPage) {
+    } else if (user && (pathname === '/login' || pathname === '/signup' || pathname === '/')) {
       router.push('/dashboard');
     }
   }, [user, loading, router, pathname]);
@@ -226,7 +227,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return signOut(auth);
   }
   
-  const isAuthProtected = !['/', '/login', '/signup'].includes(pathname);
+  const isAuthProtected = !['/', '/login', '/signup', '/contact'].includes(pathname) && !pathname.startsWith('/admin');
 
   if (loading && isAuthProtected) {
     return (
@@ -247,3 +248,5 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+
+    
