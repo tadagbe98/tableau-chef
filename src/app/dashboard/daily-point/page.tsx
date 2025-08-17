@@ -1,5 +1,5 @@
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth, AppUser } from "@/context/AuthContext";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 
 const dailySummary = {
@@ -23,21 +25,46 @@ const dailySummary = {
     taxes: 181.54,
 };
 
-const journalHistory = [
-    { date: '2024-05-20', totalSales: 2345.50, variance: -5.50, openingCash: 200, closedBy: 'Alice' },
-    { date: '2024-05-19', totalSales: 2180.00, variance: 0.00, openingCash: 200, closedBy: 'Alice' },
-    { date: '2024-05-18', totalSales: 2510.25, variance: 10.25, openingCash: 150, closedBy: 'Jean Dupont' },
-];
+interface JournalEntry {
+    id: string;
+    date: string;
+    totalSales: number;
+    variance: number;
+    openingCash: number;
+    closedBy: string;
+}
+
 
 export default function DailyPointPage() {
     const { user, isRegisterOpen, openedBy, openTime, openingCash, openRegister, closeRegister } = useAuth();
     const [cashInDrawer, setCashInDrawer] = useState('');
     const [currentOpeningCash, setCurrentOpeningCash] = useState('');
     const [variance, setVariance] = useState<number | null>(null);
+    const [journalHistory, setJournalHistory] = useState<JournalEntry[]>([]);
 
     const { toast } = useToast();
-
     const isAuthorized = user?.role === 'Admin' || user?.role === 'Caissier';
+    const journalsCollectionRef = collection(db, 'journals');
+
+    useEffect(() => {
+        if (user?.role !== 'Admin') return;
+
+        const q = query(journalsCollectionRef, orderBy("date", "desc"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const fetchedJournals = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as JournalEntry));
+            setJournalHistory(fetchedJournals);
+        }, (error) => {
+            console.error("Erreur de snapshot Firestore pour les journaux:", error);
+            toast({
+                variant: "destructive",
+                title: "Erreur de chargement",
+                description: "Impossible de charger l'historique des journaux.",
+            });
+        });
+        
+        return () => unsubscribe();
+    }, [user]);
+
 
     const handleOpenRegister = () => {
         if (!isAuthorized) {
@@ -78,7 +105,7 @@ export default function DailyPointPage() {
         setVariance(diff);
     };
 
-    const handleClosePoint = () => {
+    const handleClosePoint = async () => {
          if (!isAuthorized) {
             toast({
                 variant: 'destructive',
@@ -88,16 +115,32 @@ export default function DailyPointPage() {
             return;
         }
         calculateVariance();
-        if(cashInDrawer) {
-            // Here we would save the journal entry to Firestore
-            closeRegister();
-            setCashInDrawer('');
-            setCurrentOpeningCash('');
-            setVariance(null);
-            toast({
-                title: "Point de Vente Fermé",
-                description: `Le journal d'aujourd'hui a été créé et la caisse fermée par ${user?.displayName}.`
-            });
+        if(cashInDrawer && variance !== null) {
+            try {
+                await addDoc(journalsCollectionRef, {
+                    date: new Date().toISOString().split('T')[0],
+                    totalSales: dailySummary.totalSales,
+                    openingCash: parseFloat(openingCash),
+                    variance: variance,
+                    closedBy: user?.displayName || 'Utilisateur inconnu',
+                });
+
+                closeRegister();
+                setCashInDrawer('');
+                setCurrentOpeningCash('');
+                setVariance(null);
+                toast({
+                    title: "Point de Vente Fermé et Journal Enregistré",
+                    description: `Le journal a été créé et la caisse fermée par ${user?.displayName}.`
+                });
+            } catch (error) {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Erreur Firestore',
+                    description: "Impossible d'enregistrer le journal de caisse.",
+                });
+                console.error("Erreur d'écriture du journal:", error);
+            }
         }
     }
 
@@ -237,7 +280,10 @@ export default function DailyPointPage() {
                     type="number" 
                     placeholder="Entrer le montant" 
                     value={cashInDrawer}
-                    onChange={(e) => setCashInDrawer(e.target.value)}
+                    onChange={(e) => {
+                        setCashInDrawer(e.target.value);
+                        setVariance(null); // Recalculate variance if cash amount changes
+                    }}
                     disabled={!isAuthorized}
                 />
                 </div>
@@ -330,19 +376,27 @@ export default function DailyPointPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {journalHistory.map((entry, index) => (
-                            <TableRow key={index}>
-                                <TableCell>{entry.date}</TableCell>
-                                <TableCell>{entry.totalSales.toFixed(2)} €</TableCell>
-                                <TableCell>{entry.openingCash.toFixed(2)} €</TableCell>
-                                <TableCell>
-                                    <Badge variant={entry.variance === 0 ? 'default' : 'destructive'} className={entry.variance === 0 ? 'bg-green-500' : ''}>
-                                        {entry.variance.toFixed(2)} €
-                                    </Badge>
+                        {journalHistory.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={5} className="h-24 text-center">
+                                    Aucun journal trouvé.
                                 </TableCell>
-                                <TableCell>{entry.closedBy}</TableCell>
                             </TableRow>
-                        ))}
+                        ) : (
+                            journalHistory.map((entry) => (
+                                <TableRow key={entry.id}>
+                                    <TableCell>{new Date(entry.date).toLocaleDateString('fr-FR')}</TableCell>
+                                    <TableCell>{entry.totalSales.toFixed(2)} €</TableCell>
+                                    <TableCell>{entry.openingCash.toFixed(2)} €</TableCell>
+                                    <TableCell>
+                                        <Badge variant={entry.variance === 0 ? 'default' : 'destructive'} className={entry.variance === 0 ? 'bg-green-500' : ''}>
+                                            {entry.variance.toFixed(2)} €
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>{entry.closedBy}</TableCell>
+                                </TableRow>
+                            ))
+                        )}
                     </TableBody>
                 </Table>
             </CardContent>
