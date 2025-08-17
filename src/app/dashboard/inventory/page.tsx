@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
-import { collection, onSnapshot, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, addDoc, serverTimestamp, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -113,18 +113,32 @@ export default function InventoryPage() {
 
     const handleNotification = async (itemBeforeUpdate: InventoryItem, newStock: number) => {
         const threshold = itemBeforeUpdate.maxStock * itemBeforeUpdate.lowStockThreshold;
-        // Check if stock was above threshold and now is below
+
+        // Stock goes from OK to LOW
         if (newStock <= threshold && itemBeforeUpdate.stock > threshold) {
             await addDoc(notificationsCollectionRef, {
                 message: `Stock bas : ${itemBeforeUpdate.name} est à ${newStock} ${itemBeforeUpdate.unit}.`,
                 type: 'stock',
                 isRead: false,
                 createdAt: serverTimestamp(),
+                productId: itemBeforeUpdate.id,
             });
             toast({
                 title: "Alerte de Stock Bas",
                 description: `Une notification a été générée pour ${itemBeforeUpdate.name}.`,
             });
+        }
+        
+        // Stock goes from LOW to OK
+        if (newStock > threshold && itemBeforeUpdate.stock <= threshold) {
+             const q = query(notificationsCollectionRef, where("productId", "==", itemBeforeUpdate.id), where("isRead", "==", false));
+             const querySnapshot = await getDocs(q);
+             const batch = writeBatch(db);
+             querySnapshot.forEach(doc => {
+                 batch.update(doc.ref, { isRead: true });
+             });
+             await batch.commit();
+             console.log(`Notifications pour ${itemBeforeUpdate.name} marquées comme lues.`);
         }
     };
     

@@ -43,7 +43,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useState, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { collection, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -52,6 +52,7 @@ interface Notification {
     id: string;
     message: string;
     type: 'stock' | 'order' | 'general';
+    isRead: boolean;
     createdAt: { seconds: number; nanoseconds: number; };
 }
 
@@ -85,7 +86,12 @@ export default function DashboardLayout({
   useEffect(() => {
       if(!user) return;
       
-      const q = query(collection(db, 'notifications'), orderBy('createdAt', 'desc'), limit(10));
+      const q = query(
+          collection(db, 'notifications'), 
+          where('isRead', '==', false), 
+          orderBy('createdAt', 'desc'), 
+          limit(10)
+      );
       const unsubscribe = onSnapshot(q, (snapshot) => {
           const fetchedNotifications = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Notification));
           setNotifications(fetchedNotifications);
