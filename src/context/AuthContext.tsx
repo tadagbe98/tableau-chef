@@ -25,6 +25,7 @@ interface AuthContextType {
   signup: (email: string, pass: string, fullName: string, restaurantName: string) => Promise<any>;
   logout: () => Promise<void>;
   createUser: (email: string, pass: string, fullName: string, role: string) => Promise<void>;
+  createRestaurantWithAdmin: (email: string, pass: string, adminName: string, restaurantName: string) => Promise<void>;
   isRegisterOpen: boolean;
   openedBy: string | null;
   openTime: Date | null;
@@ -40,6 +41,7 @@ const AuthContext = createContext<AuthContextType>({
     signup: async () => {},
     logout: async () => {},
     createUser: async () => {},
+    createRestaurantWithAdmin: async () => {},
     isRegisterOpen: false,
     openedBy: null,
     openTime: null,
@@ -199,17 +201,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       });
   }
   
-  const createUser = async (email: string, pass: string, fullName: string, role: string) => {
-    const adminUser = auth.currentUser;
-    if (!adminUser) {
-        throw new Error("L'administrateur doit être connecté pour créer un utilisateur.");
-    }
-    
-    // Get the current admin's restaurant name
-    const adminDocRef = doc(db, 'users', adminUser.uid);
-    const adminDoc = await getDoc(adminDocRef);
-    const restaurantName = adminDoc.exists() ? adminDoc.data().restaurantName : 'Restaurant Inconnu';
-    
+  const createSecondaryAuthUser = async (email: string, pass: string) => {
+    // This function creates a user in a temporary Firebase app instance
+    // to avoid signing out the current admin user.
     const appName = `secondary-app-${new Date().getTime()}`;
     const secondaryApp = initializeApp({
         apiKey: auth.app.options.apiKey,
@@ -219,29 +213,56 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     try {
       const newUserCredential = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
-      const newUser = newUserCredential.user;
-    
-      const userDocRef = doc(db, "users", newUser.uid);
-      await setDoc(userDocRef, {
-          uid: newUser.uid,
-          email: newUser.email,
-          name: fullName,
-          role: role,
-          restaurantName: restaurantName, // Add restaurant name to new user
-          status: 'actif',
-      });
-
-    } catch (error: any) {
-       console.error("Error creating user:", error);
-       throw error;
+      return newUserCredential.user;
     } finally {
-      // It's important to sign out of the secondary auth instance and delete the app
-      // to avoid issues with the main admin session.
       await signOut(secondaryAuth);
       await deleteApp(secondaryApp);
     }
+  };
+
+  const createUser = async (email: string, pass: string, fullName: string, role: string) => {
+    const adminUser = auth.currentUser;
+    if (!adminUser) {
+        throw new Error("L'administrateur doit être connecté pour créer un utilisateur.");
+    }
+    
+    const adminDocRef = doc(db, 'users', adminUser.uid);
+    const adminDoc = await getDoc(adminDocRef);
+    const restaurantName = adminDoc.exists() ? adminDoc.data().restaurantName : 'Restaurant Inconnu';
+    
+    const newUser = await createSecondaryAuthUser(email, pass);
+    
+    const userDocRef = doc(db, "users", newUser.uid);
+    await setDoc(userDocRef, {
+        uid: newUser.uid,
+        email: newUser.email,
+        name: fullName,
+        role: role,
+        restaurantName: restaurantName,
+        status: 'actif',
+    });
   }
 
+  const createRestaurantWithAdmin = async (email: string, pass: string, adminName: string, restaurantName: string) => {
+    const superAdminUser = auth.currentUser;
+    if (!superAdminUser || user?.role !== 'Super Admin') {
+      throw new Error("Seul un Super Admin peut créer un nouveau restaurant.");
+    }
+    
+    const newUser = await createSecondaryAuthUser(email, pass);
+
+    const userDocRef = doc(db, "users", newUser.uid);
+    await setDoc(userDocRef, {
+      uid: newUser.uid,
+      email: newUser.email,
+      name: adminName,
+      restaurantName: restaurantName,
+      role: 'Admin',
+      status: 'actif',
+    });
+    // Note: We are NOT calling seedInitialData here, because that would populate
+    // the new restaurant's products/inventory, which should be done by the restaurant's admin.
+  }
 
   const logout = () => {
     return signOut(auth);
@@ -261,7 +282,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, createUser, isRegisterOpen, openedBy, openTime, openingCash, openRegister, closeRegister }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, logout, createUser, createRestaurantWithAdmin, isRegisterOpen, openedBy, openTime, openingCash, openRegister, closeRegister }}>
       {children}
     </AuthContext.Provider>
   );
