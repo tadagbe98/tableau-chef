@@ -17,15 +17,10 @@ import {
   Cell,
 } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-
-const monthlySalesData = [
-  { month: 'Jan', sales: 4000 },
-  { month: 'Fév', sales: 3000 },
-  { month: 'Mar', sales: 5000 },
-  { month: 'Avr', sales: 4500 },
-  { month: 'Mai', sales: 6000 },
-  { month: 'Juin', sales: 5500 },
-];
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/AuthContext';
 
 const topProductsData = [
   { name: 'Margherita', sales: 250 },
@@ -76,13 +71,44 @@ const chartConfig = {
 };
 
 export default function ReportsPage() {
+    const [monthlySalesData, setMonthlySalesData] = useState([]);
+    const { user } = useAuth();
+
+    useEffect(() => {
+        if (!user || user.role !== 'Admin') return;
+
+        const journalsRef = collection(db, 'journals');
+        const q = query(journalsRef, orderBy('date', 'asc'));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const salesByMonth = snapshot.docs.reduce((acc, doc) => {
+                const data = doc.data();
+                const date = new Date(data.date);
+                const month = date.toLocaleString('fr-FR', { month: 'short' });
+                const year = date.getFullYear();
+                const key = `${month}-${year}`;
+                
+                if (!acc[key]) {
+                    acc[key] = { month: month.charAt(0).toUpperCase() + month.slice(1), sales: 0 };
+                }
+                acc[key].sales += data.totalSales;
+
+                return acc;
+            }, {});
+
+            setMonthlySalesData(Object.values(salesByMonth));
+        });
+
+        return () => unsubscribe();
+    }, [user]);
+
   return (
     <div className="flex flex-col gap-6">
        <h1 className="text-2xl font-bold">Rapports et Analyses</h1>
       <Card>
         <CardHeader>
           <CardTitle>Tendance des Ventes Mensuelles</CardTitle>
-          <CardDescription>Un aperçu de vos revenus au cours des derniers mois.</CardDescription>
+          <CardDescription>Un aperçu de vos revenus basé sur les clôtures de caisse.</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
@@ -100,11 +126,19 @@ export default function ReportsPage() {
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
-                tickFormatter={(value) => value.slice(0, 3)}
+              />
+               <YAxis
+                stroke="#888888"
+                fontSize={12}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => `${value}€`}
               />
               <ChartTooltip
                 cursor={false}
-                content={<ChartTooltipContent hideLabel />}
+                content={<ChartTooltipContent 
+                    formatter={(value) => `${(value as number).toLocaleString()} €`}
+                    hideLabel />}
               />
               <Line
                 dataKey="sales"
@@ -122,14 +156,14 @@ export default function ReportsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Top 5 des Produits les Plus Vendus</CardTitle>
-            <CardDescription>Vos articles les plus populaires ce mois-ci.</CardDescription>
+            <CardDescription>Vos articles les plus populaires. (Données d'exemple)</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
                 <BarChart accessibilityLayer data={topProductsData} layout="vertical" margin={{ left: 20, right: 20 }}>
                     <CartesianGrid horizontal={false}/>
                     <XAxis type="number" dataKey="sales" hide/>
-                    <YAxis dataKey="name" type="category" tickLine={false} axisLine={false}/>
+                    <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={120}/>
                     <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
                     <Bar dataKey="sales" fill="var(--color-sales)" radius={4} />
                 </BarChart>
@@ -140,7 +174,7 @@ export default function ReportsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Ventes par Catégorie</CardTitle>
-             <CardDescription>Répartition des ventes par catégorie.</CardDescription>
+             <CardDescription>Répartition des ventes par catégorie. (Données d'exemple)</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
