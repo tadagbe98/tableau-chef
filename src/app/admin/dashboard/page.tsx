@@ -8,7 +8,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import RestaurantsList from './RestaurantsList';
-import { Separator } from '@/components/ui/separator';
 
 interface ContactMessage {
     id: string;
@@ -39,63 +38,63 @@ export default function AdminDashboardPage() {
   }, []);
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Suivi des Restaurants</h1>
-        <RestaurantsList />
-      </div>
+    <div className="space-y-6">
+       <Card>
+        <CardHeader>
+          <CardTitle>Suivi des Restaurants</CardTitle>
+          <CardDescription>Liste de tous les restaurants et de leurs employés enregistrés.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RestaurantsList />
+        </CardContent>
+      </Card>
 
-      <Separator />
-
-      <div>
-        <h1 className="text-2xl font-bold mb-6">Messages du Support</h1>
-        <Card>
-          <CardHeader>
-            <CardTitle>Boîte de réception</CardTitle>
-            <CardDescription>
-              Voici les messages envoyés depuis le formulaire de contact.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
+      <Card>
+        <CardHeader>
+          <CardTitle>Messages du Support</CardTitle>
+          <CardDescription>
+            Voici les messages envoyés depuis le formulaire de contact.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Nom</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Message</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Message</TableHead>
+                  <TableCell colSpan={4} className="h-24 text-center">
+                    Chargement des messages...
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
-                      Chargement des messages...
+              ) : messages.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="h-24 text-center">
+                    Aucun message pour le moment.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                messages.map((msg) => (
+                  <TableRow key={msg.id}>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt.seconds * 1000), { addSuffix: true, locale: fr }) : '...'}
                     </TableCell>
+                    <TableCell className="font-medium">{msg.name}</TableCell>
+                    <TableCell>{msg.email}</TableCell>
+                    <TableCell className="max-w-sm whitespace-pre-wrap">{msg.message}</TableCell>
                   </TableRow>
-                ) : messages.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
-                      Aucun message pour le moment.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  messages.map((msg) => (
-                    <TableRow key={msg.id}>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt.seconds * 1000), { addSuffix: true, locale: fr }) : '...'}
-                      </TableCell>
-                      <TableCell className="font-medium">{msg.name}</TableCell>
-                      <TableCell>{msg.email}</TableCell>
-                      <TableCell className="max-w-sm whitespace-pre-wrap">{msg.message}</TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

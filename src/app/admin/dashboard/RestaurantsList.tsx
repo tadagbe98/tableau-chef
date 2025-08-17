@@ -82,59 +82,53 @@ export default function RestaurantsList() {
     }
 
     return (
-        <Accordion type="single" collapsible asChild>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {restaurants.map(restaurant => (
-                    <Card key={restaurant.name} className="transition-shadow hover:shadow-md flex flex-col">
-                        <AccordionItem value={restaurant.name} className="border-b-0 flex flex-col flex-grow">
-                            <AccordionTrigger className="p-6 text-left hover:no-underline">
-                                <div className="flex flex-col items-start w-full">
-                                    <CardTitle>{restaurant.name}</CardTitle>
-                                    {restaurant.admin ? (
-                                        <CardDescription className="text-left mt-1">
-                                            Admin: {restaurant.admin.name} ({restaurant.admin.email})
-                                        </CardDescription>
-                                    ) : (
-                                        <CardDescription className="text-left mt-1 text-orange-500">
-                                            Aucun admin assigné.
-                                        </CardDescription>
-                                    )}
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="flex-grow">
-                            <div className="px-6 pb-6">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Employé</TableHead>
-                                            <TableHead>Email</TableHead>
-                                            <TableHead>Rôle</TableHead>
+        <Accordion type="single" collapsible className="w-full">
+            {restaurants.map(restaurant => (
+                <AccordionItem value={restaurant.name} key={restaurant.name}>
+                    <AccordionTrigger>
+                        <div className="flex flex-col items-start text-left">
+                            <span className="font-semibold text-base">{restaurant.name}</span>
+                            {restaurant.admin ? (
+                                <span className="text-sm text-muted-foreground">
+                                    Admin: {restaurant.admin.name} ({restaurant.admin.email})
+                                </span>
+                            ) : (
+                                <span className="text-sm text-orange-500">
+                                    Aucun admin assigné.
+                                </span>
+                            )}
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Employé</TableHead>
+                                    <TableHead>Email</TableHead>
+                                    <TableHead>Rôle</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {restaurant.employees.length > 0 ? (
+                                    restaurant.employees.map(emp => (
+                                        <TableRow key={emp.id}>
+                                            <TableCell>{emp.name}</TableCell>
+                                            <TableCell>{emp.email}</TableCell>
+                                            <TableCell><Badge variant="secondary">{emp.role}</Badge></TableCell>
                                         </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {restaurant.employees.length > 0 ? (
-                                            restaurant.employees.map(emp => (
-                                                <TableRow key={emp.id}>
-                                                    <TableCell>{emp.name}</TableCell>
-                                                    <TableCell>{emp.email}</TableCell>
-                                                    <TableCell><Badge variant="secondary">{emp.role}</Badge></TableCell>
-                                                </TableRow>
-                                            ))
-                                        ) : (
-                                            <TableRow>
-                                                <TableCell colSpan={3} className="text-center h-20">
-                                                    Aucun employé.
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    </Card>
-                ))}
-            </div>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={3} className="text-center h-20">
+                                            Aucun employé pour ce restaurant.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </AccordionContent>
+                </AccordionItem>
+            ))}
         </Accordion>
     );
 }
