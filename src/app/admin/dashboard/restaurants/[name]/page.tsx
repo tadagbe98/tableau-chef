@@ -18,7 +18,7 @@ interface User {
 interface RestaurantDetails {
     name: string;
     admin: User | null;
-    employees: User[];
+    staff: User[]; // Combined list of admin and employees
 }
 
 export default function RestaurantDetailPage({ params }: { params: { name: string } }) {
@@ -40,12 +40,18 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
             const users = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as User));
             
             const admin = users.find(user => user.role === 'Admin') || null;
-            const employees = users.filter(user => user.role !== 'Admin');
+            
+            // Sort users so that Admin is always on top
+            const sortedUsers = users.sort((a, b) => {
+                if (a.role === 'Admin') return -1;
+                if (b.role === 'Admin') return 1;
+                return a.name.localeCompare(b.name);
+            });
 
             setRestaurant({
                 name: restaurantName,
                 admin,
-                employees
+                staff: sortedUsers
             });
             setLoading(false);
         }, (error) => {
@@ -72,6 +78,16 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
             </Card>
         );
     }
+    
+    const getRoleBadgeVariant = (role: string) => {
+        switch(role) {
+            case 'Admin': return 'default';
+            case 'Gestionnaire de Stock': return 'secondary';
+            case 'Caissier': return 'outline';
+            default: return 'secondary';
+        }
+    }
+
 
     return (
         <div className="space-y-6">
@@ -92,7 +108,10 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Liste des Employés</CardTitle>
+                    <CardTitle>Liste du Personnel</CardTitle>
+                    <CardDescription>
+                        Voici la liste de tous les employés et administrateurs de ce restaurant.
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -104,18 +123,22 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {restaurant.employees.length > 0 ? (
-                                restaurant.employees.map(emp => (
-                                    <TableRow key={emp.id}>
-                                        <TableCell>{emp.name}</TableCell>
-                                        <TableCell>{emp.email}</TableCell>
-                                        <TableCell><Badge variant="secondary">{emp.role}</Badge></TableCell>
+                            {restaurant.staff.length > 0 ? (
+                                restaurant.staff.map(member => (
+                                    <TableRow key={member.id}>
+                                        <TableCell className="font-medium">{member.name}</TableCell>
+                                        <TableCell>{member.email}</TableCell>
+                                        <TableCell>
+                                            <Badge variant={getRoleBadgeVariant(member.role)}>
+                                                {member.role}
+                                            </Badge>
+                                        </TableCell>
                                     </TableRow>
                                 ))
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={3} className="text-center h-20">
-                                        Aucun employé pour ce restaurant.
+                                        Aucun personnel assigné à ce restaurant.
                                     </TableCell>
                                 </TableRow>
                             )}
