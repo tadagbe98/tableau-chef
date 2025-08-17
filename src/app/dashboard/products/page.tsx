@@ -25,7 +25,7 @@ import { db } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 
-const categories = ["Pizzas", "Burgers", "Salades", "Pâtes", "Accompagnements", "Boissons"];
+const categories = ["Pizzas", "Burgers", "Salades", "Pâtes", "Accompagnements", "Boissons", "Atiéké", "Sauces"];
 
 export interface Product {
     id: string;
@@ -48,12 +48,13 @@ export default function ProductsPage() {
         recipeNotes: '',
         image: '',
     });
+    const [customCategory, setCustomCategory] = useState('');
+    const [showCustomCategory, setShowCustomCategory] = useState(false);
     const { toast } = useToast();
-    const { user } = useAuth(); // Utiliser le hook d'authentification
+    const { user } = useAuth();
     const productsCollectionRef = collection(db, 'products');
 
     useEffect(() => {
-        // Ne lancez l'écouteur que si l'utilisateur est connecté
         if (!user) return;
 
         const unsubscribe = onSnapshot(productsCollectionRef, (snapshot) => {
@@ -68,9 +69,8 @@ export default function ProductsPage() {
             });
         });
 
-        // Nettoyer l'écouteur lors du démontage du composant
         return () => unsubscribe();
-    }, [user]); // L'effet se redéclenchera si l'état de l'utilisateur change
+    }, [user, toast]);
     
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { id, value } = e.target;
@@ -78,7 +78,14 @@ export default function ProductsPage() {
     }
 
     const handleSelectChange = (value: string) => {
-        setNewProduct(prev => ({ ...prev, category: value }));
+        if (value === 'Autre') {
+            setShowCustomCategory(true);
+            setNewProduct(prev => ({ ...prev, category: '' }));
+        } else {
+            setShowCustomCategory(false);
+            setCustomCategory('');
+            setNewProduct(prev => ({ ...prev, category: value }));
+        }
     }
     
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,11 +101,15 @@ export default function ProductsPage() {
 
     const resetForm = () => {
         setNewProduct({ name: '', category: '', price: '', stock: '', recipeNotes: '', image: '' });
+        setCustomCategory('');
+        setShowCustomCategory(false);
     }
     
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newProduct.name || !newProduct.category || !newProduct.price || !newProduct.stock) {
+        const finalCategory = showCustomCategory ? customCategory : newProduct.category;
+
+        if (!newProduct.name || !finalCategory || !newProduct.price || !newProduct.stock) {
             toast({ variant: "destructive", title: "Erreur", description: "Veuillez remplir tous les champs obligatoires." });
             return;
         }
@@ -106,7 +117,7 @@ export default function ProductsPage() {
         try {
             await addDoc(productsCollectionRef, {
                 name: newProduct.name,
-                category: newProduct.category,
+                category: finalCategory,
                 price: parseFloat(newProduct.price),
                 stock: parseInt(newProduct.stock, 10),
                 recipeNotes: newProduct.recipeNotes || '',
@@ -147,7 +158,7 @@ export default function ProductsPage() {
                             </div>
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="category" className="text-right">Catégorie</Label>
-                                <Select onValueChange={handleSelectChange} value={newProduct.category}>
+                                <Select onValueChange={handleSelectChange} value={showCustomCategory ? 'Autre' : newProduct.category}>
                                     <SelectTrigger className="col-span-3">
                                         <SelectValue placeholder="Sélectionnez une catégorie" />
                                     </SelectTrigger>
@@ -155,9 +166,21 @@ export default function ProductsPage() {
                                         {categories.map(category => (
                                             <SelectItem key={category} value={category}>{category}</SelectItem>
                                         ))}
+                                        <SelectItem value="Autre">Autre...</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
+                            {showCustomCategory && (
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="customCategory" className="text-right">Cat. Perso.</Label>
+                                    <Input 
+                                        id="customCategory" 
+                                        value={customCategory} 
+                                        onChange={(e) => setCustomCategory(e.target.value)} 
+                                        placeholder="Entrez une catégorie" 
+                                        className="col-span-3" />
+                                </div>
+                            )}
                              <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="price" className="text-right">Prix</Label>
                                 <Input id="price" type="number" value={newProduct.price} onChange={handleInputChange} placeholder="12.99" className="col-span-3" />
@@ -263,3 +286,5 @@ export default function ProductsPage() {
     </div>
   );
 }
+
+    
