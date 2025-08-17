@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { DollarSign, CreditCard, Smartphone, AlertCircle, TrendingUp, TrendingDown, CheckCircle, UserCircle, Lock } from 'lucide-react';
+import { DollarSign, CreditCard, Smartphone, AlertCircle, TrendingUp, TrendingDown, CheckCircle, UserCircle, Lock, Eye } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -14,6 +14,7 @@ import { useAuth, AppUser } from "@/context/AuthContext";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 
 
 const dailySummary = {
@@ -42,6 +43,8 @@ export default function DailyPointPage() {
     const [currentOpeningCash, setCurrentOpeningCash] = useState('');
     const [variance, setVariance] = useState<number | null>(null);
     const [journalHistory, setJournalHistory] = useState<JournalEntry[]>([]);
+    const [selectedJournal, setSelectedJournal] = useState<JournalEntry | null>(null);
+    const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
 
     const { toast } = useToast();
     const isAuthorized = user?.role === 'Admin' || user?.role === 'Caissier';
@@ -64,7 +67,7 @@ export default function DailyPointPage() {
             
             return () => unsubscribe();
         }
-    }, [user]);
+    }, [user, toast]);
 
 
     const handleOpenRegister = () => {
@@ -143,6 +146,11 @@ export default function DailyPointPage() {
                 console.error("Erreur d'écriture du journal:", error);
             }
         }
+    }
+    
+    const handleViewDetails = (entry: JournalEntry) => {
+        setSelectedJournal(entry);
+        setIsDetailDialogOpen(true);
     }
 
   return (
@@ -369,24 +377,27 @@ export default function DailyPointPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Date</TableHead>
+                            <TableHead>Date & Heure</TableHead>
                             <TableHead>Ventes Totales</TableHead>
                             <TableHead>Fonds Initial</TableHead>
                             <TableHead>Écart de Caisse</TableHead>
                             <TableHead>Fermé par</TableHead>
+                            <TableHead>
+                                <span className="sr-only">Actions</span>
+                            </TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {journalHistory.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center">
+                                <TableCell colSpan={6} className="h-24 text-center">
                                     Aucun journal trouvé.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             journalHistory.map((entry) => (
                                 <TableRow key={entry.id}>
-                                    <TableCell>{new Date(entry.date).toLocaleDateString('fr-FR')}</TableCell>
+                                    <TableCell>{new Date(entry.date).toLocaleString('fr-FR')}</TableCell>
                                     <TableCell>{entry.totalSales.toFixed(2)} €</TableCell>
                                     <TableCell>{entry.openingCash.toFixed(2)} €</TableCell>
                                     <TableCell>
@@ -395,6 +406,12 @@ export default function DailyPointPage() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell>{entry.closedBy}</TableCell>
+                                    <TableCell>
+                                        <Button variant="ghost" size="icon" onClick={() => handleViewDetails(entry)}>
+                                            <Eye className="h-4 w-4" />
+                                            <span className="sr-only">Voir les détails</span>
+                                        </Button>
+                                    </TableCell>
                                 </TableRow>
                             ))
                         )}
@@ -403,6 +420,35 @@ export default function DailyPointPage() {
             </CardContent>
         </Card>
       )}
+
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>Détails du Journal</DialogTitle>
+                <DialogDescription>
+                    Détails complets de la clôture de caisse du {selectedJournal ? new Date(selectedJournal.date).toLocaleString('fr-FR') : ''}.
+                </DialogDescription>
+            </DialogHeader>
+            {selectedJournal && (
+                <div className="grid gap-4 py-4">
+                    <div className="flex justify-between"><span className="text-muted-foreground">ID Journal:</span> <strong>{selectedJournal.id}</strong></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Fermé le:</span> <strong>{new Date(selectedJournal.date).toLocaleString('fr-FR')}</strong></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Fermé par:</span> <strong>{selectedJournal.closedBy}</strong></div>
+                    <Separator className="my-2"/>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Ventes Totales:</span> <strong className="text-primary">{selectedJournal.totalSales.toFixed(2)} €</strong></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Fonds de Caisse Initial:</span> <strong>{selectedJournal.openingCash.toFixed(2)} €</strong></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Écart de Caisse:</span> 
+                        <strong className={selectedJournal.variance === 0 ? 'text-green-500' : 'text-red-500'}>
+                            {selectedJournal.variance.toFixed(2)} €
+                        </strong>
+                    </div>
+                </div>
+            )}
+        </DialogContent>
+      </Dialog>
+
     </div>
     </TooltipProvider>
   );
+
+    
