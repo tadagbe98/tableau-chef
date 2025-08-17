@@ -4,7 +4,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, User, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, signOut, getAuth } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, writeBatch, collection } from 'firebase/firestore';
+import { doc, getDoc, setDoc, writeBatch, collection, where, query } from 'firebase/firestore';
 import { useRouter, usePathname } from 'next/navigation';
 import { Logo } from '@/components/icons/logo';
 import { useToast } from '@/hooks/use-toast';
@@ -53,7 +53,7 @@ const AuthContext = createContext<AuthContextType>({
     closeRegister: () => {},
 });
 
-const seedInitialData = async () => {
+const seedInitialData = async (restaurantName: string) => {
     const batch = writeBatch(db);
 
     // Default Products
@@ -71,7 +71,7 @@ const seedInitialData = async () => {
 
     products.forEach(product => {
         const productRef = doc(collection(db, 'products'));
-        batch.set(productRef, product);
+        batch.set(productRef, { ...product, restaurantName });
     });
 
     // Default Inventory Items
@@ -88,7 +88,7 @@ const seedInitialData = async () => {
 
     inventoryItems.forEach(item => {
         const inventoryRef = doc(collection(db, 'inventory'));
-        batch.set(inventoryRef, item);
+        batch.set(inventoryRef, { ...item, restaurantName });
     });
     
     await batch.commit();
@@ -202,7 +202,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const userDocRef = doc(db, "users", newUser.uid);
       await setDoc(userDocRef, userData);
       
-      await seedInitialData();
+      await seedInitialData(data.restaurantName);
 
       setUser({
         ...newUser,
@@ -270,6 +270,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       currency: 'EUR',
       vatRate: 20
     });
+
+    await seedInitialData(restaurantName);
   }
 
   const logout = () => {

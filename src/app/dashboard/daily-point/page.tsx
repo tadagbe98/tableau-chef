@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth, AppUser } from "@/context/AuthContext";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 
@@ -48,11 +48,15 @@ export default function DailyPointPage() {
 
     const { toast } = useToast();
     const isAuthorized = user?.role === 'Admin' || user?.role === 'Caissier';
-    const journalsCollectionRef = collection(db, 'journals');
 
     useEffect(() => {
-        if (user && user.role === 'Admin') {
-            const q = query(journalsCollectionRef, orderBy("date", "desc"));
+        if (user && user.role === 'Admin' && user.restaurantName) {
+            const journalsCollectionRef = collection(db, 'journals');
+            const q = query(
+                journalsCollectionRef, 
+                where("restaurantName", "==", user.restaurantName),
+                orderBy("date", "desc")
+            );
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const fetchedJournals = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as JournalEntry));
                 setJournalHistory(fetchedJournals);
@@ -110,7 +114,7 @@ export default function DailyPointPage() {
     };
 
     const handleClosePoint = async () => {
-         if (!isAuthorized) {
+         if (!isAuthorized || !user?.restaurantName) {
             toast({
                 variant: 'destructive',
                 title: 'Accès Refusé',
@@ -121,12 +125,14 @@ export default function DailyPointPage() {
         calculateVariance();
         if(cashInDrawer && variance !== null) {
             try {
+                const journalsCollectionRef = collection(db, 'journals');
                 await addDoc(journalsCollectionRef, {
                     date: new Date().toISOString(),
                     totalSales: dailySummary.totalSales,
                     openingCash: parseFloat(openingCash),
                     variance: variance,
                     closedBy: user?.displayName || 'Utilisateur inconnu',
+                    restaurantName: user.restaurantName,
                 });
 
                 closeRegister();

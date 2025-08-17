@@ -10,7 +10,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, Tooltip } 
 import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, onSnapshot, limit } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 const chartConfig = {
@@ -28,25 +28,26 @@ const topProductsData = [
   { name: 'Tiramisu', sales: 45 },
 ];
 
-const recentOrders = [
-    { id: '#125', customer: 'Table 3', status: 'Servie', total: '45.50 €' },
-    { id: '#124', customer: 'John Doe', status: 'Prête', total: '22.00 €' },
-    { id: '#123', customer: 'À emporter', status: 'En préparation', total: '15.75 €' },
-    { id: '#122', customer: 'Jane Smith', status: 'Nouvelle', total: '30.10 €' },
-    { id: '#121', customer: 'Table 5', status: 'Servie', total: '55.00 €' },
-]
+interface Order {
+    id: string;
+    orderNumber: number;
+    customer: string;
+    status: 'Nouvelle' | 'En préparation' | 'Prête' | 'Servie' | 'Annulée';
+    total: number;
+}
 
 function AdminDashboard() {
     const { user } = useAuth();
-    const [stats, setStats] = useState({ totalRevenue: 0, userCount: 0 });
-    const [salesData, setSalesData] = useState([]);
+    const [stats, setStats] = useState({ totalRevenue: 0, userCount: 0, orderCount: 0 });
+    const [salesData, setSalesData] = useState<any[]>([]);
+    const [recentOrders, setRecentOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (!user?.restaurantName) return;
         setLoading(true);
 
-        const fetchStats = async () => {
+        const fetchInitialData = async () => {
             // Fetch users count
             const usersQuery = query(
                 collection(db, 'users'), 
@@ -55,18 +56,18 @@ function AdminDashboard() {
             const usersSnapshot = await getDocs(usersQuery);
             setStats(prev => ({ ...prev, userCount: usersSnapshot.size }));
         };
-
-        fetchStats();
         
-        // Listen for journal updates
+        fetchInitialData();
+        
+        // Listen for journal updates for sales data
         const journalsQuery = query(
             collection(db, 'journals'), 
+            where("restaurantName", "==", user.restaurantName),
             orderBy('date', 'desc')
         );
         
-        const unsubscribe = onSnapshot(journalsQuery, (snapshot) => {
+        const journalsUnsubscribe = onSnapshot(journalsQuery, (snapshot) => {
             const journals = snapshot.docs.map(doc => doc.data());
-            
             const totalRevenue = journals.reduce((acc, journal) => acc + journal.totalSales, 0);
             
             const dailySales = journals.reduce((acc, journal) => {
@@ -76,7 +77,7 @@ function AdminDashboard() {
                 }
                 acc[date] += journal.totalSales;
                 return acc;
-            }, {});
+            }, {} as Record<string, number>);
 
             const formattedSalesData = Object.entries(dailySales)
                 .map(([date, sales]) => ({
@@ -90,9 +91,44 @@ function AdminDashboard() {
             setLoading(false);
         });
 
-        return () => unsubscribe();
+        // Listen for recent orders
+        const ordersQuery = query(
+            collection(db, 'orders'),
+            where("restaurantName", "==", user.restaurantName),
+            orderBy('createdAt', 'desc'),
+            limit(5)
+        );
+
+        const ordersUnsubscribe = onSnapshot(ordersQuery, (snapshot) => {
+            const fetchedOrders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+            setRecentOrders(fetchedOrders);
+        });
+
+        // Listen for total order count
+        const allOrdersQuery = query(collection(db, 'orders'), where("restaurantName", "==", user.restaurantName));
+        const allOrdersUnsubscribe = onSnapshot(allOrdersQuery, (snapshot) => {
+            setStats(prev => ({...prev, orderCount: snapshot.size}));
+        });
+
+
+        return () => {
+            journalsUnsubscribe();
+            ordersUnsubscribe();
+            allOrdersUnsubscribe();
+        }
 
     }, [user?.restaurantName]);
+    
+    const getStatusBadgeClass = (status: Order['status']) => {
+        switch(status) {
+            case 'Nouvelle': return 'bg-blue-500 text-white';
+            case 'En préparation': return 'bg-yellow-500 text-black';
+            case 'Prête': return 'bg-green-500 text-white';
+            case 'Servie': return 'bg-primary';
+            case 'Annulée': return 'bg-destructive';
+            default: return 'bg-secondary';
+        }
+    }
 
   return (
     <div className="flex flex-col gap-6">
@@ -128,11 +164,15 @@ function AdminDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Commandes</CardTitle>
-             <HelpCircle className="h-4 w-4 text-muted-foreground" />
+             <ShoppingBag className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">À venir</div>
-            <p className="text-xs text-muted-foreground">Sera disponible avec la gestion des commandes</p>
+             {loading ? (
+                <div className="h-7 w-12 bg-muted animate-pulse rounded-md" />
+            ) : (
+                <div className="text-2xl font-bold">{stats.orderCount}</div>
+            )}
+            <p className="text-xs text-muted-foreground">Total des commandes enregistrées</p>
           </CardContent>
         </Card>
         <Card>
@@ -141,8 +181,12 @@ function AdminDashboard() {
              <HelpCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">À venir</div>
-            <p className="text-xs text-muted-foreground">Sera disponible avec la gestion des commandes</p>
+             {loading || stats.orderCount === 0 ? (
+                <div className="h-7 w-20 bg-muted animate-pulse rounded-md" />
+            ) : (
+                 <div className="text-2xl font-bold">{(stats.totalRevenue / stats.orderCount).toFixed(2)} {user?.currency}</div>
+            )}
+            <p className="text-xs text-muted-foreground">Basé sur les commandes clôturées</p>
           </CardContent>
         </Card>
       </div>
@@ -222,7 +266,7 @@ function AdminDashboard() {
        <Card>
         <CardHeader>
           <CardTitle>Suivi des Commandes en Temps Réel</CardTitle>
-           <CardDescription>Les dernières commandes de votre restaurant. (Données d'exemple)</CardDescription>
+           <CardDescription>Les dernières commandes de votre restaurant.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -235,22 +279,32 @@ function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recentOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.id}</TableCell>
-                  <TableCell>{order.customer}</TableCell>
-                  <TableCell>
-                    <Badge variant={
-                        order.status === 'Servie' ? 'default' : 
-                        order.status === 'Prête' ? 'secondary' : 
-                        order.status === 'En préparation' ? 'outline' :
-                        order.status === 'Nouvelle' ? 'default' : 
-                        'destructive'
-                    } className={`capitalize ${order.status === 'Nouvelle' && 'bg-blue-500 text-white'} ${order.status === 'Prête' && 'bg-green-500 text-white'} ${order.status === 'Servie' && 'bg-primary'} ${order.status === 'En préparation' && 'bg-yellow-500 text-black'}`}>{order.status}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right">{order.total}</TableCell>
+              {loading ? (
+                 <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                        Chargement des commandes...
+                    </TableCell>
                 </TableRow>
-              ))}
+              ) : recentOrders.length === 0 ? (
+                 <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center">
+                        Aucune commande récente.
+                    </TableCell>
+                </TableRow>
+              ) : (
+                recentOrders.map((order) => (
+                    <TableRow key={order.id}>
+                    <TableCell className="font-medium">#{order.orderNumber}</TableCell>
+                    <TableCell>{order.customer}</TableCell>
+                    <TableCell>
+                        <Badge variant={'default'} className={`capitalize ${getStatusBadgeClass(order.status)}`}>
+                            {order.status}
+                        </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">{order.total.toFixed(2)} {user?.currency}</TableCell>
+                    </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -285,5 +339,3 @@ export default function DashboardPage() {
         </div>
     )
 }
-
-    

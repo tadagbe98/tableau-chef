@@ -32,7 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -67,12 +67,15 @@ export default function ProductsPage() {
     const [showCustomCategory, setShowCustomCategory] = useState(false);
     const { toast } = useToast();
     const { user } = useAuth();
-    const productsCollectionRef = collection(db, 'products');
+    
 
     useEffect(() => {
-        if (!user) return;
+        if (!user?.restaurantName) return;
 
-        const unsubscribe = onSnapshot(productsCollectionRef, (snapshot) => {
+        const productsCollectionRef = collection(db, 'products');
+        const q = query(productsCollectionRef, where("restaurantName", "==", user.restaurantName));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedProducts = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Product));
             setProducts(fetchedProducts);
         }, (error) => {
@@ -167,7 +170,7 @@ export default function ProductsPage() {
         e.preventDefault();
         const finalCategory = showCustomCategory ? customCategory : formData.category;
 
-        if (!formData.name || !finalCategory || !formData.price || !formData.stock) {
+        if (!formData.name || !finalCategory || !formData.price || !formData.stock || !user?.restaurantName) {
             toast({ variant: "destructive", title: "Erreur", description: "Veuillez remplir tous les champs obligatoires." });
             return;
         }
@@ -178,7 +181,8 @@ export default function ProductsPage() {
             price: parseFloat(formData.price),
             stock: parseInt(formData.stock, 10),
             recipeNotes: formData.recipeNotes || '',
-            image: formData.image || `https://placehold.co/40x40.png?text=${formData.name.charAt(0)}`
+            image: formData.image || `https://placehold.co/40x40.png?text=${formData.name.charAt(0)}`,
+            restaurantName: user.restaurantName,
         };
 
         try {
@@ -186,6 +190,7 @@ export default function ProductsPage() {
                 await updateDoc(doc(db, 'products', currentProduct.id), productData);
                 toast({ title: "Succès", description: "Le produit a été mis à jour." });
             } else {
+                const productsCollectionRef = collection(db, 'products');
                 await addDoc(productsCollectionRef, productData);
                 toast({ title: "Succès", description: "Le produit a été ajouté." });
             }
@@ -371,3 +376,4 @@ export default function ProductsPage() {
   );
 
     
+

@@ -88,11 +88,12 @@ export default function DashboardLayout({
   }, [user, router]);
   
   useEffect(() => {
-    if (!user) return;
+    if (!user?.restaurantName) return;
     
     const q = query(
         collection(db, 'notifications'), 
-        where('isRead', '==', false), 
+        where('isRead', '==', false),
+        where('restaurantName', '==', user.restaurantName),
         orderBy('createdAt', 'desc'), 
         limit(10)
     );

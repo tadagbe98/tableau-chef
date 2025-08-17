@@ -62,12 +62,12 @@ export default function InventoryPage() {
     const { toast } = useToast();
     const isAuthorized = user?.role === 'Admin' || user?.role === 'Gestionnaire de Stock';
 
-    const inventoryCollectionRef = collection(db, 'inventory');
-    const notificationsCollectionRef = collection(db, 'notifications');
-    const logsCollectionRef = collection(db, 'inventory_logs');
-
     useEffect(() => {
-        const unsubscribe = onSnapshot(inventoryCollectionRef, (snapshot) => {
+        if (!user?.restaurantName) return;
+        const inventoryCollectionRef = collection(db, 'inventory');
+        const q = query(inventoryCollectionRef, where("restaurantName", "==", user.restaurantName));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedItems = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as InventoryItem));
             setInventoryItems(fetchedItems);
         }, (error) => {
@@ -79,11 +79,17 @@ export default function InventoryPage() {
             });
         });
         return () => unsubscribe();
-    }, [toast]);
+    }, [user, toast]);
     
     useEffect(() => {
-        if (user?.role === 'Admin') {
-            const q = query(logsCollectionRef, orderBy('timestamp', 'desc'), limit(15));
+        if (user?.role === 'Admin' && user?.restaurantName) {
+            const logsCollectionRef = collection(db, 'inventory_logs');
+            const q = query(
+                logsCollectionRef, 
+                where("restaurantName", "==", user.restaurantName),
+                orderBy('timestamp', 'desc'), 
+                limit(15)
+            );
             const unsubscribe = onSnapshot(q, (snapshot) => {
                 const fetchedLogs = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as InventoryLog));
                 setInventoryLogs(fetchedLogs);
@@ -122,12 +128,13 @@ export default function InventoryPage() {
     const handleAddNewItem = async (e: React.FormEvent) => {
         e.preventDefault();
         const { name, category, stock, maxStock, unit, lowStockThreshold } = newItem;
-        if (!name || !category || !stock || !maxStock || !unit) {
+        if (!name || !category || !stock || !maxStock || !unit || !user?.restaurantName) {
             toast({ variant: 'destructive', title: 'Champs Manquants', description: 'Veuillez remplir tous les champs.' });
             return;
         }
 
         try {
+            const inventoryCollectionRef = collection(db, 'inventory');
             await addDoc(inventoryCollectionRef, {
                 name,
                 category,
@@ -135,6 +142,7 @@ export default function InventoryPage() {
                 maxStock: Number(maxStock),
                 unit,
                 lowStockThreshold: Number(lowStockThreshold),
+                restaurantName: user.restaurantName,
             });
             toast({ title: 'Succès', description: `L'article ${name} a été ajouté à l'inventaire.` });
             setIsAddDialogOpen(false);
@@ -146,8 +154,10 @@ export default function InventoryPage() {
     };
 
     const handleNotification = async (itemBeforeUpdate: InventoryItem, newStock: number) => {
+        if (!user?.restaurantName) return;
         const thresholdValue = itemBeforeUpdate.maxStock * (itemBeforeUpdate.lowStockThreshold / 100);
 
+        const notificationsCollectionRef = collection(db, 'notifications');
         // Stock goes from OK to LOW
         if (newStock <= thresholdValue && itemBeforeUpdate.stock > thresholdValue) {
             await addDoc(notificationsCollectionRef, {
@@ -156,6 +166,7 @@ export default function InventoryPage() {
                 isRead: false,
                 createdAt: serverTimestamp(),
                 productId: itemBeforeUpdate.id,
+                restaurantName: user.restaurantName
             });
             toast({
                 title: "Alerte de Stock Bas",
@@ -165,7 +176,12 @@ export default function InventoryPage() {
         
         // Stock goes from LOW to OK
         if (newStock > thresholdValue && itemBeforeUpdate.stock <= thresholdValue) {
-             const q = query(notificationsCollectionRef, where("productId", "==", itemBeforeUpdate.id), where("isRead", "==", false));
+             const q = query(
+                notificationsCollectionRef, 
+                where("productId", "==", itemBeforeUpdate.id), 
+                where("isRead", "==", false),
+                where("restaurantName", "==", user.restaurantName)
+            );
              const querySnapshot = await getDocs(q);
              if (!querySnapshot.empty) {
                 const batch = writeBatch(db);
@@ -179,7 +195,7 @@ export default function InventoryPage() {
     };
     
     const handleUpdateStock = async () => {
-        if (!selectedItem || !quantity || !user) return;
+        if (!selectedItem || !quantity || !user || !user.restaurantName) return;
 
         const currentStock = selectedItem.stock;
         const amount = parseInt(quantity, 10);
@@ -207,6 +223,7 @@ export default function InventoryPage() {
         const itemDocRef = doc(db, 'inventory', selectedItem.id);
         try {
             await updateDoc(itemDocRef, { stock: newStock });
+            const logsCollectionRef = collection(db, 'inventory_logs');
             await addDoc(logsCollectionRef, {
                 itemId: selectedItem.id,
                 itemName: selectedItem.name,
@@ -216,6 +233,7 @@ export default function InventoryPage() {
                 userId: user.uid,
                 userName: user.displayName || 'Inconnu',
                 timestamp: serverTimestamp(),
+                restaurantName: user.restaurantName,
             });
 
             await handleNotification(selectedItem, newStock);

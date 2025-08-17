@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/icons/logo';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Product } from '@/app/dashboard/products/page';
 import { useAuth } from '@/context/AuthContext';
@@ -29,21 +29,27 @@ import Link from 'next/link';
 
 const tables = Array.from({ length: 12 }, (_, i) => ({ id: i + 1, name: `T${i + 1}`, status: 'disponible' }));
 
+interface OrderItem extends Product {
+    quantity: number;
+}
+
 function OrdersContent() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>(["Tout"]);
-  const [orderItems, setOrderItems] = useState<any[]>([]);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [orderType, setOrderType] = useState("Sur place");
   const [activeCategory, setActiveCategory] = useState("Tout");
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
   const [selectedTable, setSelectedTable] = useState<number | string | null>(null);
-  const [orderNumber] = useState(Math.floor(Math.random() * 1000) + 125);
+  const [orderNumber, setOrderNumber] = useState(Math.floor(Math.random() * 1000) + 125);
   const [isTableInputDialogOpen, setIsTableInputDialogOpen] = useState(false);
   const [manualTableNumber, setManualTableNumber] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('');
 
 
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const receiptRef = useRef<HTMLDivElement>(null);
   const kitchenTicketRef = useRef<HTMLDivElement>(null);
@@ -137,15 +143,46 @@ function OrdersContent() {
     setIsPaymentDialogOpen(true);
   };
   
-  const handlePayment = (method: string) => {
-    console.log(`Payé avec ${method}`);
-    setIsPaymentDialogOpen(false);
-    setIsReceiptDialogOpen(true);
+  const handlePayment = async (method: string) => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Utilisateur non connecté.' });
+        return;
+    }
+    setPaymentMethod(method);
+
+    try {
+        const orderData = {
+            orderNumber: orderNumber,
+            customer: orderType === 'Sur place' ? `Table ${selectedTable}` : orderType,
+            status: 'Nouvelle', // Initial status
+            total: total,
+            items: orderItems.map(({ id, name, price, quantity }) => ({ id, name, price, quantity })),
+            createdAt: serverTimestamp(),
+            createdBy: user.displayName || user.email,
+            restaurantName: user.restaurantName,
+            paymentMethod: method,
+            type: orderType,
+        };
+        
+        await addDoc(collection(db, 'orders'), orderData);
+        
+        console.log(`Payé avec ${method}`);
+        setIsPaymentDialogOpen(false);
+        setIsReceiptDialogOpen(true);
+    } catch (error) {
+        console.error("Erreur lors de la sauvegarde de la commande:", error);
+        toast({
+            variant: "destructive",
+            title: "Erreur de Sauvegarde",
+            description: "Impossible d'enregistrer la commande. Veuillez réessayer."
+        });
+    }
   }
 
   const handleNewOrder = () => {
     setOrderItems([]);
     setSelectedTable(null);
+    setOrderNumber(Math.floor(Math.random() * 1000) + 125);
     setIsReceiptDialogOpen(false);
     toast({
       title: "Nouvelle Commande Créée",
@@ -396,7 +433,8 @@ function OrdersContent() {
                   <span>{total.toFixed(2)} €</span>
                 </div>
             </div>
-            <div className="text-center mt-6">
+             <div className="text-center mt-6 space-y-1">
+                <p>Payé en {paymentMethod}</p>
                 <p>Merci de votre visite !</p>
             </div>
         </div>
