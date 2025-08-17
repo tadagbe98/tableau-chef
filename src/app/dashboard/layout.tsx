@@ -84,32 +84,35 @@ export default function DashboardLayout({
   }, [user, router]);
   
   useEffect(() => {
-      if(!user) return;
+    if (!user) return;
+    
+    // This query now correctly fetches only unread notifications.
+    const q = query(
+        collection(db, 'notifications'), 
+        where('isRead', '==', false), 
+        orderBy('createdAt', 'desc'), 
+        limit(10)
+    );
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const fetchedNotifications = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Notification));
+        setNotifications(fetchedNotifications);
+    }, (error) => {
+        console.error("Erreur de notifications:", error);
+    });
       
-      const q = query(
-          collection(db, 'notifications'), 
-          where('isRead', '==', false), 
-          orderBy('createdAt', 'desc'), 
-          limit(10)
-      );
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-          const fetchedNotifications = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Notification));
-          setNotifications(fetchedNotifications);
-      }, (error) => {
-          console.error("Erreur de notifications:", error);
-      });
-      
-      return () => unsubscribe();
+    return () => unsubscribe();
   }, [user]);
   
   const filteredNotifications = useMemo(() => {
-      if (!user) return [];
-      const userRole = user.role;
-      if (userRole === 'Admin' || userRole === 'Gestionnaire de Stock') {
-          return notifications; // Admins and Stock Managers see all notifications
-      }
-      // Other roles (e.g., Caissier) only see non-stock related notifications
-      return notifications.filter(notif => notif.type !== 'stock');
+    if (!user) return [];
+    const userRole = user.role;
+    // Admins and Stock Managers see all unread notifications
+    if (userRole === 'Admin' || userRole === 'Gestionnaire de Stock') {
+        return notifications;
+    }
+    // Other roles only see non-stock related notifications
+    return notifications.filter(notif => notif.type !== 'stock');
   }, [notifications, user]);
 
   const handleLogout = async () => {
