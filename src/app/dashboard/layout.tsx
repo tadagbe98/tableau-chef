@@ -106,30 +106,7 @@ export default function DashboardLayout({
       
     return () => unsubscribe();
   }, [user]);
-  
-  const filteredNotifications = useMemo(() => {
-    if (!user) return [];
-    const userRole = user.role;
-    if (userRole === 'Admin' || userRole === 'Gestionnaire de Stock') {
-        return notifications;
-    }
-    return notifications.filter(notif => notif.type !== 'stock');
-  }, [notifications, user]);
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast({ title: 'Déconnexion réussie.'});
-      router.push('/login');
-    } catch (error) {
-      toast({ variant: 'destructive', title: 'Erreur lors de la déconnexion.'});
-    }
-  };
-  
-  if (!user) {
-    return null;
-  }
-  
   const navItems = useMemo(() => {
     if (!user?.role) return [];
     if (user.role === 'Admin') {
@@ -149,8 +126,30 @@ export default function DashboardLayout({
         isAllowed: item.roles.includes(user.role as string),
       }));
   }, [user?.role]);
+  
+  const filteredNotifications = useMemo(() => {
+    if (!user) return [];
+    const userRole = user.role;
+    if (userRole === 'Admin' || userRole === 'Gestionnaire de Stock') {
+        return notifications;
+    }
+    return notifications.filter(notif => notif.type !== 'stock');
+  }, [notifications, user]);
 
+  if (!user) {
+    return null;
+  }
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({ title: 'Déconnexion réussie.'});
+      router.push('/login');
+    } catch (error) {
+      toast({ variant: 'destructive', title: 'Erreur lors de la déconnexion.'});
+    }
+  };
+  
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
