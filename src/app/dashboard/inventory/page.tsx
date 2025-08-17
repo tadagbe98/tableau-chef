@@ -146,11 +146,10 @@ export default function InventoryPage() {
     };
 
     const handleNotification = async (itemBeforeUpdate: InventoryItem, newStock: number) => {
-        const thresholdValue = itemBeforeUpdate.lowStockThreshold;
-        const threshold = itemBeforeUpdate.maxStock * (thresholdValue / 100);
+        const thresholdValue = itemBeforeUpdate.maxStock * (itemBeforeUpdate.lowStockThreshold / 100);
 
         // Stock goes from OK to LOW
-        if (newStock <= threshold && itemBeforeUpdate.stock > threshold) {
+        if (newStock <= thresholdValue && itemBeforeUpdate.stock > thresholdValue) {
             await addDoc(notificationsCollectionRef, {
                 message: `Stock bas : ${itemBeforeUpdate.name} est à ${newStock} ${itemBeforeUpdate.unit}.`,
                 type: 'stock',
@@ -165,7 +164,7 @@ export default function InventoryPage() {
         }
         
         // Stock goes from LOW to OK
-        if (newStock > threshold && itemBeforeUpdate.stock <= threshold) {
+        if (newStock > thresholdValue && itemBeforeUpdate.stock <= thresholdValue) {
              const q = query(notificationsCollectionRef, where("productId", "==", itemBeforeUpdate.id), where("isRead", "==", false));
              const querySnapshot = await getDocs(q);
              if (!querySnapshot.empty) {
@@ -414,7 +413,7 @@ export default function InventoryPage() {
                                 const actionDetails = {
                                     add: { icon: PackagePlus, text: `+${log.quantityChange}`, color: 'text-green-500' },
                                     use: { icon: PackageMinus, text: `${log.quantityChange}`, color: 'text-orange-500' },
-                                    count: { icon: ListOrdered, text: `Ajust: ${log.quantityChange}`, color: 'text-blue-500' }
+                                    count: { icon: ListOrdered, text: `Ajust: ${log.quantityChange > 0 ? '+':''}${log.quantityChange}`, color: 'text-blue-500' }
                                 };
                                 const details = actionDetails[log.type];
                                 return (
