@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { PlusCircle, MinusCircle, CreditCard, Smartphone, DollarSign, ShoppingBasket, Printer, ChefHat } from "lucide-react";
+import { PlusCircle, MinusCircle, CreditCard, Smartphone, DollarSign, ShoppingBasket, Printer, ChefHat, Plus } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import {
@@ -14,9 +14,12 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/icons/logo';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 const products = [
   { id: 1, name: "Pizza Margherita", price: 12.99, image: "https://placehold.co/300x200.png", category: "Pizzas", "data-ai-hint": "pizza food" },
@@ -39,8 +42,10 @@ export default function OrdersPage() {
   const [activeCategory, setActiveCategory] = useState("Tout");
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
-  const [selectedTable, setSelectedTable] = useState(null);
+  const [selectedTable, setSelectedTable] = useState<number | string | null>(null);
   const [orderNumber] = useState(Math.floor(Math.random() * 1000) + 125);
+  const [isTableInputDialogOpen, setIsTableInputDialogOpen] = useState(false);
+  const [manualTableNumber, setManualTableNumber] = useState('');
 
 
   const { toast } = useToast();
@@ -134,6 +139,15 @@ export default function OrdersPage() {
     })
   }
 
+  const handleSelectManualTable = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (manualTableNumber.trim()) {
+      setSelectedTable(manualTableNumber.trim());
+      setIsTableInputDialogOpen(false);
+      setManualTableNumber('');
+    }
+  };
+
   const filteredProducts = activeCategory === "Tout"
     ? products
     : products.filter(p => p.category === activeCategory);
@@ -164,6 +178,36 @@ export default function OrdersPage() {
                                 {table.name}
                             </Button>
                         ))}
+                        <Dialog open={isTableInputDialogOpen} onOpenChange={setIsTableInputDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="flex items-center justify-center">
+                                    <Plus className="h-4 w-4" />
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px]">
+                                <form onSubmit={handleSelectManualTable}>
+                                    <DialogHeader>
+                                        <DialogTitle>Entrer le numéro de table</DialogTitle>
+                                        <DialogDescription>
+                                            Saisissez le numéro de la table pour les commandes personnalisées.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-4">
+                                        <Label htmlFor="table-number">Numéro de Table</Label>
+                                        <Input
+                                            id="table-number"
+                                            value={manualTableNumber}
+                                            onChange={(e) => setManualTableNumber(e.target.value)}
+                                            placeholder="Ex: 25, A3, ..."
+                                            required
+                                        />
+                                    </div>
+                                    <DialogFooter>
+                                        <Button type="submit">Sélectionner la Table</Button>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
                     </div>
                 </div>
             )}
