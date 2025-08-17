@@ -68,7 +68,7 @@ export default function AdminLoginPage() {
             <Logo className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold tracking-tight">TableauChef</span>
           </Link>
-          <CardTitle className="text-2xl">Connexion Super Admin</CardTitle>
+          <CardTitle className="text-2xl">Administration</CardTitle>
           <CardDescription>
             Accès réservé aux administrateurs de la plateforme.
           </CardDescription>
@@ -76,11 +76,11 @@ export default function AdminLoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email Super Admin</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@tableauchef.app"
+                placeholder="contact@tableauchef.com"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
