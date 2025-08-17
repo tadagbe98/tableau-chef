@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -47,22 +48,22 @@ export default function DailyPointPage() {
     const journalsCollectionRef = collection(db, 'journals');
 
     useEffect(() => {
-        if (!user || user.role !== 'Admin') return;
-
-        const q = query(journalsCollectionRef, orderBy("date", "desc"));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const fetchedJournals = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as JournalEntry));
-            setJournalHistory(fetchedJournals);
-        }, (error) => {
-            console.error("Erreur de snapshot Firestore pour les journaux:", error);
-            toast({
-                variant: "destructive",
-                title: "Erreur de chargement",
-                description: "Impossible de charger l'historique des journaux.",
+        if (user && user.role === 'Admin') {
+            const q = query(journalsCollectionRef, orderBy("date", "desc"));
+            const unsubscribe = onSnapshot(q, (snapshot) => {
+                const fetchedJournals = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as JournalEntry));
+                setJournalHistory(fetchedJournals);
+            }, (error) => {
+                console.error("Erreur de snapshot Firestore pour les journaux:", error);
+                toast({
+                    variant: "destructive",
+                    title: "Erreur de chargement",
+                    description: "Impossible de charger l'historique des journaux. Vérifiez les permissions.",
+                });
             });
-        });
-        
-        return () => unsubscribe();
+            
+            return () => unsubscribe();
+        }
     }, [user]);
 
 
@@ -160,7 +161,7 @@ export default function DailyPointPage() {
                     <div className="flex items-center gap-2 mt-1">
                         <UserCircle className="text-muted-foreground"/>
                         <div className="font-medium flex items-center gap-2">
-                           <span>{user?.displayName || 'Utilisateur'} </span>
+                           <span>{user?.displayName || 'Utilisateur'} </span> 
                            <Badge variant="secondary">{user?.role || 'Rôle inconnu'}</Badge>
                         </div>
                     </div>
@@ -405,4 +406,3 @@ export default function DailyPointPage() {
     </div>
     </TooltipProvider>
   );
-}
