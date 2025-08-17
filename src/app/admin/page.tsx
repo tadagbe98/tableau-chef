@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { getDoc, doc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists() && userDoc.data().role === 'Super Admin') {
-        // Redirection is handled by the layout
+        router.push('/admin/dashboard');
       } else {
         await auth.signOut(); // Log out the user if they are not Super Admin
         toast({
@@ -52,7 +52,7 @@ export default function AdminLoginPage() {
       toast({
         variant: "destructive",
         title: "Erreur de Connexion",
-        description: "Email ou mot de passe incorrect.",
+        description: "Identifiant ou mot de passe incorrect.",
       });
       console.error("Admin Login Error:", error);
     } finally {
@@ -76,10 +76,10 @@ export default function AdminLoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email du Super Admin</Label>
+              <Label htmlFor="email">Identifiant Super Admin</Label>
               <Input
                 id="email"
-                type="email"
+                type="text"
                 placeholder="admin@tableauchef.app"
                 required
                 value={email}
