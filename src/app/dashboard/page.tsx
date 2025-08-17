@@ -62,12 +62,11 @@ function AdminDashboard() {
         // Listen for journal updates for sales data
         const journalsQuery = query(
             collection(db, 'journals'), 
-            where("restaurantName", "==", user.restaurantName),
-            orderBy('date', 'desc')
+            where("restaurantName", "==", user.restaurantName)
         );
         
         const journalsUnsubscribe = onSnapshot(journalsQuery, (snapshot) => {
-            const journals = snapshot.docs.map(doc => doc.data());
+            const journals = snapshot.docs.map(doc => doc.data()).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
             const totalRevenue = journals.reduce((acc, journal) => acc + journal.totalSales, 0);
             
             const dailySales = journals.reduce((acc, journal) => {
@@ -339,3 +338,5 @@ export default function DashboardPage() {
         </div>
     )
 }
+
+    

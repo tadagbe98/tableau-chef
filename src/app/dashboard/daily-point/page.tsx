@@ -54,11 +54,11 @@ export default function DailyPointPage() {
             const journalsCollectionRef = collection(db, 'journals');
             const q = query(
                 journalsCollectionRef, 
-                where("restaurantName", "==", user.restaurantName),
-                orderBy("date", "desc")
+                where("restaurantName", "==", user.restaurantName)
             );
             const unsubscribe = onSnapshot(q, (snapshot) => {
-                const fetchedJournals = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as JournalEntry));
+                const fetchedJournals = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as JournalEntry))
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
                 setJournalHistory(fetchedJournals);
             }, (error) => {
                 console.error("Erreur de snapshot Firestore pour les journaux:", error);
@@ -456,5 +456,8 @@ export default function DailyPointPage() {
     </div>
     </TooltipProvider>
   );
+
+    
+
 
     
