@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash2, ShieldAlert, Ban, CheckCircle } from 'lucide-react';
+import { ShieldAlert, Ban, CheckCircle } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,44 +82,6 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
 
         return () => unsubscribe();
     }, [restaurantName]);
-    
-    const handleDeleteRestaurant = async () => {
-        setIsProcessing(true);
-        try {
-            const usersQuery = query(collection(db, 'users'), where("restaurantName", "==", restaurantName));
-            const usersSnapshot = await getDocs(usersQuery);
-
-            if (usersSnapshot.empty) {
-                toast({ title: "Aucun utilisateur à supprimer." });
-                router.push('/admin/dashboard/restaurants');
-                return;
-            }
-
-            const batch = writeBatch(db);
-            usersSnapshot.forEach(doc => {
-                batch.delete(doc.ref);
-            });
-
-            await batch.commit();
-
-            toast({
-                title: "Restaurant Supprimé",
-                description: `Le restaurant "${restaurantName}" et tous ses utilisateurs ont été supprimés.`
-            });
-            
-            router.push('/admin/dashboard/restaurants');
-
-        } catch (error) {
-            console.error("Failed to delete restaurant and users:", error);
-            toast({
-                variant: 'destructive',
-                title: "Erreur lors de la suppression",
-                description: "Une erreur est survenue. Veuillez réessayer."
-            });
-        } finally {
-            setIsProcessing(false);
-        }
-    }
     
     const handleToggleStatus = async () => {
         if (!restaurant) return;
@@ -259,7 +221,7 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
                         <ShieldAlert /> Zone de Danger
                     </CardTitle>
                      <CardDescription>
-                       Actions irréversibles ou importantes concernant ce restaurant.
+                       Actions importantes concernant ce restaurant.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -268,12 +230,6 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
                             <h3 className="font-semibold">Désactiver / Réactiver le restaurant</h3>
                             <p className="text-sm text-muted-foreground mt-1">
                                Désactiver un restaurant empêchera tous ses utilisateurs (y compris l'admin) de se connecter. Leurs données sont conservées et vous pouvez les réactiver à tout moment.
-                            </p>
-                        </div>
-                         <div>
-                            <h3 className="font-semibold">Supprimer le restaurant</h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                               La suppression est définitive. Elle effacera le restaurant ainsi que tous les comptes utilisateurs (Admin et employés) qui y sont associés dans la base de données.
                             </p>
                         </div>
                     </div>
@@ -309,28 +265,6 @@ export default function RestaurantDetailPage({ params }: { params: { name: strin
                         </AlertDialogContent>
                     </AlertDialog>
 
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive" disabled={isProcessing}>
-                                <Trash2 className="mr-2 h-4 w-4"/>
-                                {isProcessing ? "Traitement..." : "Supprimer"}
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Êtes-vous absolument sûr ?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                    Cette action est irréversible. Le restaurant "{restaurantName}" et tous ses utilisateurs seront supprimés. Vous ne pourrez pas annuler cette action.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDeleteRestaurant} className="bg-destructive hover:bg-destructive/90">
-                                    Oui, supprimer
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
                 </CardFooter>
             </Card>
 
