@@ -392,7 +392,7 @@ function OrdersContent() {
           <div className="my-4 text-center">
             <p className="text-muted-foreground">Que souhaitez-vous faire maintenant ?</p>
           </div>
-           <DialogFooter className="flex-col gap-2 sm:gap-3">
+           <DialogFooter className="flex flex-col gap-2">
             <Button className="w-full" onClick={handlePrintReceipt}><Printer className="mr-2 h-4 w-4"/> Imprimer le Reçu Client</Button>
             <Button className="w-full" variant="secondary" onClick={handlePrintKitchenTicket}><ChefHat className="mr-2 h-4 w-4"/> Imprimer le Ticket de Cuisine</Button>
             <Button className="w-full" variant="outline" onClick={handleNewOrder}>Commencer une Nouvelle Commande</Button>
