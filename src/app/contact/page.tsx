@@ -60,7 +60,7 @@ export default function ContactPage() {
   };
   
   const getBackLink = () => {
-      if (user?.role === 'Admin') return '/admin/dashboard';
+      if (user?.role === 'Super Admin') return '/admin/dashboard';
       if (user) return '/dashboard';
       return '/login';
   }
