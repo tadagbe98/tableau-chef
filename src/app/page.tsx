@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { UtensilsCrossed, Package, Sprout, BarChart, Bell, Users } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
           <span className="text-xl font-bold tracking-tight">TableauChef</span>
         </Link>
         <nav className="flex items-center gap-4">
+           <ThemeSwitcher />
            <Button variant="ghost" asChild>
             <Link href="/contact">Contact</Link>
           </Button>
