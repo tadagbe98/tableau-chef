@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -17,7 +18,7 @@ import {
   Cell,
 } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -73,12 +74,13 @@ const chartConfig = {
 export default function ReportsPage() {
     const [monthlySalesData, setMonthlySalesData] = useState([]);
     const { user } = useAuth();
+    const currency = user?.currency || 'EUR';
 
     useEffect(() => {
-        if (!user || user.role !== 'Admin') return;
+        if (!user?.restaurantName || user.role !== 'Admin') return;
 
         const journalsRef = collection(db, 'journals');
-        const q = query(journalsRef, orderBy('date', 'asc'));
+        const q = query(journalsRef, where("restaurantName", "==", user.restaurantName), orderBy('date', 'asc'));
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const salesByMonth = snapshot.docs.reduce((acc, doc) => {
@@ -132,12 +134,12 @@ export default function ReportsPage() {
                 fontSize={12}
                 tickLine={false}
                 axisLine={false}
-                tickFormatter={(value) => `${value}€`}
+                tickFormatter={(value) => `${value}${currency}`}
               />
               <ChartTooltip
                 cursor={false}
                 content={<ChartTooltipContent 
-                    formatter={(value) => `${(value as number).toLocaleString()} €`}
+                    formatter={(value) => `${(value as number).toLocaleString()} ${currency}`}
                     hideLabel />}
               />
               <Line

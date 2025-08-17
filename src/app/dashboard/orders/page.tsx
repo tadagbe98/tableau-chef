@@ -21,7 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Logo } from '@/components/icons/logo';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { collection, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, serverTimestamp, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Product } from '@/app/dashboard/products/page';
 import { useAuth } from '@/context/AuthContext';
@@ -34,6 +34,7 @@ interface OrderItem extends Product {
 }
 
 function OrdersContent() {
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>(["Tout"]);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
@@ -46,16 +47,19 @@ function OrdersContent() {
   const [isTableInputDialogOpen, setIsTableInputDialogOpen] = useState(false);
   const [manualTableNumber, setManualTableNumber] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
+  const currency = user?.currency || 'EUR';
 
 
   const { toast } = useToast();
-  const { user } = useAuth();
   
   const receiptRef = useRef<HTMLDivElement>(null);
   const kitchenTicketRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'products'), (snapshot) => {
+    if (!user?.restaurantName) return;
+    const q = query(collection(db, 'products'), where("restaurantName", "==", user.restaurantName));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
         const fetchedProducts = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Product));
         setProducts(fetchedProducts);
 
@@ -71,7 +75,7 @@ function OrdersContent() {
     });
 
     return () => unsubscribe();
-  }, [toast]);
+  }, [toast, user]);
   
   const handlePrint = (contentRef: React.RefObject<HTMLDivElement>) => {
     const content = contentRef.current;
@@ -144,8 +148,8 @@ function OrdersContent() {
   };
   
   const handlePayment = async (method: string) => {
-    if (!user) {
-        toast({ variant: 'destructive', title: 'Erreur', description: 'Utilisateur non connecté.' });
+    if (!user || !user.restaurantName) {
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Utilisateur non connecté ou restaurant non défini.' });
         return;
     }
     setPaymentMethod(method);
@@ -283,7 +287,7 @@ function OrdersContent() {
                     <Image src={product.image || 'https://placehold.co/300x200.png'} alt={product.name} width={300} height={200} className="rounded-t-lg object-cover aspect-video" data-ai-hint="product image" />
                     <div className="p-3">
                         <h3 className="font-semibold text-sm truncate">{product.name}</h3>
-                        <p className="text-muted-foreground text-sm">{product.price.toFixed(2)} €</p>
+                        <p className="text-muted-foreground text-sm">{product.price.toFixed(2)} {currency}</p>
                     </div>
                 </CardContent>
                 </Card>
@@ -316,7 +320,7 @@ function OrdersContent() {
                   <div key={item.id} className="flex items-center">
                     <div className="flex-grow">
                       <p className="font-medium">{item.name}</p>
-                      <p className="text-sm text-muted-foreground">{item.price.toFixed(2)} €</p>
+                      <p className="text-sm text-muted-foreground">{item.price.toFixed(2)} {currency}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateQuantity(item.id, item.quantity - 1)}>
@@ -327,7 +331,7 @@ function OrdersContent() {
                         <PlusCircle className="h-4 w-4" />
                       </Button>
                     </div>
-                    <p className="w-16 text-right font-medium">{(item.price * item.quantity).toFixed(2)} €</p>
+                    <p className="w-16 text-right font-medium">{(item.price * item.quantity).toFixed(2)} {currency}</p>
                   </div>
                 ))}
               </div>
@@ -338,16 +342,16 @@ function OrdersContent() {
               <div className="w-full space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Sous-total</span>
-                  <span>{subtotal.toFixed(2)} €</span>
+                  <span>{subtotal.toFixed(2)} {currency}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>TVA (20%)</span>
-                  <span>{tax.toFixed(2)} €</span>
+                  <span>{tax.toFixed(2)} {currency}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between font-bold text-lg">
                   <span>Total</span>
-                  <span>{total.toFixed(2)} €</span>
+                  <span>{total.toFixed(2)} {currency}</span>
                 </div>
               </div>
               <Button className="w-full mt-4" size="lg" onClick={handlePlaceOrder}>
@@ -363,7 +367,7 @@ function OrdersContent() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Paiement de la Commande</DialogTitle>
-            <DialogDescription>Montant total : <span className="font-bold text-foreground">{total.toFixed(2)} €</span></DialogDescription>
+            <DialogDescription>Montant total : <span className="font-bold text-foreground">{total.toFixed(2)} {currency}</span></DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-3 gap-4 py-4">
             <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => handlePayment('Espèces')}>
@@ -414,7 +418,7 @@ function OrdersContent() {
                 {orderItems.map(item => (
                   <div key={item.id} className="flex justify-between">
                     <span>{item.quantity} x {item.name}</span>
-                    <span>{(item.price * item.quantity).toFixed(2)} €</span>
+                    <span>{(item.price * item.quantity).toFixed(2)} {currency}</span>
                   </div>
                 ))}
             </div>
@@ -422,15 +426,15 @@ function OrdersContent() {
             <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span>Sous-total</span>
-                  <span>{subtotal.toFixed(2)} €</span>
+                  <span>{subtotal.toFixed(2)} {currency}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>TVA (20%)</span>
-                  <span>{tax.toFixed(2)} €</span>
+                  <span>{tax.toFixed(2)} {currency}</span>
                 </div>
                 <div className="flex justify-between font-bold text-base">
                   <span>Total</span>
-                  <span>{total.toFixed(2)} €</span>
+                  <span>{total.toFixed(2)} {currency}</span>
                 </div>
             </div>
              <div className="text-center mt-6 space-y-1">

@@ -51,6 +51,7 @@ export interface Product {
 }
 
 export default function ProductsPage() {
+    const { user } = useAuth();
     const [products, setProducts] = useState<Product[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
@@ -66,7 +67,7 @@ export default function ProductsPage() {
     const [customCategory, setCustomCategory] = useState('');
     const [showCustomCategory, setShowCustomCategory] = useState(false);
     const { toast } = useToast();
-    const { user } = useAuth();
+    const currency = user?.currency || 'EUR';
     
 
     useEffect(() => {
@@ -255,7 +256,7 @@ export default function ProductsPage() {
                                 </div>
                             )}
                              <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="price" className="text-right">Prix</Label>
+                                <Label htmlFor="price" className="text-right">Prix ({currency})</Label>
                                 <Input id="price" type="number" value={formData.price} onChange={handleInputChange} placeholder="12.99" className="col-span-3" />
                             </div>
                              <div className="grid grid-cols-4 items-center gap-4">
@@ -332,7 +333,7 @@ export default function ProductsPage() {
                         <Badge variant="outline">{product.category}</Badge>
                     </TableCell>
                     <TableCell>{product.stock} en stock</TableCell>
-                    <TableCell>{product.price.toFixed(2)} €</TableCell>
+                    <TableCell>{product.price.toFixed(2)} {currency}</TableCell>
                     <TableCell>
                         <AlertDialog>
                             <DropdownMenu>
@@ -376,4 +377,5 @@ export default function ProductsPage() {
   );
 
     
+
 

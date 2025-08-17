@@ -48,6 +48,7 @@ export default function DailyPointPage() {
 
     const { toast } = useToast();
     const isAuthorized = user?.role === 'Admin' || user?.role === 'Caissier';
+    const currency = user?.currency || 'EUR';
 
     useEffect(() => {
         if (user && user.role === 'Admin' && user.restaurantName) {
@@ -94,7 +95,7 @@ export default function DailyPointPage() {
         openRegister(currentOpeningCash, user as AppUser);
         toast({
             title: "Caisse Ouverte",
-            description: `La caisse a été ouverte par ${user?.displayName} avec un fonds de ${parseFloat(currentOpeningCash).toFixed(2)} €.`
+            description: `La caisse a été ouverte par ${user?.displayName} avec un fonds de ${parseFloat(currentOpeningCash).toFixed(2)} ${currency}.`
         });
     };
 
@@ -181,7 +182,7 @@ export default function DailyPointPage() {
                     </div>
                 </div>
                 <div>
-                    <Label htmlFor="opening-cash">Fonds de Caisse Initial</Label>
+                    <Label htmlFor="opening-cash">Fonds de Caisse Initial ({currency})</Label>
                     <Input 
                         id="opening-cash"
                         type="number"
@@ -230,7 +231,7 @@ export default function DailyPointPage() {
                 <CardContent className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="p-4 bg-secondary rounded-lg">
                         <p className="text-sm text-muted-foreground">Ventes Totales</p>
-                        <p className="text-2xl font-bold">{dailySummary.totalSales.toFixed(2)} €</p>
+                        <p className="text-2xl font-bold">{dailySummary.totalSales.toFixed(2)} {currency}</p>
                     </div>
                     <div className="p-4 bg-secondary rounded-lg">
                         <p className="text-sm text-muted-foreground">Commandes Totales</p>
@@ -238,11 +239,11 @@ export default function DailyPointPage() {
                     </div>
                     <div className="p-4 bg-secondary rounded-lg">
                         <p className="text-sm text-muted-foreground">Réductions Totales</p>
-                        <p className="text-2xl font-bold">{dailySummary.discounts.toFixed(2)} €</p>
+                        <p className="text-2xl font-bold">{dailySummary.discounts.toFixed(2)} {currency}</p>
                     </div>
                     <div className="p-4 bg-secondary rounded-lg">
                         <p className="text-sm text-muted-foreground">Taxes Totales</p>
-                        <p className="text-2xl font-bold">{dailySummary.taxes.toFixed(2)} €</p>
+                        <p className="text-2xl font-bold">{dailySummary.taxes.toFixed(2)} {currency}</p>
                     </div>
                 </CardContent>
                 <CardContent>
@@ -252,21 +253,21 @@ export default function DailyPointPage() {
                             <div className="p-3 bg-primary/10 rounded-full"><DollarSign className="text-primary"/></div>
                             <div>
                                 <p className="text-muted-foreground">Ventes en Espèces</p>
-                                <p className="font-semibold text-lg">{dailySummary.cashSales.toFixed(2)} €</p>
+                                <p className="font-semibold text-lg">{dailySummary.cashSales.toFixed(2)} {currency}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="p-3 bg-primary/10 rounded-full"><CreditCard className="text-primary"/></div>
                             <div>
                                 <p className="text-muted-foreground">Ventes par Carte</p>
-                                <p className="font-semibold text-lg">{dailySummary.cardSales.toFixed(2)} €</p>
+                                <p className="font-semibold text-lg">{dailySummary.cardSales.toFixed(2)} {currency}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="p-3 bg-primary/10 rounded-full"><Smartphone className="text-primary"/></div>
                             <div>
                                 <p className="text-muted-foreground">Paiement Mobile</p>
-                                <p className="font-semibold text-lg">{dailySummary.mobileSales.toFixed(2)} €</p>
+                                <p className="font-semibold text-lg">{dailySummary.mobileSales.toFixed(2)} {currency}</p>
                             </div>
                         </div>
                     </div>
@@ -281,15 +282,15 @@ export default function DailyPointPage() {
             <CardContent className="space-y-4">
                 <div>
                 <Label>Fonds de Caisse Initial</Label>
-                <Input value={`${parseFloat(openingCash || '0').toFixed(2)} €`} disabled />
+                <Input value={`${parseFloat(openingCash || '0').toFixed(2)} ${currency}`} disabled />
                 </div>
                 <div>
                 <Label>Espèces Attendues en Caisse</Label>
-                <Input value={`${expectedCash.toFixed(2)} €`} disabled />
+                <Input value={`${expectedCash.toFixed(2)} ${currency}`} disabled />
                 <p className="text-xs text-muted-foreground mt-1">Fonds initial + Ventes en espèces</p>
                 </div>
                 <div>
-                <Label htmlFor="cash-in-drawer">Espèces Réelles en Caisse</Label>
+                <Label htmlFor="cash-in-drawer">Espèces Réelles en Caisse ({currency})</Label>
                 <Input 
                     id="cash-in-drawer" 
                     type="number" 
@@ -337,7 +338,7 @@ export default function DailyPointPage() {
                                 Écart
                             </p>
                             <p className={`text-3xl font-bold ${variance === 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                {variance > 0 ? '+' : ''}{variance.toFixed(2)} €
+                                {variance > 0 ? '+' : ''}{variance.toFixed(2)} {currency}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
                                 {variance === 0 ? "Équilibré" : variance > 0 ? "Excédent" : "Manquant"}
@@ -404,11 +405,11 @@ export default function DailyPointPage() {
                             journalHistory.map((entry) => (
                                 <TableRow key={entry.id}>
                                     <TableCell>{new Date(entry.date).toLocaleString('fr-FR')}</TableCell>
-                                    <TableCell>{entry.totalSales.toFixed(2)} €</TableCell>
-                                    <TableCell>{entry.openingCash.toFixed(2)} €</TableCell>
+                                    <TableCell>{entry.totalSales.toFixed(2)} {currency}</TableCell>
+                                    <TableCell>{entry.openingCash.toFixed(2)} {currency}</TableCell>
                                     <TableCell>
                                         <Badge variant={entry.variance === 0 ? 'default' : 'destructive'} className={entry.variance === 0 ? 'bg-green-500' : ''}>
-                                            {entry.variance.toFixed(2)} €
+                                            {entry.variance.toFixed(2)} {currency}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>{entry.closedBy}</TableCell>
@@ -441,11 +442,11 @@ export default function DailyPointPage() {
                     <div className="flex justify-between"><span className="text-muted-foreground">Fermé le:</span> <strong>{new Date(selectedJournal.date).toLocaleString('fr-FR')}</strong></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">Fermé par:</span> <strong>{selectedJournal.closedBy}</strong></div>
                     <Separator className="my-2"/>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Ventes Totales:</span> <strong className="text-primary">{selectedJournal.totalSales.toFixed(2)} €</strong></div>
-                    <div className="flex justify-between"><span className="text-muted-foreground">Fonds de Caisse Initial:</span> <strong>{selectedJournal.openingCash.toFixed(2)} €</strong></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Ventes Totales:</span> <strong className="text-primary">{selectedJournal.totalSales.toFixed(2)} {currency}</strong></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Fonds de Caisse Initial:</span> <strong>{selectedJournal.openingCash.toFixed(2)} {currency}</strong></div>
                     <div className="flex justify-between"><span className="text-muted-foreground">Écart de Caisse:</span> 
                         <strong className={selectedJournal.variance === 0 ? 'text-green-500' : 'text-red-500'}>
-                            {selectedJournal.variance.toFixed(2)} €
+                            {selectedJournal.variance.toFixed(2)} {currency}
                         </strong>
                     </div>
                 </div>
