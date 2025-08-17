@@ -7,14 +7,37 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Logo } from '@/components/icons/logo';
 import { Button } from '@/components/ui/button';
 import { LogOut, MessageSquare } from 'lucide-react';
+import { auth, db } from '@/lib/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
-  const { user, logout, loading } = useAuth();
+  const [adminUser, setAdminUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        if (userDoc.exists() && userDoc.data().role === 'Super Admin') {
+          setAdminUser(user);
+        } else {
+          setAdminUser(null);
+        }
+      } else {
+        setAdminUser(null);
+      }
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+  
   const handleLogout = async () => {
-    await logout();
+    await auth.signOut();
     router.push('/admin');
   };
 
@@ -29,25 +52,19 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // If not logged in, only the /admin page (login page) is accessible
-  if (!user) {
+  // If not logged in as Super Admin, only the /admin page (login page) is accessible
+  if (!adminUser) {
     if (pathname !== '/admin') {
       router.push('/admin');
-      return null;
+      return null; // Render nothing while redirecting
     }
     return <>{children}</>;
   }
   
-  // If logged in but not an Admin, redirect
-  if (user.role !== 'Admin') {
-      router.push('/');
-      return null;
-  }
-
-  // If logged in as admin, redirect from login page to dashboard
+  // If logged in as Super Admin, redirect from login page to dashboard
   if (pathname === '/admin') {
       router.push('/admin/dashboard');
-      return null;
+      return null; // Render nothing while redirecting
   }
 
   return (
@@ -60,7 +77,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         <div className="ml-auto flex items-center gap-4">
             <Button variant="ghost" asChild>
                 <Link href="/contact">
-                    <MessageSquare className="mr-2 h-4 w-4"/> Support
+                    <MessageSquare className="mr-2 h-4 w-4"/> Support Client
                 </Link>
             </Button>
             <Button variant="outline" onClick={handleLogout}>
@@ -79,6 +96,8 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // We still need the main AuthProvider for other parts of the app to function correctly
+  // but the logic for this layout is self-contained in AdminLayoutContent
   return (
     <AuthProvider>
       <AdminLayoutContent>{children}</AdminLayoutContent>

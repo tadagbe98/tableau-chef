@@ -16,6 +16,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { getDoc, doc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
@@ -29,13 +31,28 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(email, password);
-      // Redirection is handled by the layout
+      const userCredential = await login(email, password);
+      const user = userCredential.user;
+      
+      // Check for Super Admin role in Firestore
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists() && userDoc.data().role === 'Super Admin') {
+        // Redirection is handled by the layout
+      } else {
+        await auth.signOut(); // Log out the user if they are not Super Admin
+        toast({
+          variant: "destructive",
+          title: "Accès Refusé",
+          description: "Seuls les comptes Super Admin peuvent se connecter ici.",
+        });
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erreur de Connexion",
-        description: "Email ou mot de passe incorrect. Assurez-vous d'utiliser un compte Super Admin.",
+        description: "Email ou mot de passe incorrect.",
       });
       console.error("Admin Login Error:", error);
     } finally {
@@ -59,7 +76,7 @@ export default function AdminLoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email du Super Admin</Label>
               <Input
                 id="email"
                 type="email"
