@@ -134,7 +134,7 @@ export default function InventoryPage() {
                 stock: Number(stock),
                 maxStock: Number(maxStock),
                 unit,
-                lowStockThreshold: Number(lowStockThreshold) / 100, // Store as a decimal
+                lowStockThreshold: Number(lowStockThreshold),
             });
             toast({ title: 'Succès', description: `L'article ${name} a été ajouté à l'inventaire.` });
             setIsAddDialogOpen(false);
@@ -146,7 +146,8 @@ export default function InventoryPage() {
     };
 
     const handleNotification = async (itemBeforeUpdate: InventoryItem, newStock: number) => {
-        const threshold = itemBeforeUpdate.maxStock * itemBeforeUpdate.lowStockThreshold;
+        const thresholdValue = itemBeforeUpdate.lowStockThreshold;
+        const threshold = itemBeforeUpdate.maxStock * (thresholdValue / 100);
 
         // Stock goes from OK to LOW
         if (newStock <= threshold && itemBeforeUpdate.stock > threshold) {
@@ -300,11 +301,11 @@ export default function InventoryPage() {
                             <Input id="category" value={newItem.category} onChange={handleNewItemChange} className="col-span-3" placeholder="Ex: Épicerie" />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="stock" className="text-right">Stock Initial</Label>
+                            <Label htmlFor="stock" className="text-right">Stock Actuel</Label>
                             <Input id="stock" type="number" value={newItem.stock} onChange={handleNewItemChange} className="col-span-3" placeholder="0" />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="maxStock" className="text-right">Stock Maximal</Label>
+                            <Label htmlFor="maxStock" className="text-right">Stock Idéal (Max)</Label>
                             <Input id="maxStock" type="number" value={newItem.maxStock} onChange={handleNewItemChange} className="col-span-3" placeholder="100" />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
@@ -463,3 +464,5 @@ export default function InventoryPage() {
     </TooltipProvider>
   );
 }
+
+    
