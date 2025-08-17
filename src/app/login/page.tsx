@@ -99,11 +99,14 @@ export default function LoginPage() {
             </Link>
           </div>
           <Separator className="my-4" />
-           <div className="text-center text-sm">
-            Besoin d'aide ?{" "}
-            <Link href="/contact" className="underline">
-              Contacter le support
-            </Link>
+           <div className="flex justify-center items-center text-sm gap-4">
+                <Link href="/contact" className="underline">
+                    Contacter le support
+                </Link>
+                <Separator orientation="vertical" className="h-4" />
+                <Link href="/admin" className="underline">
+                    Accès Admin
+                </Link>
           </div>
         </CardContent>
       </Card>
