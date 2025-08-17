@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from "react";
@@ -13,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-import { collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, updateDoc, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import {
   AlertDialog,
@@ -44,11 +45,23 @@ export default function UsersPage() {
   const { toast } = useToast();
   const { user: adminUser, createUser } = useAuth();
 
-  const usersCollectionRef = collection(db, 'users');
-
   const fetchUsers = async () => {
+    if (!adminUser?.restaurantName) {
+      // Don't fetch if the admin doesn't have a restaurant name, to avoid showing all users.
+      setUsers([]);
+      return;
+    }
+    
     try {
-      const snapshot = await getDocs(usersCollectionRef);
+      const usersCollectionRef = collection(db, 'users');
+      // Create a query to get users only for the current admin's restaurant
+      const q = query(
+        usersCollectionRef, 
+        where("restaurantName", "==", adminUser.restaurantName),
+        where("role", "!=", "Super Admin") // Also explicitly exclude Super Admins
+      );
+
+      const snapshot = await getDocs(q);
       const fetchedUsers = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as UserData));
       // Ensure we have the uid from the doc id if it's missing in the data
       const finalUsers = fetchedUsers.map(u => ({...u, uid: u.uid || u.id }));
@@ -84,6 +97,8 @@ export default function UsersPage() {
           return;
       }
       try {
+          // Note: This only deletes the Firestore document. The Firebase Auth user still exists.
+          // A cloud function would be needed for a complete deletion.
           const userDocRef = doc(db, 'users', userToDelete.uid);
           await deleteDoc(userDocRef);
           toast({ title: 'Succès', description: "Utilisateur supprimé de la base de données. L'authentification reste active." });
@@ -135,9 +150,10 @@ export default function UsersPage() {
         await createUser(formData.email, formData.password, formData.name, formData.role as string);
         toast({
             title: "Utilisateur créé avec succès !",
-            description: `Le compte pour ${formData.name} a été créé. Rafraîchissez la page pour voir la mise à jour.`,
+            description: `Le compte pour ${formData.name} a été créé.`,
             duration: 5000,
         });
+        fetchUsers(); // Refresh the list after creation
         setIsDialogOpen(false);
     } catch (error: any) {
         let description = "Une erreur est survenue lors de la création.";
@@ -207,7 +223,7 @@ export default function UsersPage() {
       <Card>
         <CardHeader>
           <CardTitle>Liste des Utilisateurs</CardTitle>
-          <CardDescription>Gérez les comptes et les permissions.</CardDescription>
+          <CardDescription>Gérez les comptes et les permissions de votre restaurant.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
