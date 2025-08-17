@@ -1,6 +1,5 @@
 import type {Metadata} from 'next';
 import './globals.css';
-import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
   title: 'TableauChef',
@@ -9,8 +8,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  return children;
+}) {
+  return (
+    <html>
+      <body>{children}</body>
+    </html>
+  );
 }

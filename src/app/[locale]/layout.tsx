@@ -14,14 +14,14 @@ export default async function LocaleLayout({
   const messages = await getMessages();
  
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body>
-        <NextIntlClientProvider messages={messages}>
+      <body suppressHydrationWarning={true}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider
               attribute="class"
               defaultTheme="dark"
@@ -35,6 +35,6 @@ export default async function LocaleLayout({
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>
-    </html>
+    </>
   );
 }
