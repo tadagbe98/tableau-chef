@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -46,7 +47,6 @@ export default function ProductsPage() {
         price: '',
         stock: '',
         recipeNotes: '',
-        image: '',
     });
     const [customCategory, setCustomCategory] = useState('');
     const [showCustomCategory, setShowCustomCategory] = useState(false);
@@ -88,19 +88,8 @@ export default function ProductsPage() {
         }
     }
     
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setNewProduct(prev => ({ ...prev, image: reader.result as string }));
-            }
-            reader.readAsDataURL(file);
-        }
-    }
-
     const resetForm = () => {
-        setNewProduct({ name: '', category: '', price: '', stock: '', recipeNotes: '', image: '' });
+        setNewProduct({ name: '', category: '', price: '', stock: '', recipeNotes: '' });
         setCustomCategory('');
         setShowCustomCategory(false);
     }
@@ -121,7 +110,7 @@ export default function ProductsPage() {
                 price: parseFloat(newProduct.price),
                 stock: parseInt(newProduct.stock, 10),
                 recipeNotes: newProduct.recipeNotes || '',
-                image: newProduct.image || `https://placehold.co/40x40.png?text=${newProduct.name.charAt(0)}`
+                image: `https://placehold.co/40x40.png?text=${newProduct.name.charAt(0)}`
             });
             toast({ title: "Succès", description: "Le produit a été ajouté." });
             setIsDialogOpen(false);
@@ -189,17 +178,6 @@ export default function ProductsPage() {
                                 <Label htmlFor="stock" className="text-right">Stock Initial</Label>
                                 <Input id="stock" type="number" value={newProduct.stock} onChange={handleInputChange} placeholder="50" className="col-span-3" />
                             </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="image" className="text-right">Image</Label>
-                                 <Input id="image" type="file" onChange={handleImageChange} className="col-span-3" accept="image/*" />
-                            </div>
-                            {newProduct.image && (
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <div className="col-start-2 col-span-3">
-                                        <Image src={newProduct.image} alt="Aperçu" width={80} height={80} className="rounded-md object-cover" />
-                                    </div>
-                                </div>
-                            )}
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="recipeNotes" className="text-right">Notes de Recette</Label>
                                 <Textarea id="recipeNotes" value={newProduct.recipeNotes} onChange={handleInputChange} placeholder="Détails de la recette, ingrédients, etc." className="col-span-3" />
@@ -286,5 +264,7 @@ export default function ProductsPage() {
     </div>
   );
 }
+
+    
 
     
