@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 
 const categories = ["Pizzas", "Burgers", "Salades", "Pâtes", "Accompagnements", "Boissons", "Atiéké", "Sauces"];
+const MAX_IMAGE_SIZE_BYTES = 500 * 1024; // 500 KB
 
 export interface Product {
     id: string;
@@ -47,6 +48,7 @@ export default function ProductsPage() {
         price: '',
         stock: '',
         recipeNotes: '',
+        image: '',
     });
     const [customCategory, setCustomCategory] = useState('');
     const [showCustomCategory, setShowCustomCategory] = useState(false);
@@ -77,6 +79,25 @@ export default function ProductsPage() {
         setNewProduct(prev => ({...prev, [id]: value }));
     }
 
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > MAX_IMAGE_SIZE_BYTES) {
+                toast({
+                    variant: "destructive",
+                    title: "Image trop lourde",
+                    description: `Veuillez sélectionner une image de moins de ${MAX_IMAGE_SIZE_BYTES / 1024} Ko.`,
+                });
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setNewProduct(prev => ({ ...prev, image: reader.result as string }));
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
     const handleSelectChange = (value: string) => {
         if (value === 'Autre') {
             setShowCustomCategory(true);
@@ -89,7 +110,7 @@ export default function ProductsPage() {
     }
     
     const resetForm = () => {
-        setNewProduct({ name: '', category: '', price: '', stock: '', recipeNotes: '' });
+        setNewProduct({ name: '', category: '', price: '', stock: '', recipeNotes: '', image: '' });
         setCustomCategory('');
         setShowCustomCategory(false);
     }
@@ -110,14 +131,14 @@ export default function ProductsPage() {
                 price: parseFloat(newProduct.price),
                 stock: parseInt(newProduct.stock, 10),
                 recipeNotes: newProduct.recipeNotes || '',
-                image: `https://placehold.co/40x40.png?text=${newProduct.name.charAt(0)}`
+                image: newProduct.image || `https://placehold.co/40x40.png?text=${newProduct.name.charAt(0)}`
             });
             toast({ title: "Succès", description: "Le produit a été ajouté." });
             setIsDialogOpen(false);
             resetForm();
         } catch (error) {
             console.error("Error adding document: ", error);
-            toast({ variant: "destructive", title: "Erreur", description: "Impossible d'ajouter le produit." });
+            toast({ variant: "destructive", title: "Erreur", description: "Impossible d'ajouter le produit. L'image est peut-être trop grande." });
         }
     }
 
@@ -181,6 +202,10 @@ export default function ProductsPage() {
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="recipeNotes" className="text-right">Notes de Recette</Label>
                                 <Textarea id="recipeNotes" value={newProduct.recipeNotes} onChange={handleInputChange} placeholder="Détails de la recette, ingrédients, etc." className="col-span-3" />
+                            </div>
+                             <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="image" className="text-right">Image</Label>
+                                <Input id="image" type="file" onChange={handleImageChange} accept="image/*" className="col-span-3" />
                             </div>
                         </div>
                         <DialogFooter>
@@ -264,7 +289,3 @@ export default function ProductsPage() {
     </div>
   );
 }
-
-    
-
-    
