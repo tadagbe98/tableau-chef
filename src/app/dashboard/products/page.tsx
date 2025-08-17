@@ -182,7 +182,7 @@ export default function ProductsPage() {
             price: parseFloat(formData.price),
             stock: parseInt(formData.stock, 10),
             recipeNotes: formData.recipeNotes || '',
-            image: formData.image || `https://placehold.co/40x40.png?text=${formData.name.charAt(0)}`,
+            image: formData.image || '',
             restaurantName: user.restaurantName,
         };
 
@@ -377,5 +377,6 @@ export default function ProductsPage() {
   );
 
     
+
 
 
