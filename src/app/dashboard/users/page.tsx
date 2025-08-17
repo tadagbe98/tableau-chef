@@ -187,7 +187,7 @@ export default function UsersPage() {
                 <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="name" className="text-right">Nom Complet</Label>
-                    <Input id="name" value={formData.name} onChange={(e) => handleFormChange(e, 'name')} placeholder="John Doe" className="col-span-3" required />
+                    <Input id="name" value={formData.name} onChange={(e) => handleFormChange(e, 'name')} placeholder="Tadagbe Massolokonon" className="col-span-3" required />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                     <Label htmlFor="email" className="text-right">Email</Label>

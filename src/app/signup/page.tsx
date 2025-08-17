@@ -93,7 +93,7 @@ export default function SignupPage() {
           <form onSubmit={handleSignup} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="full-name">Nom Complet</Label>
-              <Input id="full-name" placeholder="John Doe" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
+              <Input id="full-name" placeholder="Tadagbe Massolokonon" required value={fullName} onChange={(e) => setFullName(e.target.value)} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="restaurant-name">Nom du Restaurant</Label>

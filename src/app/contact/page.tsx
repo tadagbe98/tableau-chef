@@ -128,7 +128,7 @@ export default function ContactPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Votre Nom</Label>
-                <Input id="name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
+                <Input id="name" placeholder="Tadagbe Massolokonon" value={name} onChange={(e) => setName(e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Votre Email</Label>
