@@ -27,6 +27,7 @@ import {
   Bell,
   Users,
   CheckCircle,
+  Lock,
 } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import { Button } from '@/components/ui/button';
@@ -59,7 +60,7 @@ interface Notification {
 const allNavItems = [
   { href: '/dashboard', icon: Home, label: 'Tableau de bord', roles: ['Admin', 'Caissier', 'Gestionnaire de Stock'] },
   { href: '/dashboard/orders', icon: UtensilsCrossed, label: 'Commandes', roles: ['Admin', 'Caissier'] },
-  { href: '/dashboard/products', icon: ShoppingBasket, label: 'Produits', roles: ['Admin', 'Caissier', 'Gestionnaire de Stock'] },
+  { href: '/dashboard/products', icon: ShoppingBasket, label: 'Produits', roles: ['Admin', 'Gestionnaire de Stock'] },
   { href: '/dashboard/inventory', icon: Warehouse, label: 'Inventaire', roles: ['Admin', 'Gestionnaire de Stock'] },
   { href: '/dashboard/reports', icon: BarChart, label: 'Rapports', roles: ['Admin'] },
   { href: '/dashboard/daily-point', icon: BookOpenCheck, label: 'Point Journalier', roles: ['Admin', 'Caissier'] },
@@ -86,7 +87,6 @@ export default function DashboardLayout({
   useEffect(() => {
     if (!user) return;
     
-    // This query now correctly fetches only unread notifications.
     const q = query(
         collection(db, 'notifications'), 
         where('isRead', '==', false), 
@@ -107,11 +107,9 @@ export default function DashboardLayout({
   const filteredNotifications = useMemo(() => {
     if (!user) return [];
     const userRole = user.role;
-    // Admins and Stock Managers see all unread notifications
     if (userRole === 'Admin' || userRole === 'Gestionnaire de Stock') {
         return notifications;
     }
-    // Other roles only see non-stock related notifications
     return notifications.filter(notif => notif.type !== 'stock');
   }, [notifications, user]);
 
@@ -129,7 +127,34 @@ export default function DashboardLayout({
     return null;
   }
   
-  const navItems = allNavItems.filter(item => user.role && item.roles.includes(user.role));
+  // Show all items to Admin, but filter for others to show locked state
+  const navItems = useMemo(() => {
+    if (!user?.role) return [];
+    if (user.role === 'Admin') {
+      return allNavItems.map(item => ({ ...item, isAllowed: true }));
+    }
+    return allNavItems
+      .filter(item => {
+        // Admins see everything. For other roles, we need to decide what to show (locked or unlocked)
+        // A user should see an item if they have ANY of the defined roles for that item.
+        // Let's refine the logic. Every role should see every menu item, but some are disabled.
+        // What roles should be able to see what?
+        // Admin: all
+        // Caissier: Dashboard, Commandes, Point Journalier (unlocked). Produits, Inventaire (locked). Rapports, Utilisateurs (hidden).
+        // Gestionnaire de stock: Dashboard, Produits, Inventaire (unlocked). Commandes, Point Journalier (locked). Rapports, Utilisateurs (hidden).
+        
+        // Let's hide what's not relevant at all.
+        if (user.role === 'Caissier' && (item.href === '/dashboard/reports' || item.href === '/dashboard/users')) return false;
+        if (user.role === 'Gestionnaire de Stock' && (item.href === '/dashboard/reports' || item.href === '/dashboard/users')) return false;
+        
+        return true;
+      })
+      .map(item => ({
+        ...item,
+        isAllowed: item.roles.includes(user.role as string),
+      }));
+  }, [user?.role]);
+
 
   const getInitials = (name: string | null | undefined) => {
     if (!name) return 'U';
@@ -152,10 +177,12 @@ export default function DashboardLayout({
                 <SidebarMenuButton
                   asChild
                   isActive={pathname === item.href}
-                  tooltip={item.label}
+                  tooltip={item.isAllowed ? item.label : `${item.label} (Verrouillé)`}
+                  disabled={!item.isAllowed}
+                  aria-disabled={!item.isAllowed}
                 >
-                  <Link href={item.href}>
-                    <item.icon />
+                  <Link href={item.isAllowed ? item.href : '#'}>
+                    {item.isAllowed ? <item.icon /> : <Lock />}
                     <span>{item.label}</span>
                   </Link>
                 </SidebarMenuButton>
