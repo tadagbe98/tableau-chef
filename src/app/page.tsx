@@ -12,6 +12,9 @@ export default function Home() {
           <span className="text-xl font-bold tracking-tight">TableauChef</span>
         </Link>
         <nav className="flex items-center gap-4">
+           <Button variant="ghost" asChild>
+            <Link href="/contact">Contact</Link>
+          </Button>
           <Button variant="ghost" asChild>
             <Link href="/login">Se connecter</Link>
           </Button>
@@ -34,7 +37,7 @@ export default function Home() {
               <Link href="/signup">Commencer Gratuitement</Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link href="#">Contacter les Ventes</Link>
+              <Link href="/contact">Nous Contacter</Link>
             </Button>
           </div>
         </section>
