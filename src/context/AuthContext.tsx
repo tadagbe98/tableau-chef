@@ -17,6 +17,7 @@ export interface AppUser extends User {
   restaurantName?: string;
   restaurantAddress?: string;
   restaurantPhone?: string;
+  restaurantLogo?: string;
   status?: 'actif' | 'inactif';
   language?: string;
   currency?: string;
@@ -138,6 +139,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               restaurantName: userData.restaurantName,
               restaurantAddress: userData.restaurantAddress,
               restaurantPhone: userData.restaurantPhone,
+              restaurantLogo: userData.restaurantLogo || '',
               status: userData.status || 'actif',
               language: userData.language || 'fr',
               currency: userData.currency || 'EUR',
@@ -213,6 +215,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         status: 'actif',
         restaurantAddress: '',
         restaurantPhone: '',
+        restaurantLogo: '',
       };
       
       await updateProfile(newUser, { displayName: data.fullName });
@@ -288,6 +291,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       vatRate: 20,
       restaurantAddress: '',
       restaurantPhone: '',
+      restaurantLogo: '',
     });
 
     await seedInitialData(restaurantName);

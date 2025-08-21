@@ -82,7 +82,7 @@ function OrdersContent() {
       const printWindow = window.open('', '', 'height=600,width=800');
       if (printWindow) {
         printWindow.document.write('<html><head><title>Imprimer</title>');
-        printWindow.document.write('<style>body { font-family: monospace; margin: 20px; } .text-center { text-align: center; } .mb-6 { margin-bottom: 1.5rem; } .mb-4 { margin-bottom: 1rem; } .mb-2 { margin-bottom: 0.5rem; } .h-12 { height: 3rem; } .w-12 { width: 3rem; } .mx-auto { margin-left: auto; margin-right: auto; } .text-2xl { font-size: 1.5rem; line-height: 2rem; } .font-bold { font-weight: 700; } .space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; } .text-sm { font-size: 0.875rem; line-height: 1.25rem; } .flex { display: flex; } .justify-between { justify-content: space-between; } .my-4 { margin-top: 1rem; margin-bottom: 1rem; } .border-dashed { border-style: dashed; } .space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; } .text-base { font-size: 1rem; line-height: 1.5rem; } .mt-6 { margin-top: 1.5rem; } .text-xl { font-size: 1.25rem; line-height: 1.75rem; } .text-lg { font-size: 1.125rem; line-height: 1.75rem; } .font-semibold { font-weight: 600; } .my-3 { margin-top: 0.75rem; margin-bottom: 0.75rem; } .border-black { border-color: #000; } hr { border-width: 0; border-top-width: 1px; } </style>');
+        printWindow.document.write('<style>body { font-family: monospace; margin: 20px; } .receipt-logo { max-width: 100px; height: auto; margin-bottom: 1rem; } .text-center { text-align: center; } .mb-6 { margin-bottom: 1.5rem; } .mb-4 { margin-bottom: 1rem; } .mb-2 { margin-bottom: 0.5rem; } .h-12 { height: 3rem; } .w-12 { width: 3rem; } .mx-auto { margin-left: auto; margin-right: auto; } .text-2xl { font-size: 1.5rem; line-height: 2rem; } .font-bold { font-weight: 700; } .space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; } .text-sm { font-size: 0.875rem; line-height: 1.25rem; } .flex { display: flex; } .justify-between { justify-content: space-between; } .my-4 { margin-top: 1rem; margin-bottom: 1rem; } .border-dashed { border-style: dashed; } .space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; } .text-base { font-size: 1rem; line-height: 1.5rem; } .mt-6 { margin-top: 1.5rem; } .text-xl { font-size: 1.25rem; line-height: 1.75rem; } .text-lg { font-size: 1.125rem; line-height: 1.75rem; } .font-semibold { font-weight: 600; } .my-3 { margin-top: 0.75rem; margin-bottom: 0.75rem; } .border-black { border-color: #000; } hr { border-width: 0; border-top-width: 1px; } </style>');
         printWindow.document.write('</head><body>');
         printWindow.document.write(content.innerHTML);
         printWindow.document.write('</body></html>');
@@ -391,7 +391,7 @@ function OrdersContent() {
                 Que souhaitez-vous faire maintenant ?
             </DialogDescription>
           </DialogHeader>
-           <DialogFooter className="flex-col items-center space-y-2">
+           <DialogFooter className="flex-col items-center space-y-2 sm:space-y-2">
             <Button className="w-full" onClick={handlePrintReceipt}><Printer className="mr-2 h-4 w-4"/> Imprimer le Reçu Client</Button>
             <Button className="w-full" variant="secondary" onClick={handlePrintKitchenTicket}><ChefHat className="mr-2 h-4 w-4"/> Imprimer le Ticket de Cuisine</Button>
             <Button className="w-full" variant="outline" onClick={handleNewOrder}>Commencer une Nouvelle Commande</Button>
@@ -403,6 +403,7 @@ function OrdersContent() {
       <div className="hidden">
         <div ref={receiptRef}>
             <div className="text-center mb-6">
+                {user?.restaurantLogo && <img src={user.restaurantLogo} alt="Restaurant Logo" className="mx-auto receipt-logo"/>}
                 <h2 className="text-2xl font-bold">{user?.restaurantName || 'TableauChef'}</h2>
                  <p className="text-sm">{user?.restaurantAddress}</p>
                  <p className="text-sm">{user?.restaurantPhone}</p>

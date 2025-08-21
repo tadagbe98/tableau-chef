@@ -12,9 +12,11 @@ import { doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updateProfile } from "firebase/auth";
+import Image from "next/image";
 
 const currencies = ['EUR', 'USD', 'GBP', 'CHF', 'XOF'];
 const languages = [{value: 'fr', label: 'Français'}, {value: 'en', label: 'English'}];
+const MAX_LOGO_SIZE_BYTES = 200 * 1024; // 200 KB
 
 export default function SettingsPage() {
     const { user, loading, refetchUser } = useAuth();
@@ -28,6 +30,7 @@ export default function SettingsPage() {
         name: '',
         address: '',
         phone: '',
+        logo: '',
         currency: 'EUR',
         language: 'fr',
     });
@@ -42,6 +45,7 @@ export default function SettingsPage() {
                 name: user.restaurantName || '',
                 address: user.restaurantAddress || '',
                 phone: user.restaurantPhone || '',
+                logo: user.restaurantLogo || '',
                 currency: user.currency || 'EUR',
                 language: user.language || 'fr',
             })
@@ -61,6 +65,26 @@ export default function SettingsPage() {
         setRestaurantData(prev => ({ ...prev, [id]: value }));
     };
 
+    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > MAX_LOGO_SIZE_BYTES) {
+                toast({
+                    variant: "destructive",
+                    title: "Logo trop volumineux",
+                    description: `Veuillez sélectionner une image de moins de ${MAX_LOGO_SIZE_BYTES / 1024} Ko.`,
+                });
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setRestaurantData(prev => ({ ...prev, logo: reader.result as string }));
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+
     const handleSaveChanges = async () => {
         if (!user) return;
         setIsSaving(true);
@@ -73,6 +97,7 @@ export default function SettingsPage() {
                 restaurantName: restaurantData.name,
                 restaurantAddress: restaurantData.address,
                 restaurantPhone: restaurantData.phone,
+                restaurantLogo: restaurantData.logo,
                 currency: restaurantData.currency,
                 language: restaurantData.language,
             });
@@ -149,6 +174,19 @@ export default function SettingsPage() {
                 <Label htmlFor="phone">Numéro de téléphone</Label>
                 <Input id="phone" value={restaurantData.phone} onChange={handleRestaurantChange} placeholder="+33 1 23 45 67 89" />
             </div>
+
+            <div className="grid gap-2">
+                <Label htmlFor="logo">Logo du restaurant</Label>
+                <div className="flex items-center gap-4">
+                    {restaurantData.logo && (
+                        <Image src={restaurantData.logo} alt="Logo" width={64} height={64} className="rounded-md object-contain bg-muted" />
+                    )}
+                    <Input id="logo" type="file" onChange={handleLogoChange} accept="image/png, image/jpeg, image/webp" className="max-w-xs" />
+                </div>
+                 <p className="text-xs text-muted-foreground">Fichier image (PNG, JPG, WEBP), 200 Ko maximum.</p>
+            </div>
+
+
              <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                     <Label htmlFor="currency">Devise</Label>
