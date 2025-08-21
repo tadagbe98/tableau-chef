@@ -34,6 +34,7 @@ export interface UserData {
     name: string;
     email: string;
     role: 'Admin' | 'Caissier' | 'Gestionnaire de Stock';
+    restaurantName: string; 
 }
 
 export default function UsersPage() {
@@ -47,23 +48,20 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     if (!adminUser?.restaurantName) {
-      // Don't fetch if the admin doesn't have a restaurant name, to avoid showing all users.
       setUsers([]);
       return;
     }
     
     try {
       const usersCollectionRef = collection(db, 'users');
-      // Create a query to get users only for the current admin's restaurant
       const q = query(
         usersCollectionRef, 
         where("restaurantName", "==", adminUser.restaurantName),
-        where("role", "!=", "Super Admin") // Also explicitly exclude Super Admins
+        where("role", "!=", "Super Admin")
       );
 
       const snapshot = await getDocs(q);
       const fetchedUsers = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as UserData));
-      // Ensure we have the uid from the doc id if it's missing in the data
       const finalUsers = fetchedUsers.map(u => ({...u, uid: u.uid || u.id }));
       setUsers(finalUsers);
     } catch (error) {
@@ -73,7 +71,7 @@ export default function UsersPage() {
   };
 
   useEffect(() => {
-    if (adminUser) { // Only fetch if admin is logged in
+    if (adminUser) {
         fetchUsers();
     }
   }, [adminUser]);
@@ -97,12 +95,10 @@ export default function UsersPage() {
           return;
       }
       try {
-          // Note: This only deletes the Firestore document. The Firebase Auth user still exists.
-          // A cloud function would be needed for a complete deletion.
           const userDocRef = doc(db, 'users', userToDelete.uid);
           await deleteDoc(userDocRef);
           toast({ title: 'Succès', description: "Utilisateur supprimé de la base de données. L'authentification reste active." });
-          fetchUsers(); // Refresh the list
+          fetchUsers();
       } catch (error) {
           toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de supprimer l'utilisateur."});
           console.error(error);
@@ -153,7 +149,7 @@ export default function UsersPage() {
             description: `Le compte pour ${formData.name} a été créé.`,
             duration: 5000,
         });
-        fetchUsers(); // Refresh the list after creation
+        fetchUsers(); 
         setIsDialogOpen(false);
     } catch (error: any) {
         let description = "Une erreur est survenue lors de la création.";
@@ -164,7 +160,6 @@ export default function UsersPage() {
         console.error("Form submission error:", error);
     }
   };
-
 
   return (
     <div>
