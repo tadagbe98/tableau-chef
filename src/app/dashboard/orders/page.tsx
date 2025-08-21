@@ -423,9 +423,10 @@ function OrdersContent({ products, categories }: OrdersContentProps) {
             </div>
         </div>
         <div ref={kitchenTicketRef}>
-             <div className="text-center mb-4">
-                <h2 className="text-xl font-bold">NOUVELLE COMMANDE</h2>
-                <p className="text-lg">{new Date().toLocaleTimeString('fr-FR')}</p>
+             <div className="mb-4">
+                <h2 className="text-xl font-bold text-center">{user?.restaurantName || 'TableauChef'}</h2>
+                <p className="text-lg text-center">NOUVELLE COMMANDE</p>
+                <p className="text-base text-center">{new Date().toLocaleTimeString('fr-FR')}</p>
             </div>
              <div className="text-left">
                 <p className="text-lg font-semibold">Commande #{orderNumber}</p>
