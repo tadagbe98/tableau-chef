@@ -32,10 +32,13 @@ interface OrderItem extends Product {
     quantity: number;
 }
 
-function OrdersContent() {
+interface OrdersContentProps {
+  products: Product[];
+  categories: string[];
+}
+
+function OrdersContent({ products, categories }: OrdersContentProps) {
   const { user } = useAuth();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<string[]>(["Tout"]);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [orderType, setOrderType] = useState("Sur place");
   const [activeCategory, setActiveCategory] = useState("Tout");
@@ -53,28 +56,6 @@ function OrdersContent() {
   
   const receiptRef = useRef<HTMLDivElement>(null);
   const kitchenTicketRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!user?.restaurantName) return;
-    const q = query(collection(db, 'products'), where("restaurantName", "==", user.restaurantName));
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-        const fetchedProducts = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Product));
-        setProducts(fetchedProducts);
-
-        const fetchedCategories = ["Tout", ...Array.from(new Set(fetchedProducts.map(p => p.category)))];
-        setCategories(fetchedCategories);
-    }, (error) => {
-        console.error("Erreur de chargement des produits:", error);
-        toast({
-            variant: "destructive",
-            title: "Erreur de chargement",
-            description: "Impossible de charger les produits depuis la base de données.",
-        });
-    });
-
-    return () => unsubscribe();
-  }, [toast, user]);
   
   const handlePrint = (contentRef: React.RefObject<HTMLDivElement>) => {
     const content = contentRef.current;
@@ -466,6 +447,37 @@ function OrdersContent() {
 
 export default function OrdersPage() {
   const { user, isRegisterOpen } = useAuth();
+  const { toast } = useToast();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>(["Tout"]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user?.restaurantName) {
+        setLoading(false);
+        return;
+    }
+    const q = query(collection(db, 'products'), where("restaurantName", "==", user.restaurantName));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+        const fetchedProducts = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Product));
+        setProducts(fetchedProducts);
+
+        const fetchedCategories = ["Tout", ...Array.from(new Set(fetchedProducts.map(p => p.category)))];
+        setCategories(fetchedCategories);
+        setLoading(false);
+    }, (error) => {
+        console.error("Erreur de chargement des produits:", error);
+        toast({
+            variant: "destructive",
+            title: "Erreur de chargement",
+            description: "Impossible de charger les produits depuis la base de données.",
+        });
+        setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [toast, user]);
   
   if (user?.role === 'Caissier' && !isRegisterOpen) {
     return (
@@ -490,9 +502,19 @@ export default function OrdersPage() {
     );
   }
 
-  return <OrdersContent />;
+  if (loading) {
+      return (
+          <div className="flex items-center justify-center h-full">
+              <p>Chargement des produits...</p>
+          </div>
+      )
+  }
+
+  return <OrdersContent products={products} categories={categories} />;
 }
  
+    
+
     
 
     
