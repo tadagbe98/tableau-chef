@@ -384,7 +384,15 @@ function OrdersContent({ products, categories }: OrdersContentProps) {
       <div className="hidden">
         <div ref={receiptRef}>
             <div className="text-center mb-6">
-                {user?.restaurantLogo && <img src={user.restaurantLogo} alt="Restaurant Logo" className="mx-auto receipt-logo"/>}
+                {user?.restaurantLogo && (
+                  <Image 
+                    src={user.restaurantLogo} 
+                    alt="Restaurant Logo" 
+                    width={80} 
+                    height={80}
+                    className="mx-auto receipt-logo"
+                  />
+                )}
                 <h2 className="text-2xl font-bold">{user?.restaurantName || 'TableauChef'}</h2>
                  <p className="text-sm">{user?.restaurantAddress}</p>
                  <p className="text-sm">{user?.restaurantPhone}</p>
