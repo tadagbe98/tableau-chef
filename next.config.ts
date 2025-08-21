@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -9,14 +10,6 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'placehold.co',
-        port: '',
-        pathname: '/**',
-      },
-    ],
     // Allow loading base64-encoded images (Data URLs)
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
@@ -27,9 +20,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'placehold.co',
       },
+      // Rule to allow data URLs for images
       {
         protocol: 'data',
-        hostname: '',
+        hostname: '**',
       },
     ],
   },
