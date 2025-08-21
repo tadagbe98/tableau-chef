@@ -8,14 +8,14 @@ import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="container mx-auto flex h-20 items-center justify-between px-4">
+      <header className="container mx-auto flex h-auto min-h-20 items-center justify-between px-4 py-2 flex-wrap">
         <Link href="/" className="flex items-center gap-2">
           <Logo className="h-8 w-8 text-primary" />
           <span className="text-xl font-bold tracking-tight">TableauChef</span>
         </Link>
-        <nav className="flex items-center gap-4">
+        <nav className="flex items-center gap-2 sm:gap-4 flex-wrap justify-end">
            <ThemeSwitcher />
-           <Button variant="ghost" asChild>
+           <Button variant="ghost" asChild className="hidden sm:inline-flex">
             <Link href="/contact">Contact</Link>
           </Button>
           <Button variant="ghost" asChild>
@@ -24,7 +24,7 @@ export default function Home() {
           <Button asChild>
             <Link href="/signup">Sign up</Link>
           </Button>
-           <Button variant="secondary" asChild>
+           <Button variant="secondary" asChild className="hidden sm:inline-flex">
                 <Link href="/contact">
                     <Heart className="mr-2 h-4 w-4" /> Faites un don
                 </Link>
@@ -40,7 +40,7 @@ export default function Home() {
           <p className="mx-auto mt-6 max-w-[700px] text-lg text-muted-foreground">
             De l'inventaire et des recettes aux commandes et paiements, TableauChef rassemble toutes les opérations de votre restaurant en un seul tableau de bord élégant.
           </p>
-          <div className="mt-8 flex gap-4">
+          <div className="mt-8 flex flex-col sm:flex-row gap-4">
             <Button size="lg" asChild>
               <Link href="/signup">Commencer Gratuitement</Link>
             </Button>
