@@ -63,15 +63,15 @@ const seedInitialData = async (restaurantName: string) => {
 
     // Default Products
     const products = [
-        { name: 'Poulet Yassa', category: 'Plats Africains', price: 15.50, stock: 20, image: 'https://placehold.co/300x200.png', recipeNotes: 'Poulet mariné avec oignons et citron.' },
-        { name: 'Riz Jollof', category: 'Plats Africains', price: 12.00, stock: 30, image: 'https://placehold.co/300x200.png', recipeNotes: 'Riz cuit dans une sauce tomate épicée.' },
-        { name: 'Pizza Margherita', category: 'Pizzas', price: 10.00, stock: 50, image: 'https://placehold.co/300x200.png', recipeNotes: 'Sauce tomate, mozzarella, basilic.' },
-        { name: 'Classic Burger', category: 'Burgers', price: 11.50, stock: 40, image: 'https://placehold.co/300x200.png', recipeNotes: 'Steak, salade, tomate, oignon, sauce maison.' },
-        { name: 'Salade César', category: 'Salades', price: 9.50, stock: 25, image: 'https://placehold.co/300x200.png', recipeNotes: 'Laitue, poulet grillé, croûtons, parmesan.' },
-        { name: 'Coca-Cola', category: 'Boissons', price: 2.50, stock: 100, image: 'https://placehold.co/300x200.png' },
-        { name: 'Eau Minérale', category: 'Boissons', price: 2.00, stock: 100, image: 'https://placehold.co/300x200.png' },
-        { name: 'Sauce Pili-Pili', category: 'Sauces', price: 1.00, stock: 50, image: 'https://placehold.co/300x200.png' },
-        { name: 'Alloco', category: 'Accompagnements', price: 5.00, stock: 40, image: 'https://placehold.co/300x200.png' }
+        { name: 'Poulet Yassa', category: 'Plats Africains', price: 15.50, stock: 20, image: '/images/yassa.jpg', recipeNotes: 'Poulet mariné avec oignons et citron.' },
+        { name: 'Riz Jollof', category: 'Plats Africains', price: 12.00, stock: 30, image: '/images/jollof.jpg', recipeNotes: 'Riz cuit dans une sauce tomate épicée.' },
+        { name: 'Pizza Margherita', category: 'Pizzas', price: 10.00, stock: 50, image: '/images/margherita.jpg', recipeNotes: 'Sauce tomate, mozzarella, basilic.' },
+        { name: 'Classic Burger', category: 'Burgers', price: 11.50, stock: 40, image: '/images/burger.jpg', recipeNotes: 'Steak, salade, tomate, oignon, sauce maison.' },
+        { name: 'Salade César', category: 'Salades', price: 9.50, stock: 25, image: '/images/cesar_salad.jpg', recipeNotes: 'Laitue, poulet grillé, croûtons, parmesan.' },
+        { name: 'Coca-Cola', category: 'Boissons', price: 2.50, stock: 100, image: '/images/coca.jpg' },
+        { name: 'Eau Minérale', category: 'Boissons', price: 2.00, stock: 100, image: '/images/eau.jpg' },
+        { name: 'Sauce Pili-Pili', category: 'Sauces', price: 1.00, stock: 50, image: '/images/pili_pili.jpg' },
+        { name: 'Alloco', category: 'Accompagnements', price: 5.00, stock: 40, image: '/images/alloco.jpg' }
     ];
 
     products.forEach(product => {
