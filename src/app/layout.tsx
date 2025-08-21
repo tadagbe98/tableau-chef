@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import Script from 'next/script';
 import './globals.css';
@@ -36,6 +37,20 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'TableauChef',
+    operatingSystem: 'WEB',
+    applicationCategory: 'BusinessApplication',
+    description: "Optimisez la gestion de votre restaurant avec TableauChef. Gérez commandes, inventaire, produits et rapports depuis une seule plateforme. Idéal pour les restaurants, bars et cafés.",
+    offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'EUR',
+    },
+  };
+
   return (
     <html lang="fr" suppressHydrationWarning>
       <head>
@@ -56,6 +71,12 @@ export default function RootLayout({
             gtag('config', 'G-GKLTWWNV20');
           `}
         </Script>
+
+        {/* JSON-LD for SEO */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </head>
       <body>
         <ThemeProvider
