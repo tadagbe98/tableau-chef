@@ -283,20 +283,20 @@ export default function DashboardLayout({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 p-1 h-auto rounded-full">
-                    {user.restaurantLogo && (
+                 <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    {user.restaurantLogo ? (
                         <Image 
                             src={user.restaurantLogo} 
                             alt="Logo du restaurant"
-                            width={36}
-                            height={36}
-                            className="rounded-full object-cover h-9 w-9"
+                            fill
+                            className="rounded-full object-cover"
                         />
+                    ) : (
+                        <Avatar className="h-9 w-9">
+                            <AvatarImage src={user.photoURL || "https://placehold.co/100x100.png"} alt="@utilisateur" />
+                            <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
+                        </Avatar>
                     )}
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={user.photoURL || "https://placehold.co/100x100.png"} alt="@utilisateur" />
-                      <AvatarFallback>{getInitials(user.displayName)}</AvatarFallback>
-                    </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
