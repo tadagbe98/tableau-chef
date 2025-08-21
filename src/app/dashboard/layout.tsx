@@ -51,6 +51,7 @@ import { db } from '@/lib/firebase';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import Image from 'next/image';
 
 interface Notification {
     id: string;
@@ -279,6 +280,18 @@ export default function DashboardLayout({
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {user.restaurantLogo && (
+                <Image 
+                    src={user.restaurantLogo} 
+                    alt="Logo du restaurant"
+                    width={36}
+                    height={36}
+                    className="rounded-full object-cover h-9 w-9"
+                    data-ai-hint="restaurant logo"
+                />
+            )}
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="h-9 w-9 cursor-pointer">
