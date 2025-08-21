@@ -1,21 +1,24 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { UtensilsCrossed, Package, Sprout, BarChart, Bell, Users, Heart } from 'lucide-react';
+import { UtensilsCrossed, Package, Sprout, BarChart, Bell, Users, Heart, Menu } from 'lucide-react';
 import { Logo } from '@/components/icons/logo';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <header className="container mx-auto flex h-auto min-h-20 items-center justify-between px-4 py-2 flex-wrap">
+      <header className="container mx-auto flex h-auto min-h-20 items-center justify-between px-4 py-2">
         <Link href="/" className="flex items-center gap-2">
           <Logo className="h-8 w-8 text-primary" />
           <span className="text-xl font-bold tracking-tight">TableauChef</span>
         </Link>
-        <nav className="flex items-center gap-2 sm:gap-4 flex-wrap justify-end">
+        
+        {/* Desktop Navigation */}
+        <nav className="hidden items-center gap-2 sm:gap-4 md:flex">
            <ThemeSwitcher />
-           <Button variant="ghost" asChild className="hidden sm:inline-flex">
+           <Button variant="ghost" asChild>
             <Link href="/contact">Contact</Link>
           </Button>
           <Button variant="ghost" asChild>
@@ -24,12 +27,41 @@ export default function Home() {
           <Button asChild>
             <Link href="/signup">Sign up</Link>
           </Button>
-           <Button variant="secondary" asChild className="hidden sm:inline-flex">
+           <Button variant="secondary" asChild>
                 <Link href="/contact">
                     <Heart className="mr-2 h-4 w-4" /> Faites un don
                 </Link>
             </Button>
         </nav>
+
+        {/* Mobile Navigation */}
+        <div className="flex items-center gap-2 md:hidden">
+            <ThemeSwitcher />
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="icon">
+                        <Menu className="h-5 w-5" />
+                        <span className="sr-only">Ouvrir le menu</span>
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                        <Link href="/contact">Contact</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                        <Link href="/login">Login</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                        <Link href="/signup">Sign up</Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                        <Link href="/contact">
+                            <Heart className="mr-2 h-4 w-4" />Faites un don
+                        </Link>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        </div>
       </header>
 
       <main className="flex-1">
