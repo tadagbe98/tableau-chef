@@ -383,8 +383,8 @@ function OrdersContent() {
       </Dialog>
       
       {/* Receipt Dialog */}
-      <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+       <Dialog open={isReceiptDialogOpen} onOpenChange={setIsReceiptDialogOpen}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-center">Paiement Réussi</DialogTitle>
              <DialogDescription className="text-center">
@@ -493,6 +493,8 @@ export default function OrdersPage() {
   return <OrdersContent />;
 }
  
+    
+
     
 
     
