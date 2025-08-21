@@ -1,0 +1,10 @@
+# Allow all user agents to crawl the site
+User-agent: *
+Allow: /
+
+# Disallow crawling of admin and dashboard areas
+Disallow: /admin/
+Disallow: /dashboard/
+
+# Point to the sitemap
+Sitemap: https://tableauchef.app/sitemap.xml

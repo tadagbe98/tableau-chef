@@ -5,9 +5,30 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'TableauChef',
-  description: 'The ultimate restaurant management platform.',
+  title: {
+    default: 'TableauChef | Plateforme de Gestion de Restaurant Tout-en-Un',
+    template: '%s | TableauChef',
+  },
+  description: "Optimisez la gestion de votre restaurant avec TableauChef. Gérez commandes, inventaire, produits et rapports depuis une seule plateforme. Idéal pour les restaurants, bars et cafés.",
+  keywords: ['gestion restaurant', 'logiciel restaurant', 'POS', 'caisse enregistreuse', 'gestion de stock', 'menu numérique', 'TableauChef', 'optimisation restaurant'],
+  authors: [{ name: 'TableauChef' }],
+  creator: 'TableauChef',
+  openGraph: {
+    type: 'website',
+    locale: 'fr_FR',
+    url: 'https://tableauchef.app', // Replace with your actual domain
+    title: 'TableauChef | Plateforme de Gestion de Restaurant Tout-en-Un',
+    description: "De l'inventaire aux commandes, TableauChef centralise toutes les opérations de votre restaurant.",
+    siteName: 'TableauChef',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TableauChef | Plateforme de Gestion de Restaurant Tout-en-Un',
+    description: "Simplifiez la gestion de votre restaurant avec notre solution complète et intuitive.",
+    // creator: '@yourtwitterhandle', // Optional: Add your twitter handle
+  },
 };
+
 
 export default function RootLayout({
   children,
