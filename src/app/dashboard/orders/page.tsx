@@ -392,9 +392,9 @@ function OrdersContent() {
             </DialogDescription>
           </DialogHeader>
            <DialogFooter className="flex-col space-y-2 pt-4">
-            <Button className="w-full" onClick={handlePrintReceipt}><Printer className="mr-2 h-4 w-4"/> Imprimer le Reçu Client</Button>
-            <Button className="w-full" variant="secondary" onClick={handlePrintKitchenTicket}><ChefHat className="mr-2 h-4 w-4"/> Imprimer le Ticket de Cuisine</Button>
-            <Button className="w-full" variant="outline" onClick={handleNewOrder}>Commencer une Nouvelle Commande</Button>
+            <Button className="w-full" onClick={handlePrintReceipt}><Printer className="mr-2 h-4 w-4"/> Reçu Client</Button>
+            <Button className="w-full" variant="secondary" onClick={handlePrintKitchenTicket}><ChefHat className="mr-2 h-4 w-4"/> Ticket Cuisine</Button>
+            <Button className="w-full" variant="outline" onClick={handleNewOrder}><PlusCircle className="mr-2 h-4 w-4" /> Nouvelle Commande</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -494,3 +494,4 @@ export default function OrdersPage() {
 }
  
     
+
