@@ -27,7 +27,7 @@ export interface AppUser extends User {
 interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
-  refetchUser?: () => Promise<void>;
+  refetchUser: () => Promise<void>;
   login: (email: string, pass: string) => Promise<any>;
   signup: (email: string, pass: string, data: Record<string, any>) => Promise<any>;
   logout: () => Promise<void>;
@@ -44,6 +44,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({ 
     user: null, 
     loading: true,
+    refetchUser: async () => {},
     login: async () => {},
     signup: async () => {},
     logout: async () => {},
@@ -62,15 +63,15 @@ const seedInitialData = async (restaurantName: string) => {
 
     // Default Products
     const products = [
-        { name: 'Poulet Yassa', category: 'Plats Africains', price: 15.50, stock: 20, image: '/images/poulet-yassa.jpg', recipeNotes: 'Poulet mariné avec oignons et citron.' },
-        { name: 'Riz Jollof', category: 'Plats Africains', price: 12.00, stock: 30, image: '/images/riz-jollof.jpg', recipeNotes: 'Riz cuit dans une sauce tomate épicée.' },
-        { name: 'Pizza Margherita', category: 'Pizzas', price: 10.00, stock: 50, image: '/images/pizza-margherita.jpg', recipeNotes: 'Sauce tomate, mozzarella, basilic.' },
-        { name: 'Classic Burger', category: 'Burgers', price: 11.50, stock: 40, image: '/images/classic-burger.jpg', recipeNotes: 'Steak, salade, tomate, oignon, sauce maison.' },
-        { name: 'Salade César', category: 'Salades', price: 9.50, stock: 25, image: '/images/salade-cesar.jpg', recipeNotes: 'Laitue, poulet grillé, croûtons, parmesan.' },
-        { name: 'Coca-Cola', category: 'Boissons', price: 2.50, stock: 100, image: '/images/coca-cola.jpg' },
-        { name: 'Eau Minérale', category: 'Boissons', price: 2.00, stock: 100, image: '/images/eau-minerale.jpg' },
-        { name: 'Sauce Pili-Pili', category: 'Sauces', price: 1.00, stock: 50, image: '/images/sauce-pili-pili.jpg' },
-        { name: 'Alloco', category: 'Accompagnements', price: 5.00, stock: 40, image: '/images/alloco.jpg' }
+        { name: 'Poulet Yassa', category: 'Plats Africains', price: 15.50, stock: 20, image: '', recipeNotes: 'Poulet mariné avec oignons et citron.' },
+        { name: 'Riz Jollof', category: 'Plats Africains', price: 12.00, stock: 30, image: '', recipeNotes: 'Riz cuit dans une sauce tomate épicée.' },
+        { name: 'Pizza Margherita', category: 'Pizzas', price: 10.00, stock: 50, image: '', recipeNotes: 'Sauce tomate, mozzarella, basilic.' },
+        { name: 'Classic Burger', category: 'Burgers', price: 11.50, stock: 40, image: '', recipeNotes: 'Steak, salade, tomate, oignon, sauce maison.' },
+        { name: 'Salade César', category: 'Salades', price: 9.50, stock: 25, image: '', recipeNotes: 'Laitue, poulet grillé, croûtons, parmesan.' },
+        { name: 'Coca-Cola', category: 'Boissons', price: 2.50, stock: 100, image: '' },
+        { name: 'Eau Minérale', category: 'Boissons', price: 2.00, stock: 100, image: '' },
+        { name: 'Sauce Pili-Pili', category: 'Sauces', price: 1.00, stock: 50, image: '' },
+        { name: 'Alloco', category: 'Accompagnements', price: 5.00, stock: 40, image: '' }
     ];
 
     products.forEach(product => {
@@ -126,54 +127,59 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setOpenTime(null);
   };
   
-  const fetchUserData = useCallback(async (firebaseUser: User | null): Promise<AppUser | null> => {
-      if (firebaseUser) {
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-            const userData = userDoc.data();
-            const appUser: AppUser = {
-              ...firebaseUser,
-              displayName: userData.name,
-              role: userData.role,
-              restaurantName: userData.restaurantName,
-              restaurantAddress: userData.restaurantAddress,
-              restaurantPhone: userData.restaurantPhone,
-              restaurantLogo: userData.restaurantLogo || '',
-              status: userData.status || 'actif',
-              language: userData.language || 'fr',
-              currency: userData.currency || 'EUR',
-              vatRate: userData.vatRate || 20,
-            };
-            
-            if (appUser.role !== 'Super Admin' && appUser.status === 'inactif') {
-                await signOut(auth);
-                toast({
-                    variant: 'destructive',
-                    title: 'Accès Refusé',
-                    description: "Votre compte a été désactivé. Veuillez contacter un administrateur."
-                });
-                return null;
-            } else {
-                return appUser;
-            }
-        } else {
-             return firebaseUser; // User exists in Auth but not in Firestore
+  const fetchUserData = useCallback(async (firebaseUser: User): Promise<AppUser | null> => {
+    const userDocRef = doc(db, 'users', firebaseUser.uid);
+    const userDoc = await getDoc(userDocRef);
+    if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const appUser: AppUser = {
+            ...firebaseUser,
+            // Keep original user data but override with Firestore data
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            displayName: userData.name || firebaseUser.displayName,
+            role: userData.role,
+            restaurantName: userData.restaurantName,
+            restaurantAddress: userData.restaurantAddress,
+            restaurantPhone: userData.restaurantPhone,
+            restaurantLogo: userData.restaurantLogo,
+            status: userData.status || 'actif',
+            language: userData.language || 'fr',
+            currency: userData.currency || 'EUR',
+            vatRate: userData.vatRate || 20,
+        };
+        
+        if (appUser.role !== 'Super Admin' && appUser.status === 'inactif') {
+            await signOut(auth);
+            toast({
+                variant: 'destructive',
+                title: 'Accès Refusé',
+                description: "Votre compte a été désactivé. Veuillez contacter un administrateur."
+            });
+            return null;
         }
-      }
-      return null;
+        return appUser;
+    }
+    // User exists in Auth but not in Firestore, just return the base user.
+    return firebaseUser;
   }, [toast]);
   
   const refetchUser = useCallback(async () => {
     const firebaseUser = auth.currentUser;
-    const appUser = await fetchUserData(firebaseUser);
-    setUser(appUser);
+    if (firebaseUser) {
+        const appUser = await fetchUserData(firebaseUser);
+        setUser(appUser);
+    }
   }, [fetchUserData]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      const appUser = await fetchUserData(firebaseUser);
-      setUser(appUser);
+      if (firebaseUser) {
+          const appUser = await fetchUserData(firebaseUser);
+          setUser(appUser);
+      } else {
+          setUser(null);
+      }
       setLoading(false);
     });
 
@@ -322,5 +328,3 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-
-    
