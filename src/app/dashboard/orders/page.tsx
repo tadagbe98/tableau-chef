@@ -391,7 +391,7 @@ function OrdersContent() {
                 Que souhaitez-vous faire maintenant ?
             </DialogDescription>
           </DialogHeader>
-           <DialogFooter className="flex-col items-center space-y-2 sm:space-y-2">
+           <DialogFooter className="flex-col space-y-2 pt-4">
             <Button className="w-full" onClick={handlePrintReceipt}><Printer className="mr-2 h-4 w-4"/> Imprimer le Reçu Client</Button>
             <Button className="w-full" variant="secondary" onClick={handlePrintKitchenTicket}><ChefHat className="mr-2 h-4 w-4"/> Imprimer le Ticket de Cuisine</Button>
             <Button className="w-full" variant="outline" onClick={handleNewOrder}>Commencer une Nouvelle Commande</Button>
