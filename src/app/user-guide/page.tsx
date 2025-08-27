@@ -53,7 +53,7 @@ export default function UserGuidePage() {
                         <div className="p-4 border rounded-lg">
                            <h3 className="font-bold text-lg text-foreground flex items-center gap-2"><Badge variant="secondary">Caissier</Badge></h3>
                            <p className="mt-1">
-                               Le Caissier est au cœur de l'action quotidienne. Son rôle est centré sur les ventes.
+                                Le Caissier est au cœur de l'action quotidienne. Son rôle est centré sur les ventes.
                            </p>
                            <ul className="list-disc pl-6 mt-2 space-y-1">
                                <li><span className="font-semibold">Point de Vente :</span> Accès principal pour prendre les commandes des clients.</li>
