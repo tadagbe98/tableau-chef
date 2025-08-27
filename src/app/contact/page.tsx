@@ -97,8 +97,8 @@ export default function ContactPage() {
               </div>
               <div>
                 <p className="font-semibold">Email</p>
-                <a href="mailto:tadagbemassolokonon@gmail.com" className="text-muted-foreground hover:underline">
-                  tadagbemassolokonon@gmail.com
+                <a href="mailto:tableauchef@gmail.com" className="text-muted-foreground hover:underline">
+                  tableauchef@gmail.com
                 </a>
               </div>
             </div>
