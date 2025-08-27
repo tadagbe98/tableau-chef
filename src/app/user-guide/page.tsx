@@ -23,7 +23,7 @@ export default function UserGuidePage() {
                 <section>
                     <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2"><KeyRound/> Accès et Connexion</h2>
                     <p>
-                        Bienvenue sur TableauChef ! Pour commencer, votre Super Administrateur ou l'Administrateur de votre restaurant vous créera un compte et vous fournira vos identifiants de connexion (adresse e-mail et mot de passe initial).
+                        Bienvenue sur TableauChef ! Pour commencer, l'Administrateur de votre restaurant vous créera un compte et vous fournira vos identifiants de connexion (adresse e-mail et mot de passe initial).
                     </p>
                     <p className="mt-2">
                         Rendez-vous sur la page de connexion de l'application et utilisez ces identifiants pour accéder à votre tableau de bord.
