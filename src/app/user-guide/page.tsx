@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Logo } from '@/components/icons/logo';
-import { ArrowLeft, KeyRound, ChefHat, UserCog, Package, BarChart3, BookOpenCheck } from 'lucide-react';
+import { ArrowLeft, KeyRound, ChefHat, UserCog, Package, BarChart3, BookOpenCheck, Rocket, Crown, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 export default function UserGuidePage() {
@@ -15,24 +15,53 @@ export default function UserGuidePage() {
               <Logo className="h-8 w-8 text-primary" />
               <span className="text-2xl font-bold tracking-tight">TableauChef</span>
             </Link>
-            <CardTitle className="text-3xl font-bold">Guide d'Utilisation</CardTitle>
+            <CardTitle className="text-3xl font-bold">Guide de Démarrage Rapide</CardTitle>
         </header>
 
         <Card>
             <CardContent className="p-6 md:p-8 space-y-8 text-muted-foreground">
                 <section>
-                    <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2"><KeyRound/> Accès et Connexion</h2>
+                    <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2"><Rocket/> Comment commencer ?</h2>
                     <p>
-                        Bienvenue sur TableauChef ! Pour commencer, l'Administrateur de votre restaurant vous créera un compte et vous fournira vos identifiants de connexion (adresse e-mail et mot de passe initial).
+                        Que vous soyez propriétaire de restaurant ou membre du personnel, voici comment vous lancer sur TableauChef en deux minutes.
                     </p>
-                    <p className="mt-2">
-                        Rendez-vous sur la page de connexion de l'application et utilisez ces identifiants pour accéder à votre tableau de bord.
-                    </p>
+                    
+                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div className="p-4 border rounded-lg bg-background/50 flex flex-col">
+                           <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
+                                <Crown className="text-amber-500"/> Pour les Propriétaires (Admin)
+                           </h3>
+                           <p className="mt-2 flex-grow">C'est vous qui créez l'espace de travail pour votre restaurant.</p>
+                           <ol className="list-decimal pl-5 mt-2 space-y-1 flex-grow">
+                               <li>Rendez-vous sur la <Link href="/" className="font-semibold text-primary underline">page d'accueil</Link>.</li>
+                               <li>Cliquez sur le bouton <strong>"Commencer Gratuitement"</strong>.</li>
+                               <li>Remplissez le formulaire avec vos informations.</li>
+                           </ol>
+                           <p className="mt-3 text-xs italic">
+                               Félicitations ! Votre compte est le compte **Administrateur**. Vous avez le contrôle total pour configurer votre restaurant et inviter votre équipe.
+                           </p>
+                       </div>
+
+                       <div className="p-4 border rounded-lg bg-background/50 flex flex-col">
+                           <h3 className="font-bold text-lg text-foreground flex items-center gap-2">
+                                <Users /> Pour les Employés
+                           </h3>
+                           <p className="mt-2 flex-grow">Vous êtes Caissier ou Gestionnaire de Stock ? C'est encore plus simple.</p>
+                            <ol className="list-decimal pl-5 mt-2 space-y-1 flex-grow">
+                               <li>Votre administrateur doit d'abord vous créer un compte.</li>
+                               <li>Il vous fournira une <strong>adresse e-mail</strong> et un <strong>mot de passe</strong>.</li>
+                               <li>Utilisez-les pour vous connecter sur la page de <Link href="/login" className="font-semibold text-primary underline">Connexion</Link>.</li>
+                           </ol>
+                           <p className="mt-3 text-xs italic">
+                                Une fois connecté, vous n'aurez accès qu'aux outils nécessaires à votre rôle. Facile et sécurisé !
+                           </p>
+                       </div>
+                    </div>
                 </section>
 
                 <section>
                     <h2 className="text-2xl font-semibold text-foreground mb-4 flex items-center gap-2"><UserCog/> Comprendre les Rôles</h2>
-                    <p>TableauChef utilise un système de rôles pour s'assurer que chaque membre de l'équipe ait accès aux outils dont il a besoin, et uniquement à ceux-là. Voici les rôles disponibles :</p>
+                    <p>TableauChef utilise un système de rôles pour s'assurer que chaque membre de l'équipe ait accès aux outils dont il a besoin, et uniquement à ceux-là. L'Administrateur du restaurant (celui qui a créé le compte) est responsable de l'attribution de ces rôles.</p>
                     
                     <div className="mt-4 space-y-4">
                         <div className="p-4 border rounded-lg">
