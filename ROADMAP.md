@@ -83,4 +83,4 @@ Cette dernière phase consiste à transformer le projet en un produit distribuab
     *   Intégrez le module `electron-updater`.
     *   Configurez-le pour qu'il vérifie périodiquement si une nouvelle version de l'application est disponible sur un serveur (ex: GitHub Releases). Si c'est le cas, il peut la télécharger et l'installer automatiquement.
 
-**Résultat Final :** Un logiciel de bureau TableauChef complet, installable, et utilisable en toute autonomie par les restaurateurs sur leurs propres ordinateurs.
+**Résultat Final :** Un logiciel de bureau TableauChef complet, installable, et utilisable en toute autonomie par les restaurateurs sur leurs propres ordinateeurs.
