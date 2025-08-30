@@ -1,0 +1,106 @@
+
+{
+  "description": "Structure de la base de données Firestore pour l'application TableauChef. Chaque collection est associée à un restaurant via le champ 'restaurantName'.",
+  "collections": {
+    "users": {
+      "description": "Contient les informations sur tous les utilisateurs, y compris les administrateurs de restaurant, les employés et les super administrateurs.",
+      "schema": {
+        "uid": "string (ID d'authentification Firebase, aussi ID du document)",
+        "name": "string",
+        "email": "string",
+        "role": "string (ex: 'Admin', 'Caissier', 'Gestionnaire de Stock', 'Super Admin')",
+        "status": "string (ex: 'actif', 'inactif')",
+        "restaurantName": "string",
+        "restaurantAddress": "string",
+        "restaurantPhone": "string",
+        "restaurantLogo": "string (URL Data URI base64)",
+        "currency": "string (ex: 'EUR', 'USD')",
+        "language": "string (ex: 'fr', 'en')"
+      }
+    },
+    "products": {
+      "description": "Liste de tous les articles vendables (plats, boissons, etc.).",
+      "schema": {
+        "name": "string",
+        "category": "string",
+        "price": "number",
+        "stock": "number (disponibilité pour la vente, peut être différent de l'inventaire des ingrédients)",
+        "recipeNotes": "string",
+        "image": "string (URL Data URI base64)",
+        "restaurantName": "string"
+      }
+    },
+    "inventory": {
+      "description": "Liste de toutes les matières premières et fournitures.",
+      "schema": {
+        "name": "string",
+        "category": "string",
+        "stock": "number (quantité actuelle)",
+        "maxStock": "number (quantité idéale/maximale)",
+        "unit": "string (ex: 'kg', 'L', 'unités')",
+        "lowStockThreshold": "number (seuil en % pour les alertes de stock bas)",
+        "restaurantName": "string"
+      }
+    },
+    "inventory_logs": {
+      "description": "Historique de tous les mouvements de stock (ajouts, utilisations, comptages).",
+      "schema": {
+        "itemId": "string (ID de l'article dans la collection 'inventory')",
+        "itemName": "string",
+        "quantityChange": "number (positif pour ajout, négatif pour utilisation)",
+        "newStock": "number (stock après le mouvement)",
+        "type": "string (ex: 'add', 'use', 'count')",
+        "userId": "string",
+        "userName": "string",
+        "timestamp": "timestamp",
+        "restaurantName": "string"
+      }
+    },
+    "orders": {
+      "description": "Enregistrement de toutes les commandes passées.",
+      "schema": {
+        "orderNumber": "number",
+        "customer": "string (ex: 'Table 5', 'À emporter')",
+        "status": "string (ex: 'Nouvelle', 'En préparation', 'Prête', 'Servie', 'Annulée')",
+        "total": "number",
+        "items": "array<object> [{ id, name, price, quantity }]",
+        "createdAt": "timestamp",
+        "createdBy": "string (nom de l'utilisateur)",
+        "paymentMethod": "string (ex: 'Espèces', 'Carte', 'Mobile')",
+        "type": "string (ex: 'Sur place', 'À emporter', 'Livraison')",
+        "restaurantName": "string"
+      }
+    },
+    "journals": {
+      "description": "Historique des clôtures de caisse journalières.",
+      "schema": {
+        "date": "string (ISO)",
+        "totalSales": "number",
+        "openingCash": "number",
+        "variance": "number (écart de caisse)",
+        "closedBy": "string (nom de l'utilisateur)",
+        "restaurantName": "string"
+      }
+    },
+    "notifications": {
+      "description": "Notifications pour les stocks bas ou autres alertes.",
+      "schema": {
+        "message": "string",
+        "type": "string (ex: 'stock', 'order')",
+        "isRead": "boolean",
+        "createdAt": "timestamp",
+        "productId": "string (ID de l'article concerné)",
+        "restaurantName": "string"
+      }
+    },
+    "contact_messages": {
+        "description": "Messages envoyés via le formulaire de contact public ou du support.",
+        "schema": {
+            "name": "string",
+            "email": "string",
+            "message": "string",
+            "createdAt": "timestamp"
+        }
+    }
+  }
+}
