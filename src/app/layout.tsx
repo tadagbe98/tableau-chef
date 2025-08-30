@@ -5,6 +5,7 @@ import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/toaster';
+import { CustomTitlebar } from '@/components/CustomTitlebar';
 
 export const metadata: Metadata = {
   title: {
@@ -50,6 +51,9 @@ export default function RootLayout({
         priceCurrency: 'EUR',
     },
   };
+  
+  const isElectron = process.env.npm_lifecycle_event === 'electron:dev' || process.env.npm_lifecycle_script === 'electron:dev';
+
 
   return (
     <html lang="fr" suppressHydrationWarning>
@@ -85,9 +89,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider>
-            {children}
-          </AuthProvider>
+          {isElectron && <CustomTitlebar />}
+          <main className={isElectron ? 'pt-8' : ''}>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </main>
           <Toaster />
         </ThemeProvider>
       </body>
