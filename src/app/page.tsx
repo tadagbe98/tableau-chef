@@ -4,6 +4,7 @@ import { UtensilsCrossed, Package, Sprout, BarChart, Bell, Users, Heart, Menu } 
 import { Logo } from '@/components/icons/logo';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 
 export default function Home() {
   return (
@@ -65,15 +66,18 @@ export default function Home() {
 
       <main className="flex-1">
         <section className="container mx-auto flex flex-col items-center px-4 py-20 text-center">
+          <Badge variant="outline" className="mb-4 text-lg py-2 px-4 rounded-full border-primary/50">
+            Abonnement à partir de <span className="font-bold text-primary ml-2">66 USD</span> /mois
+          </Badge>
           <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
-            La Plateforme Ultime de Gestion de Restaurant
+            La Plateforme Ultime pour Votre Commerce
           </h1>
           <p className="mx-auto mt-6 max-w-[700px] text-lg text-muted-foreground">
-            De l'inventaire et des recettes aux commandes et paiements, TableauChef rassemble toutes les opérations de votre restaurant en un seul tableau de bord élégant.
+            De l'inventaire et des recettes aux commandes et paiements, TableauChef rassemble toutes les opérations de votre restaurant, magasin ou atelier en un seul tableau de bord élégant.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
             <Button size="lg" asChild>
-              <Link href="/contact">Commencer Gratuitement</Link>
+              <Link href="/contact">Demander un Accès</Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
               <Link href="/contact">Nous Contacter</Link>
@@ -85,7 +89,7 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold">Tout ce dont vous avez besoin, rien de superflu.</h2>
-              <p className="text-muted-foreground mt-2">Des fonctionnalités puissantes pour optimiser le succès de votre restaurant.</p>
+              <p className="text-muted-foreground mt-2">Des fonctionnalités puissantes pour optimiser le succès de votre commerce.</p>
             </div>
             <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               <div className="flex flex-col items-center text-center p-6 bg-card rounded-lg shadow-sm">
