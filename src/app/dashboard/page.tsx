@@ -66,7 +66,7 @@ function AdminDashboard() {
         );
         
         const journalsUnsubscribe = onSnapshot(journalsQuery, (snapshot) => {
-            const journals = snapshot.docs.map(doc => doc.data()).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            const journals = snapshot.docs.map(doc => doc.data()).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
             const totalRevenue = journals.reduce((acc, journal) => acc + journal.totalSales, 0);
             
             const dailySales = journals.reduce((acc, journal) => {
@@ -338,5 +338,7 @@ export default function DashboardPage() {
         </div>
     )
 }
+
+    
 
     
