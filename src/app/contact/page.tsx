@@ -135,7 +135,7 @@ export default function ContactPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="message">Votre Message</Label>
-                <Textarea id="message" placeholder="Comment pouvons-nous vous aider ?" value={message} onChange={(e) => setMessage(e.target.value)} required />
+                <Textarea id="message" placeholder="Ecrivez par exemple, je veux des accès !" value={message} onChange={(e) => setMessage(e.target.value)} required />
               </div>
             </CardContent>
             <CardFooter className="flex-col items-stretch gap-4">
