@@ -74,9 +74,9 @@ export default function ContactPage() {
             <span className="text-2xl font-bold tracking-tight">TableauChef</span>
           </Link>
           <div className="space-y-4">
-            <h1 className="text-3xl font-bold">Contacter le Support</h1>
+            <h1 className="text-3xl font-bold">Demandez Votre Accès</h1>
             <p className="text-muted-foreground">
-              Avez-vous une question ou besoin d'aide ? Remplissez le formulaire ou utilisez les informations ci-dessous pour nous joindre.
+              Prêt à optimiser votre commerce ? Remplissez ce formulaire pour obtenir votre accès à la plateforme tout-en-un à partir de <span className="font-bold text-foreground">66 USD/mois</span>.
             </p>
           </div>
           <div className="space-y-4">
