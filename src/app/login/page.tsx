@@ -1,4 +1,3 @@
-
 'use client';
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -76,7 +75,7 @@ export default function LoginPage() {
               <div className="flex items-center">
                 <Label htmlFor="password">Mot de passe</Label>
                 <Link
-                  href="#"
+                  href="/contact"
                   className="ml-auto inline-block text-sm underline"
                 >
                   Mot de passe oublié ?
@@ -96,8 +95,8 @@ export default function LoginPage() {
           </form>
            <div className="mt-4 text-center text-sm">
             Vous n'avez pas de compte ?{" "}
-            <Link href="/signup" className="underline">
-              S'inscrire
+            <Link href="/contact" className="underline">
+              Demander un accès
             </Link>
           </div>
           <Separator className="my-4" />

@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { UtensilsCrossed, Package, Sprout, BarChart, Bell, Users, Heart, Menu } from 'lucide-react';
@@ -25,7 +24,7 @@ export default function Home() {
             <Link href="/login">Login</Link>
           </Button>
           <Button asChild>
-            <Link href="/signup">Sign up</Link>
+            <Link href="/contact">Demander un Accès</Link>
           </Button>
            <Button variant="secondary" asChild>
                 <Link href="/contact">
@@ -52,7 +51,7 @@ export default function Home() {
                         <Link href="/login">Login</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                        <Link href="/signup">Sign up</Link>
+                        <Link href="/contact">Demander un Accès</Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                         <Link href="/contact">
@@ -74,7 +73,7 @@ export default function Home() {
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4">
             <Button size="lg" asChild>
-              <Link href="/signup">Commencer Gratuitement</Link>
+              <Link href="/contact">Commencer Gratuitement</Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
               <Link href="/contact">Nous Contacter</Link>
