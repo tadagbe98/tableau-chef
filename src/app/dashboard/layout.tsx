@@ -235,7 +235,7 @@ export default function DashboardLayout({
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-sm md:px-6">
-          <SidebarTrigger className="md:hidden" />
+          <SidebarTrigger />
           <div className="flex w-full items-center justify-end gap-2">
             {isRegisterOpen && (
               <Badge variant="outline" className="flex items-center gap-2 text-sm p-2 border-green-500 text-green-500">
