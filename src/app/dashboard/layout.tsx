@@ -201,8 +201,8 @@ export default function DashboardLayout({
         <SidebarFooter>
           <SidebarMenu>
              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip={'Faites un don'}>
-                    <Link href="/contact" className="bg-primary/10 text-primary hover:bg-primary/20">
+                <SidebarMenuButton asChild tooltip={'Faites un don'} variant="outline">
+                    <Link href="/contact">
                         <Heart />
                         <span>Faites un don</span>
                     </Link>
