@@ -67,7 +67,7 @@ export default function Home() {
       <main className="flex-1">
         <section className="container mx-auto flex flex-col items-center px-4 py-20 text-center">
           <Badge variant="outline" className="mb-4 text-lg py-2 px-4 rounded-full border-primary/50">
-            Abonnement à partir de <span className="font-bold text-primary ml-2">66 USD</span> /mois
+            Abonnement à partir de <span className="font-bold text-primary ml-2">66 USD</span> /an
           </Badge>
           <h1 className="text-4xl font-extrabold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">
             La Plateforme Ultime pour Votre Commerce

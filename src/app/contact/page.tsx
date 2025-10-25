@@ -1,4 +1,3 @@
-
 'use client';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -76,7 +75,7 @@ export default function ContactPage() {
           <div className="space-y-4">
             <h1 className="text-3xl font-bold">Demandez Votre Accès</h1>
             <p className="text-muted-foreground">
-              Prêt à optimiser votre commerce ? Remplissez ce formulaire pour obtenir votre accès à la plateforme tout-en-un à partir de <span className="font-bold text-foreground">66 USD/mois</span>.
+              Prêt à optimiser votre commerce ? Remplissez ce formulaire pour obtenir votre accès à la plateforme tout-en-un à partir de <span className="font-bold text-foreground">66 USD/an</span>.
             </p>
           </div>
           <div className="space-y-4">
